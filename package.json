@@ -1,0 +1,18 @@
+{
+  "name": "stockest-scratch",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "protobufjs": "^7.5.4",
+    "upstox": "^1.2.3",
+    "upstox-js-sdk": "^2.19.0",
+    "ws": "^8.18.3"
+  }
+}

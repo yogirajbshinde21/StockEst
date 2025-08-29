@@ -1,0 +1,255 @@
+/* Language Selector Styles */
+.language-selector {
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+}
+
+.language-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  min-width: 80px;
+  justify-content: space-between;
+}
+
+.language-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.language-button.active {
+  background: rgba(103, 126, 234, 0.3);
+  border-color: rgba(103, 126, 234, 0.5);
+}
+
+.language-button.translating {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.globe-icon {
+  color: #67c3f3;
+  flex-shrink: 0;
+}
+
+.current-language {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.chevron {
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.translation-indicator {
+  animation: pulse 1.5s ease-in-out infinite;
+  font-size: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Dropdown Styles */
+.language-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  min-width: 280px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  animation: dropdownSlideIn 0.3s ease;
+}
+
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(103, 126, 234, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.language-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.language-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.language-option:hover {
+  background: rgba(103, 126, 234, 0.1);
+  color: #67c3f3;
+}
+
+.language-option.selected {
+  background: rgba(103, 126, 234, 0.2);
+  color: #67c3f3;
+}
+
+.language-option:last-child {
+  border-bottom: none;
+}
+
+.language-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.language-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.language-native {
+  font-size: 12px;
+  opacity: 0.8;
+  color: #94a3b8;
+}
+
+.check-icon {
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+.translation-error {
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  font-size: 12px;
+  text-align: center;
+}
+
+.dropdown-footer {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.powered-by {
+  font-size: 11px;
+  color: #64748b;
+  opacity: 0.8;
+}
+
+.language-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .language-dropdown {
+    right: -20px;
+    min-width: 260px;
+  }
+  
+  .language-button {
+    padding: 6px 10px;
+    font-size: 13px;
+    min-width: 70px;
+  }
+  
+  .current-language {
+    display: none;
+  }
+  
+  .language-selector .current-language::after {
+    content: attr(data-short);
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .language-dropdown {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  .language-option {
+    color: #e2e8f0;
+  }
+  
+  .language-option:hover {
+    background: rgba(103, 126, 234, 0.15);
+  }
+}
+
+/* Loading state for Trans components */
+.trans-loading {
+  opacity: 0.7;
+  position: relative;
+}
+
+.translation-spinner {
+  display: inline-block;
+  margin-right: 4px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.trans-error {
+  color: #fca5a5;
+  opacity: 0.8;
+}

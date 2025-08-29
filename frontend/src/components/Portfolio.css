@@ -1,0 +1,724 @@
+/* Portfolio Component Styles */
+.portfolio {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 600px;
+  margin-bottom: 2rem;
+}
+
+/* Loading and Error States */
+.portfolio-loading,
+.portfolio-error {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  margin-bottom: 1rem;
+}
+
+.loading-spinner .spin {
+  animation: spin 1s linear infinite;
+  color: #667eea;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.portfolio-error {
+  color: #dc2626;
+}
+
+.portfolio-error svg {
+  color: #f87171;
+  margin-bottom: 1rem;
+}
+
+.portfolio-error h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+}
+
+.portfolio-error p {
+  margin: 0 0 1.5rem 0;
+}
+
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #b91c1c;
+}
+
+/* Portfolio Summary */
+.portfolio-summary {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  /* Removed max-height constraint to allow natural flow */
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem; /* Increased margin for better spacing */
+}
+
+.summary-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 60px;
+  min-height: 60px;
+  max-height: 60px;
+}
+
+.card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-icon.cash {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.card-icon.invested {
+  background: #f0f9ff;
+  color: #0891b2;
+}
+
+.card-icon.current {
+  background: #f0fdf4;
+  color: #059669;
+}
+
+.card-icon.pnl.profit {
+  background: #f0fdf4;
+  color: #059669;
+}
+
+.card-icon.pnl.loss {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.15rem;
+  line-height: 1.2;
+}
+
+.card-value.profit {
+  color: #059669;
+}
+
+.card-value.loss {
+  color: #dc2626;
+}
+
+.card-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Portfolio Allocation */
+.portfolio-allocation {
+  /* Add clear separation from summary cards */
+  margin-top: 0.5rem;
+}
+
+.portfolio-allocation h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+}
+
+.allocation-chart {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.allocation-bar {
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  background: #e5e7eb;
+  margin-bottom: 0.75rem;
+}
+
+.cash-bar {
+  background: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+.invested-bar {
+  background: #10b981;
+  transition: width 0.3s ease;
+}
+
+.allocation-labels {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.label-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.label-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.label-color.cash {
+  background: #3b82f6;
+}
+
+.label-color.invested {
+  background: #10b981;
+}
+
+/* Holdings Section */
+.portfolio-holdings {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+}
+
+.holdings-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.holdings-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* No Holdings */
+.no-holdings {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.no-holdings-icon {
+  margin-bottom: 1rem;
+  color: #d1d5db;
+}
+
+.no-holdings h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: #374151;
+}
+
+.no-holdings p {
+  margin: 0 0 1.5rem 0;
+}
+
+.view-market-btn {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.view-market-btn:hover {
+  background: #5a67d8;
+}
+
+/* Holdings Table */
+.holdings-table {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 500px;
+}
+
+.holdings-table .table-header {
+  display: grid;
+  grid-template-columns: 1fr 80px 100px 100px 120px 120px 120px 100px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.holdings-table .table-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 450px;
+  max-height: 500px;
+}
+
+/* Custom scrollbar for holdings table */
+.holdings-table .table-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.holdings-table .table-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.holdings-table .table-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.holdings-table .table-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.holdings-table .table-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 100px 100px 120px 120px 120px 100px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+  align-items: center;
+}
+
+.holdings-table .table-row:hover {
+  background: #fafbfc;
+}
+
+.holdings-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.holdings-table .header-cell {
+  padding: 1rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+}
+
+.holdings-table .table-cell {
+  padding: 1rem 0.75rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  justify-content: flex-start;
+}
+
+/* Stock Cell */
+.stock-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stock-symbol {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.9rem;
+}
+
+.stock-name {
+  font-size: 0.75rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Quantity, Price, Investment, Value Cells */
+.quantity,
+.price,
+.investment,
+.current-value {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* P&L Cell */
+.pnl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.pnl.profit {
+  color: #059669;
+}
+
+.pnl.loss {
+  color: #dc2626;
+}
+
+.pnl-amount {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.pnl-percent {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.375rem;
+}
+
+/* Numeric value alignment */
+.holdings-table .table-cell:nth-child(2), /* Quantity */
+.holdings-table .table-cell:nth-child(3), /* Avg Price */
+.holdings-table .table-cell:nth-child(4), /* Current Price */
+.holdings-table .table-cell:nth-child(5), /* Investment */
+.holdings-table .table-cell:nth-child(6), /* Current Value */
+.holdings-table .table-cell:nth-child(7) { /* P&L */
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.holdings-table .header-cell:nth-child(2), /* Quantity */
+.holdings-table .header-cell:nth-child(3), /* Avg Price */
+.holdings-table .header-cell:nth-child(4), /* Current Price */
+.holdings-table .header-cell:nth-child(5), /* Investment */
+.holdings-table .header-cell:nth-child(6), /* Current Value */
+.holdings-table .header-cell:nth-child(7) { /* P&L */
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.holdings-table .table-cell:nth-child(8) { /* Actions */
+  justify-content: center;
+}
+
+.holdings-table .header-cell:nth-child(8) { /* Actions */
+  justify-content: center;
+  text-align: center;
+}
+
+.buy-btn,
+.sell-btn {
+  padding: 0.375rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buy-btn {
+  background: #dcfce7;
+  color: #059669;
+}
+
+.buy-btn:hover {
+  background: #bbf7d0;
+}
+
+.sell-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.sell-btn:hover {
+  background: #fecaca;
+}
+
+/* Recent Transactions */
+.recent-transactions {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.transactions-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transactions-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.toggle-transactions-btn {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-transactions-btn:hover {
+  background: #f8fafc;
+}
+
+/* Transactions List */
+.transactions-list {
+  border-top: 1px solid #e2e8f0;
+}
+
+.no-transactions {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.transactions-table .table-header {
+  display: grid;
+  grid-template-columns: 120px 80px 1fr 80px 100px 120px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.transactions-table .table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.transactions-table .table-row {
+  display: grid;
+  grid-template-columns: 120px 80px 1fr 80px 100px 120px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.transactions-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.transactions-table .header-cell,
+.transactions-table .table-cell {
+  padding: 1rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.transaction-type {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.transaction-type.buy {
+  background: #dcfce7;
+  color: #059669;
+}
+
+.transaction-type.sell {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .portfolio {
+    gap: 1rem;
+  }
+  
+  .portfolio-summary {
+    padding: 1rem;
+  }
+  
+  .summary-cards {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .holdings-header,
+  .transactions-header {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .portfolio {
+    min-height: 500px;
+  }
+  
+  .portfolio-holdings {
+    min-height: 500px;
+  }
+  
+  .holdings-table {
+    min-height: 400px;
+  }
+  
+  .holdings-table .table-body {
+    min-height: 350px;
+    max-height: 400px;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .summary-card {
+    height: 65px;
+    min-height: 65px;
+    max-height: 65px;
+    padding: 0.65rem;
+  }
+  
+  .holdings-table .table-header,
+  .holdings-table .table-row {
+    grid-template-columns: 1fr 60px 80px 80px 100px 100px 80px;
+  }
+  
+  .holdings-table .header-cell,
+  .holdings-table .table-cell {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .stock-name {
+    display: none;
+  }
+  
+  .transactions-table .table-header,
+  .transactions-table .table-row {
+    grid-template-columns: 100px 60px 1fr 60px 80px 100px;
+  }
+  
+  .allocation-labels {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+    margin-bottom: 1.5rem; /* Ensure adequate spacing */
+  }
+  
+  .summary-card {
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
+    padding: 0.6rem;
+  }
+  
+  .holdings-table .table-header,
+  .holdings-table .table-row {
+    grid-template-columns: 1fr 50px 70px 70px 80px 60px;
+  }
+  
+  .holdings-table .header-cell:nth-child(5),
+  .holdings-table .table-cell:nth-child(5) {
+    display: none; /* Hide investment column on very small screens */
+  }
+  
+  .transactions-table .table-header,
+  .transactions-table .table-row {
+    grid-template-columns: 80px 50px 1fr 50px 80px;
+  }
+  
+  .transactions-table .header-cell:nth-child(5),
+  .transactions-table .table-cell:nth-child(5) {
+    display: none; /* Hide price column on very small screens */
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
