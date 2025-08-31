@@ -16,10 +16,12 @@ const newsRoutes = require('./routes/news');
 const chatbotRoutes = require('./routes/chatbot');
 const watchlistRoutes = require('./routes/watchlist');
 const achievementRoutes = require('./routes/achievements');
+const analysisRoutes = require('./routes/analysis');
 
 // Import services
 const stockDataService = require('./services/stockDataService');
 const newsScheduler = require('./utils/newsScheduler');
+const HistoricalDataService = require('./services/HistoricalDataService');
 
 // Import middleware
 const { auth } = require('./middleware/auth');
@@ -116,6 +118,7 @@ class StockSimulatorServer {
     this.app.use('/api/chatbot', chatbotRoutes);
     this.app.use('/api/watchlist', watchlistRoutes);
     this.app.use('/api/achievements', achievementRoutes);
+    this.app.use('/api/analysis', analysisRoutes);
 
     // 404 handler for API routes
     this.app.use('/api/*', (req, res) => {
@@ -309,6 +312,21 @@ class StockSimulatorServer {
       // Start news scheduler
       newsScheduler.startScheduler();
       console.log('✅ News scheduler started for Perplexity API');
+
+      // Setup cron job for historical data refresh (daily at 4:00 PM IST, after market close)
+      cron.schedule('0 16 * * 1-5', async () => {
+        try {
+          console.log('🔄 Starting daily historical data refresh...');
+          await HistoricalDataService.bulkRefreshData();
+          console.log('✅ Daily historical data refresh completed');
+        } catch (error) {
+          console.error('❌ Historical data refresh error:', error.message);
+        }
+      }, {
+        timezone: "Asia/Kolkata"
+      });
+
+      console.log('✅ Historical data refresh scheduler started (weekdays 4:00 PM IST)');
 
       // Initial price update
       if (stockDataService.isMarketOpen()) {

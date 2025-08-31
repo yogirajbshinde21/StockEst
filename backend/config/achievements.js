@@ -208,6 +208,112 @@ const achievements = {
       type: 'PROFIT_STREAK',
       target: 7
     }
+  },
+
+  // Analysis Achievements
+  chart_explorer: {
+    id: 'chart_explorer',
+    name: 'Chart Explorer',
+    nameHi: 'चार्ट खोजकर्ता',
+    description: 'Analyze charts for 3 different time intervals',
+    descriptionHi: '3 अलग-अलग समय अंतराल के लिए चार्ट का विश्लेषण करें',
+    icon: '📊',
+    category: 'ANALYSIS',
+    tier: 'BRONZE',
+    experiencePoints: 20,
+    reward: {
+      type: 'VIRTUAL_MONEY',
+      amount: 300,
+      description: 'Bonus ₹300 for exploring charts!'
+    },
+    condition: {
+      type: 'CHART_INTERVALS_EXPLORED',
+      target: 3
+    }
+  },
+
+  trend_spotter: {
+    id: 'trend_spotter',
+    name: 'Trend Spotter',
+    nameHi: 'ट्रेंड स्पॉटर',
+    description: 'Identify 10 different market trends correctly',
+    descriptionHi: '10 अलग-अलग बाज़ार ट्रेंड सही तरीके से पहचानें',
+    icon: '📈',
+    category: 'ANALYSIS',
+    tier: 'SILVER',
+    experiencePoints: 40,
+    reward: {
+      type: 'VIRTUAL_MONEY',
+      amount: 800,
+      description: 'Bonus ₹800 for spotting trends!'
+    },
+    condition: {
+      type: 'TRENDS_SPOTTED',
+      target: 10
+    }
+  },
+
+  analysis_streak: {
+    id: 'analysis_streak',
+    name: 'Analysis Streak',
+    nameHi: 'विश्लेषण स्ट्रीक',
+    description: 'Analyze charts for 7 consecutive days',
+    descriptionHi: '7 लगातार दिन चार्ट का विश्लेषण करें',
+    icon: '🔥',
+    category: 'ANALYSIS',
+    tier: 'GOLD',
+    experiencePoints: 75,
+    reward: {
+      type: 'VIRTUAL_MONEY',
+      amount: 1500,
+      description: 'Bonus ₹1,500 for consistent analysis!'
+    },
+    condition: {
+      type: 'ANALYSIS_STREAK',
+      target: 7
+    }
+  },
+
+  volatility_master: {
+    id: 'volatility_master',
+    name: 'Volatility Master',
+    nameHi: 'अस्थिरता मास्टर',
+    description: 'Analyze high volatility periods in 5 different stocks',
+    descriptionHi: '5 अलग-अलग शेयरों में उच्च अस्थिरता अवधि का विश्लेषण करें',
+    icon: '⚡',
+    category: 'ANALYSIS',
+    tier: 'GOLD',
+    experiencePoints: 60,
+    reward: {
+      type: 'VIRTUAL_MONEY',
+      amount: 1200,
+      description: 'Bonus ₹1,200 for mastering volatility!'
+    },
+    condition: {
+      type: 'HIGH_VOLATILITY_ANALYZED',
+      target: 5
+    }
+  },
+
+  technical_analyst: {
+    id: 'technical_analyst',
+    name: 'Technical Analyst',
+    nameHi: 'तकनीकी विश्लेषक',
+    description: 'Complete comprehensive analysis of all 4 tracked companies',
+    descriptionHi: 'सभी 4 ट्रैक की गई कंपनियों का व्यापक विश्लेषण पूरा करें',
+    icon: '🔬',
+    category: 'ANALYSIS',
+    tier: 'PLATINUM',
+    experiencePoints: 100,
+    reward: {
+      type: 'VIRTUAL_MONEY',
+      amount: 2000,
+      description: 'Bonus ₹2,000 for comprehensive analysis!'
+    },
+    condition: {
+      type: 'ALL_COMPANIES_ANALYZED',
+      target: 4
+    }
   }
 };
 
@@ -242,6 +348,12 @@ const categories = {
     nameHi: 'लक्ष्य',
     icon: '🏆',
     color: '#ef4444'
+  },
+  ANALYSIS: {
+    name: 'Analysis',
+    nameHi: 'विश्लेषण',
+    icon: '📊',
+    color: '#06b6d4'
   }
 };
 

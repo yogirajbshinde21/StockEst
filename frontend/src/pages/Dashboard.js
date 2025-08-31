@@ -13,6 +13,7 @@ import ChatBot from '../components/ChatBot';
 import Trans from '../components/Trans';
 import AchievementsList from '../components/AchievementsList';
 import AchievementNotification from '../components/AchievementNotification';
+import StockAnalysis from '../components/StockAnalysis';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -26,7 +27,8 @@ import {
   Clock,
   Newspaper,
   Heart,
-  Trophy
+  Trophy,
+  BarChart3
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -97,16 +99,7 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const formatNumber = (num) => {
-    if (num >= 10000000) {
-      return (num / 10000000).toFixed(1) + 'Cr';
-    } else if (num >= 100000) {
-      return (num / 100000).toFixed(1) + 'L';
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toFixed(0);
-  };
+  
 
   const topGainers = getTopGainers(3);
   const topLosers = getTopLosers(3);
@@ -163,6 +156,17 @@ const Dashboard = () => {
           </button>
 
           <button
+            className={`nav-item ${activeTab === 'analysis' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('analysis');
+              setSidebarOpen(false);
+            }}
+          >
+            <BarChart3 size={20} />
+            <Trans>Analysis</Trans>
+          </button>
+
+          <button
             className={`nav-item ${activeTab === 'news' ? 'active' : ''}`}
             onClick={() => {
               setActiveTab('news');
@@ -170,7 +174,7 @@ const Dashboard = () => {
             }}
           >
             <Newspaper size={20} />
-            <Trans>समाचार - News</Trans>
+            <Trans>News</Trans>
           </button>
 
           <button
@@ -181,7 +185,7 @@ const Dashboard = () => {
             }}
           >
             <Trophy size={20} />
-            <Trans>🏆 Achievements</Trans>
+            <Trans>Leaderboard</Trans>
           </button>
         </div>
 
@@ -304,7 +308,7 @@ const Dashboard = () => {
             <div className="highlight-section">
               <h3 className="section-title">
                 <TrendingUp className="section-icon profit" />
-                Top Gainers
+                <span className="section-text">Top Gainers</span>
               </h3>
               <div className="highlight-list">
                 {topGainers.map((stock, index) => (
@@ -323,8 +327,8 @@ const Dashboard = () => {
 
             <div className="highlight-section">
               <h3 className="section-title">
-                <TrendingDown className="section-icon loss" />
-                Top Losers
+                <TrendingDown className="section-icon loss " />
+                <span className="section-text">Top Losers</span>
               </h3>
               <div className="highlight-list">
                 {topLosers.map((stock, index) => (
@@ -354,6 +358,8 @@ const Dashboard = () => {
             />
           ) : activeTab === 'watchlist' ? (
             <Watchlist onTrade={handleTrade} />
+          ) : activeTab === 'analysis' ? (
+            <StockAnalysis />
           ) : activeTab === 'news' ? (
             <NewsSection />
           ) : activeTab === 'achievements' ? (

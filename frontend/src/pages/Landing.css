@@ -622,13 +622,16 @@
 
 .video-container {
   position: relative;
-  background: var(--glass-bg);
-  border-radius: 1rem;
   overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 1rem;
   border: 1px solid var(--border-subtle);
   transition: all 0.3s ease;
   backdrop-filter: blur(20px);
   min-height: 300px; /* Prevent layout shift */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .video-container:hover {
@@ -637,6 +640,118 @@
   box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
 }
 
+/* ========================================
+   HIGH-PERFORMANCE LAZY VIDEO OPTIMIZATION
+   ========================================
+   Custom LazyVideo component for YouTube embedding:
+   - Instant thumbnail loading with lazy video initialization
+   - Custom StockEst-branded play button
+   - Hardware-accelerated transitions
+   - Zero YouTube loading delays
+   ======================================== */
+
+/* Optimize video containers for performance */
+.video-container {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 1rem;
+  border: 1px solid var(--border-subtle);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-container:hover {
+  transform: scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  border-color: var(--gold-accent);
+}
+
+/* Enhanced play button hover effects */
+.video-container [style*="background: linear-gradient"]:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 15px 30px rgba(102, 126, 234, 0.5) !important;
+}
+
+/* Ensure smooth transitions for all video elements */
+.video-container iframe {
+  transition: all 0.3s ease;
+  border-radius: 1rem;
+  pointer-events: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Aggressively hide all YouTube UI elements */
+.video-container iframe:hover {
+  pointer-events: none !important;
+}
+
+.video-container:hover iframe {
+  pointer-events: none !important;
+}
+
+/* Block YouTube UI with CSS */
+.video-container {
+  position: relative !important;
+}
+
+.video-container iframe::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* Hide any YouTube overlay elements */
+.video-container iframe[src*="youtube"] {
+  background: transparent !important;
+}
+
+/* Prevent any YouTube control visibility */
+.video-container iframe[src*="youtube"]::-webkit-media-controls,
+.video-container iframe[src*="youtube"]::-webkit-media-controls-panel {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Pulse animation for video loading indicator */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Loading state improvements */
+.video-loading {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  border-radius: 1rem;
+}
+
+/* Video/iframe styling - supports both local videos and YouTube embeds */
 .demo-video {
   width: 100%;
   height: 300px;
@@ -645,49 +760,20 @@
   /* Add hardware acceleration */
   transform: translateZ(0);
   will-change: transform;
+  border: none;
+  /* Hide YouTube branding and controls completely */
+  pointer-events: none;
 }
 
-.video-placeholder {
+/* Legacy iframe support (kept for backwards compatibility) */
+iframe.demo-video {
   width: 100%;
   height: 300px;
-  background: var(--glass-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  color: var(--text-gray);
-  font-size: 1.1rem;
-  font-weight: 600;
-  gap: 1rem;
-}
-
-.video-placeholder.loading {
-  background: linear-gradient(45deg, var(--glass-bg), rgba(255, 255, 255, 0.05));
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border-subtle);
-  border-top: 3px solid var(--gold-accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Optimize for slow connections */
-@media (prefers-reduced-data: reduce) {
-  .demo-video {
-    display: none;
-  }
-  
-  .video-placeholder {
-    display: flex;
-  }
+  object-fit: inherit;
+  pointer-events: none;
+  border: none;
+  outline: none;
+  overflow: hidden;
 }
 
 .progress-container {
@@ -969,6 +1055,15 @@
     height: 200px;
   }
   
+  iframe.demo-video {
+    height: 200px;
+  }
+  
+  /* Optimize video container for tablet */
+  .video-container {
+    min-height: 200px;
+  }
+  
   .video-placeholder {
     height: 200px;
   }
@@ -994,6 +1089,22 @@
   
   .demo-video {
     height: 180px;
+  }
+  
+  iframe.demo-video {
+    height: 180px;
+  }
+  
+  /* Optimize video container for mobile */
+  .video-container {
+    min-height: 180px;
+  }
+  
+  /* Adjust play button size for mobile */
+  .video-container [style*="width: 80px"] {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 20px !important;
   }
   
   .video-placeholder {

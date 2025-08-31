@@ -3,16 +3,99 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import './Landing.css';
 
+// Custom LazyVideo component with auto-start functionality
+const LazyVideo = ({ videoId, title, height = '300px' }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isLoaded) {
+          setIsVisible(true);
+          // Auto-start video after a short delay to ensure smooth loading
+          setTimeout(() => {
+            setIsLoaded(true);
+          }, 500);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [isLoaded]);
+
+  return (
+    <div ref={videoRef} style={{ width: '100%', height, borderRadius: '1rem', overflow: 'hidden' }}>
+      {!isLoaded ? (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            borderRadius: '1rem',
+            transition: 'opacity 0.3s ease'
+          }}
+        >
+          {isVisible && (
+            <div style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '20px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+              animation: 'pulse 1.5s infinite'
+            }}>
+              ▶
+            </div>
+          )}
+        </div>
+      ) : (
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&playlist=${videoId}&enablejsapi=1&iv_load_policy=3&fs=0&disablekb=1&cc_load_policy=0&autohide=1&wmode=opaque&origin=${window.location.origin}`}
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          allow="autoplay; encrypted-media"
+          allowFullScreen={false}
+          title={title}
+          style={{ 
+            borderRadius: '1rem',
+            pointerEvents: 'none',
+            border: 'none',
+            outline: 'none'
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 const Landing = () => {
   const [isVisible, setIsVisible] = useState({});
   const [progress, setProgress] = useState(0);
   const [achievement, setAchievement] = useState({ show: false, message: '' });
   const [stockPrices, setStockPrices] = useState({});
   const [typewriterText, setTypewriterText] = useState('');
-  const { currentLanguage, toggleLanguage } = useLanguage();
+  const { currentLanguage } = useLanguage();
   const observerRef = useRef(null);
   const achievementsUnlocked = useRef(new Set());
-  const [videosLoaded, setVideosLoaded] = useState(new Set());
 
   const stocks = useMemo(() => [
     { symbol: 'RELIANCE', basePrice: 2456.80 },
@@ -25,10 +108,11 @@ const Landing = () => {
     { symbol: 'ADANI', basePrice: 2234.89 }
   ], []);
 
+  // Features with lite-youtube embedded videos for high performance
   const features = [
     {
       id: 1,
-      video: "/videos/Language_Feature.mp4",
+      videoId: "vEBvHDGFbBo",
       title: {
         en: "🌐 Multi-Language Support",
         hi: "🌐 बहुभाषी सहायता"
@@ -42,7 +126,7 @@ const Landing = () => {
     },
     {
       id: 2,
-      video: "/videos/Buy_Feature.mp4",
+      videoId: "LsR1mf4Yy5I",
       title: {
         en: "💰 Smart Stock Trading",
         hi: "💰 स्मार्ट स्टॉक ट्रेडिंग"
@@ -56,7 +140,7 @@ const Landing = () => {
     },
     {
       id: 3,
-      video: "/videos/Portfolio_Feature.mp4",
+      videoId: "kvKPFyMe1ok",
       title: {
         en: "📊 Portfolio Management",
         hi: "📊 पोर्टफोलियो प्रबंधन"
@@ -70,7 +154,7 @@ const Landing = () => {
     },
     {
       id: 4,
-      video: "/videos/Watchlist_feature.mp4",
+      videoId: "JTpeZv-Az80",
       title: {
         en: "⭐ Smart Watchlist & Alerts",
         hi: "⭐ स्मार्ट वॉचलिस्ट और अलर्ट"
@@ -84,7 +168,7 @@ const Landing = () => {
     },
     {
       id: 5,
-      video: "/videos/Financial_News_Feature.mp4",
+      videoId: "C8pw6HciosY",
       title: {
         en: "📰 Real-Time Financial News",
         hi: "📰 रियल-टाइम वित्तीय समाचार"
@@ -98,7 +182,7 @@ const Landing = () => {
     },
     {
       id: 6,
-      video: "/videos/Leaderboard_feature.mp4",
+      videoId: "rK2QJ4XKw_I",
       title: {
         en: "🏆 Gamified Leaderboard",
         hi: "🏆 गेमिफाइड लीडरबोर्ड"
@@ -112,7 +196,7 @@ const Landing = () => {
     },
     {
       id: 7,
-      video: "/videos/Chatbot_Feature.mp4",
+      videoId: "tIbCrVj_Gck",
       title: {
         en: "🤖 AI-Powered Assistant",
         hi: "🤖 AI-संचालित सहायक"
@@ -196,12 +280,6 @@ const Landing = () => {
             const id = entry.target.id;
             setIsVisible(prev => ({ ...prev, [id]: true }));
 
-            // Load video when feature becomes visible
-            const featureKey = entry.target.dataset.feature;
-            if (featureKey && !videosLoaded.has(featureKey)) {
-              setVideosLoaded(prev => new Set([...prev, featureKey]));
-            }
-
             // Update progress
             const visibleFeatures = document.querySelectorAll('.feature-item.visible').length + 1;
             const totalFeatures = features.length;
@@ -209,6 +287,7 @@ const Landing = () => {
             setProgress(Math.min(newProgress, 100));
 
             // Show achievements
+            const featureKey = entry.target.dataset.feature;
             if (featureKey && !achievementsUnlocked.current.has(featureKey)) {
               achievementsUnlocked.current.add(featureKey);
               setTimeout(() => {
@@ -218,7 +297,7 @@ const Landing = () => {
           }
         });
       },
-      { threshold: 0.1, rootMargin: '0px 0px -100px 0px' } // Load earlier
+      { threshold: 0.1, rootMargin: '0px 0px -100px 0px' }
     );
 
     const elements = document.querySelectorAll('.feature-item');
@@ -229,7 +308,7 @@ const Landing = () => {
         observerRef.current.disconnect();
       }
     };
-  }, [videosLoaded, features.length, showAchievement]);
+  }, [features.length, showAchievement]);
 
   // Show welcome achievement on mount
   useEffect(() => {
@@ -294,6 +373,31 @@ const Landing = () => {
   const scrollToFeatures = () => {
     document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Intersection observer for LazyVideo performance optimization
+  useEffect(() => {
+    const videoContainers = document.querySelectorAll('.video-container');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Preload thumbnails when videos come into view
+          const container = entry.target;
+          const backgroundImages = container.querySelectorAll('[style*="background-image"]');
+          backgroundImages.forEach(element => {
+            const style = element.getAttribute('style');
+            const match = style.match(/url\(([^)]+)\)/);
+            if (match) {
+              const img = new Image();
+              img.src = match[1].replace(/['"]/g, '');
+            }
+          });
+        }
+      });
+    }, { threshold: 0.1 });
+
+    videoContainers.forEach(container => observer.observe(container));
+    return () => observer.disconnect();
+  }, []);
 
   // Parallax effect for scroll
   useEffect(() => {
@@ -472,35 +576,11 @@ const Landing = () => {
                 </div>
                 <div className="feature-video">
                   <div className="video-container">
-                    {videosLoaded.has(feature.key) ? (
-                      <video 
-                        autoPlay 
-                        muted 
-                        loop 
-                        playsInline
-                        controls={false}
-                        disablePictureInPicture
-                        className="demo-video"
-                        onContextMenu={(e) => e.preventDefault()}
-                        preload="metadata"
-                        poster={`/images/video-posters/${feature.key}-poster.jpg`}
-                        onError={(e) => {
-                          const placeholder = document.createElement('div');
-                          placeholder.className = 'video-placeholder';
-                          placeholder.innerHTML = '🎬 Feature Demo Coming Soon';
-                          e.target.parentNode.replaceChild(placeholder, e.target);
-                        }}
-                      >
-                        <source src={feature.video} type="video/mp4" />
-                        <source src={feature.video.replace('.mp4', '.webm')} type="video/webm" />
-                        Your browser does not support the video tag.
-                      </video>
-                    ) : (
-                      <div className="video-placeholder loading">
-                        <div className="loading-spinner"></div>
-                        <span>Loading {feature.title[currentLanguage]}...</span>
-                      </div>
-                    )}
+                    <LazyVideo
+                      videoId={feature.videoId}
+                      title={feature.title[currentLanguage]}
+                      height="300px"
+                    />
                   </div>
                 </div>
               </div>
