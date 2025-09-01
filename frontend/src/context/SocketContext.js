@@ -76,6 +76,26 @@ export const SocketProvider = ({ children }) => {
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+  const subscriptionCheckRef = useRef(null);
+
+  // Periodic subscription check to ensure we stay subscribed
+  useEffect(() => {
+    if (state.isConnected && socketRef.current) {
+      subscriptionCheckRef.current = setInterval(() => {
+        // Re-subscribe to stock updates to ensure we don't lose connection
+        if (socketRef.current && state.isConnected) {
+          console.log('🔄 Periodic subscription check - ensuring stock updates...');
+          socketRef.current.emit('subscribe-stocks');
+        }
+      }, 60000); // Check every minute
+      
+      return () => {
+        if (subscriptionCheckRef.current) {
+          clearInterval(subscriptionCheckRef.current);
+        }
+      };
+    }
+  }, [state.isConnected]);
 
   // Initialize socket connection and fetch initial data
   useEffect(() => {
@@ -149,6 +169,9 @@ export const SocketProvider = ({ children }) => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
+      if (subscriptionCheckRef.current) {
+        clearInterval(subscriptionCheckRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, token]);
@@ -183,6 +206,7 @@ export const SocketProvider = ({ children }) => {
         
         // Authenticate with the server
         if (token) {
+          console.log('🔑 Authenticating socket...');
           socket.emit('authenticate', token);
         }
       });
@@ -207,9 +231,11 @@ export const SocketProvider = ({ children }) => {
       socket.on('authenticated', (data) => {
         if (data.success) {
           console.log('✅ Socket authenticated for user:', data.user?.email);
-          // Subscribe to real-time updates
-          subscribeToStockUpdates();
-          subscribeToPortfolioUpdates();
+          // Subscribe to real-time updates with a slight delay to ensure connection is stable
+          setTimeout(() => {
+            subscribeToStockUpdates();
+            subscribeToPortfolioUpdates();
+          }, 100);
         } else {
           console.error('❌ Socket authentication failed:', data.message);
           toast.error('Real-time connection authentication failed');
@@ -275,8 +301,14 @@ export const SocketProvider = ({ children }) => {
   // Subscribe to stock updates
   const subscribeToStockUpdates = () => {
     if (socketRef.current && state.isConnected) {
+      console.log('📈 Attempting to subscribe to stock updates...');
       socketRef.current.emit('subscribe-stocks');
-      console.log('📈 Subscribed to stock updates');
+      console.log('📈 Subscribe request sent');
+    } else {
+      console.warn('⚠️ Cannot subscribe to stock updates - socket not connected:', {
+        hasSocket: !!socketRef.current,
+        isConnected: state.isConnected
+      });
     }
   };
 
@@ -307,7 +339,13 @@ export const SocketProvider = ({ children }) => {
   // Manually refresh stock data
   const refreshStockData = () => {
     if (socketRef.current && state.isConnected) {
+      console.log('🔄 Manual refresh - subscribing to stock updates...');
       socketRef.current.emit('subscribe-stocks');
+    } else {
+      console.warn('⚠️ Cannot refresh stock data - socket not ready:', {
+        hasSocket: !!socketRef.current,
+        isConnected: state.isConnected
+      });
     }
   };
 

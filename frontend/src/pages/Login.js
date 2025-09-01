@@ -186,6 +186,11 @@ const Login = () => {
                 <Trans>Sign up here</Trans>
               </Link>
             </p>
+            <p className="back-to-landing">
+              <Link to="/" className="auth-link">
+                <Trans>← Back to Landing Page</Trans>
+              </Link>
+            </p>
           </div>
 
           {/* Demo Credentials */}

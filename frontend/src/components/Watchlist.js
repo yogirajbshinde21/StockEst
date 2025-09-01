@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import AnimatedPrice from './AnimatedPrice';
+import { usePriceTracker } from '../hooks/usePriceTracker';
 import Trans from './Trans';
 import toast from 'react-hot-toast';
 import { 
@@ -25,6 +27,7 @@ const Watchlist = ({ onTrade }) => {
 
   const { token } = useAuth();
   const { stockData } = useSocket();
+  const { getPriceInfo } = usePriceTracker(stockData?.stocks || [], 'instrumentKey', 'currentPrice');
 
   // Fetch watchlist on component mount
   useEffect(() => {
@@ -222,14 +225,18 @@ const Watchlist = ({ onTrade }) => {
 
                 <div className="price-section">
                   <div className="current-price">
-                    {formatCurrency(stock.currentPrice || 0)}
-                  </div>
-                  <div className={`price-change ${(stock.change || 0) >= 0 ? 'profit' : 'loss'}`}>
-                    {(stock.change || 0) >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                    <span>
-                      {(stock.change || 0) >= 0 ? '+' : ''}
-                      {formatCurrency(stock.change || 0)} ({(stock.changePercent || 0).toFixed(2)}%)
-                    </span>
+                    <AnimatedPrice
+                      value={stock.currentPrice || 0}
+                      previousValue={getPriceInfo(stock.instrumentKey).previousPrice}
+                      currency={true}
+                      decimals={2}
+                      showArrow={false}
+                      showChange={true}
+                      changeValue={stock.change || 0}
+                      changePercent={stock.changePercent || 0}
+                      size="medium"
+                      className="watchlist-price"
+                    />
                   </div>
                 </div>
 

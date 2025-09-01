@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import AnimatedPrice from './AnimatedPrice';
+import { usePriceTracker } from '../hooks/usePriceTracker';
 import axios from 'axios';
 import { 
   TrendingUp, 
@@ -22,6 +24,14 @@ const Portfolio = ({ portfolioData, onTrade }) => {
   const [showTransactions, setShowTransactions] = useState(false);
   
   const { user } = useAuth();
+  
+  // Extract stocks from portfolio for price tracking
+  const portfolioStocks = localPortfolioData?.portfolio?.map(holding => ({
+    instrumentKey: holding.instrumentKey,
+    currentPrice: holding.currentPrice
+  })) || [];
+  
+  const { getPriceInfo } = usePriceTracker(portfolioStocks, 'instrumentKey', 'currentPrice');
 
   // Fetch portfolio data
   useEffect(() => {
@@ -254,7 +264,16 @@ const Portfolio = ({ portfolioData, onTrade }) => {
                   </div>
 
                   <div className="table-cell price-cell">
-                    <div className="price">{formatCurrency(holding.currentPrice)}</div>
+                    <AnimatedPrice
+                      value={holding.currentPrice}
+                      previousValue={getPriceInfo(holding.instrumentKey).previousPrice}
+                      currency={true}
+                      decimals={2}
+                      showArrow={false}
+                      showChange={false}
+                      size="medium"
+                      className="portfolio-price"
+                    />
                   </div>
 
                   <div className="table-cell investment-cell">

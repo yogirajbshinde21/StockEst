@@ -77,6 +77,41 @@
   min-width: 80px;
 }
 
+.ticker-price-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.ticker-animated-price {
+  width: 100%;
+}
+
+.ticker-animated-price .price-container {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.ticker-animated-price .change-container {
+  margin-top: 0;
+  margin-left: 8px;
+}
+
+.ticker-animated-price .price-value {
+  color: #e5e7eb !important;
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 90px;
+}
+
+.ticker-animated-price.change-positive .price-value {
+  color: #22c55e !important;
+}
+
+.ticker-animated-price.change-negative .price-value {
+  color: #ef4444 !important;
+}
+
 .ticker-price {
   font-size: 15px;
   font-weight: 600;

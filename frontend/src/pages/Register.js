@@ -280,6 +280,11 @@ const Register = () => {
                 Sign in here
               </Link>
             </p>
+            <p className="back-to-landing">
+              <Link to="/" className="auth-link">
+                ← Back to Landing Page
+              </Link>
+            </p>
           </div>
 
           {/* Terms Notice */}

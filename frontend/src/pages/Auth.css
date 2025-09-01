@@ -271,6 +271,24 @@
   font-size: 0.9rem;
 }
 
+.auth-footer .back-to-landing {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.auth-footer .back-to-landing .auth-link {
+  color: #9ca3af;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.auth-footer .back-to-landing .auth-link:hover {
+  color: #667eea;
+}
+
 .auth-link {
   color: #667eea;
   text-decoration: none;

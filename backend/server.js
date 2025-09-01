@@ -275,14 +275,15 @@ class StockSimulatorServer {
    */
   async setupStockDataService() {
     try {
-      // Initialize stock data
-      await stockDataService.initializeStocks();
-      console.log('✅ Stock data service initialized');
+      // Initialize stock data with proper previousClose values
+      await stockDataService.initializeApplication();
+      console.log('✅ Stock data service initialized with proper previousClose values');
 
-      // Setup cron job for stock price updates (every 30 seconds during market hours)
-      const updateInterval = process.env.STOCK_UPDATE_INTERVAL || 30000;
+      // Setup cron job for stock price updates (every 15 seconds during market hours)
+      const updateInterval = process.env.STOCK_UPDATE_INTERVAL || 15000;
       
-      cron.schedule('*/30 * * * * *', async () => {
+      // Schedule API fetching here (in seconds)...
+      cron.schedule('*/15 * * * * *', async () => {     // 15 seconds
         try {
           if (stockDataService.isMarketOpen()) {
             console.log(`🔄 Attempting stock price update at ${new Date().toLocaleTimeString()}`);

@@ -1,27 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../context/SocketContext';
+import AnimatedPrice from './AnimatedPrice';
+import { usePriceTracker } from '../hooks/usePriceTracker';
 import './StockTicker.css';
 
 const StockTicker = () => {
-  const { stockData, isConnected } = useSocket();
+  const { stockData, isConnected, refreshStockData } = useSocket();
   const [tickerData, setTickerData] = useState([]);
   const tickerRef = useRef(null);
+  
+  const { getPriceInfo } = usePriceTracker(stockData?.stocks || [], 'instrumentKey', 'currentPrice');
+
+  // Ensure we have stock data for the ticker
+  useEffect(() => {
+    if (isConnected && (!stockData?.stocks || stockData.stocks.length === 0)) {
+      console.log('📊 StockTicker: No stock data found, triggering refresh...');
+      refreshStockData();
+    }
+  }, [isConnected, stockData, refreshStockData]);
 
   useEffect(() => {
     if (stockData && stockData.stocks && stockData.stocks.length > 0) {
       // Format stock data for ticker display
-      const formattedData = stockData.stocks.map(stock => ({
-        symbol: stock.symbol,
-        companyName: stock.companyName,
-        currentPrice: stock.currentPrice,
-        change: stock.change,
-        changePercent: stock.changePercent,
-        isPositive: stock.change >= 0,
-        instrumentKey: stock.instrumentKey
-      }));
+      const formattedData = stockData.stocks.map(stock => {
+        const priceInfo = getPriceInfo(stock.instrumentKey);
+        return {
+          symbol: stock.symbol,
+          companyName: stock.companyName,
+          currentPrice: stock.currentPrice,
+          previousPrice: priceInfo.previousPrice,
+          change: stock.change,
+          changePercent: stock.changePercent,
+          isPositive: stock.change >= 0,
+          instrumentKey: stock.instrumentKey
+        };
+      });
+      
       setTickerData(formattedData);
     }
-  }, [stockData]);
+  }, [stockData, getPriceInfo]);
 
   useEffect(() => {
     // Calculate and set animation duration based on content width
@@ -38,36 +55,23 @@ const StockTicker = () => {
     }
   }, [tickerData]);
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2
-    }).format(price);
-  };
-
-  const formatChange = (change) => {
-    const sign = change >= 0 ? '+' : '';
-    return `${sign}${change.toFixed(2)}`;
-  };
-
-  const formatChangePercent = (changePercent) => {
-    const sign = changePercent >= 0 ? '+' : '';
-    return `${sign}${changePercent.toFixed(2)}%`;
-  };
-
   const renderTickerItem = (stock, index) => (
     <div key={`${stock.instrumentKey}-${index}`} className="ticker-item">
       <span className="ticker-symbol">{stock.symbol}</span>
-      <span className="ticker-price">{formatPrice(stock.currentPrice)}</span>
-      <span className={`ticker-change ${stock.isPositive ? 'positive' : 'negative'}`}>
-        <span className="change-arrow">
-          {stock.isPositive ? '▲' : '▼'}
-        </span>
-        <span className="change-value">{formatChange(stock.change)}</span>
-        <span className="change-percent">({formatChangePercent(stock.changePercent)})</span>
-      </span>
+      <div className="ticker-price-container">
+        <AnimatedPrice
+          value={stock.currentPrice}
+          previousValue={stock.previousPrice}
+          currency={true}
+          decimals={2}
+          showArrow={true}
+          showChange={true}
+          changeValue={stock.change}
+          changePercent={stock.changePercent}
+          size="small"
+          className="ticker-animated-price"
+        />
+      </div>
     </div>
   );
 

@@ -1,0 +1,488 @@
+/* AnimatedPrice Component Styles */
+.animated-price {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+/* Price Container */
+.price-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+/* Price Value Styling */
+.price-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+/* Size Variants */
+.animated-price.size-small .price-value {
+  font-size: 14px;
+}
+
+.animated-price.size-medium .price-value {
+  font-size: 16px;
+}
+
+.animated-price.size-large .price-value {
+  font-size: 18px;
+}
+
+.animated-price.size-xlarge .price-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* Arrow Indicators */
+.price-arrow {
+  display: inline-flex;
+  align-items: center;
+  animation: fadeInScale 0.4s ease-out;
+  transition: transform 0.2s ease;
+}
+
+.price-arrow.up {
+  color: #22c55e;
+  animation: bounceUp 0.6s ease-out;
+}
+
+.price-arrow.down {
+  color: #ef4444;
+  animation: bounceDown 0.6s ease-out;
+}
+
+/* Change Container */
+.change-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+  margin-top: 2px;
+}
+
+.change-value,
+.change-percent {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Color States */
+.animated-price.change-positive .price-value {
+  color: #22c55e;
+}
+
+.animated-price.change-negative .price-value {
+  color: #ef4444;
+}
+
+.animated-price.change-neutral .price-value {
+  color: #6b7280;
+}
+
+.animated-price.change-positive .change-value,
+.animated-price.change-positive .change-percent {
+  color: #22c55e;
+}
+
+.animated-price.change-negative .change-value,
+.animated-price.change-negative .change-percent {
+  color: #ef4444;
+}
+
+/* Animation States */
+.animated-price.animating .price-value {
+  transform: scale(1.05);
+  text-shadow: 0 0 8px currentColor;
+}
+
+.animated-price.direction-up.animating {
+  animation: priceUp 0.8s ease-out;
+}
+
+.animated-price.direction-down.animating {
+  animation: priceDown 0.8s ease-out;
+}
+
+/* Pulse Overlay Effect */
+.pulse-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pulse-overlay.up {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, transparent 70%);
+  animation: pulseGreen 0.8s ease-out;
+}
+
+.pulse-overlay.down {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.2) 0%, transparent 70%);
+  animation: pulseRed 0.8s ease-out;
+}
+
+/* Keyframe Animations */
+@keyframes priceUp {
+  0% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(-3px) scale(1.02);
+  }
+  30% {
+    transform: translateY(-1px) scale(1.05);
+  }
+  50% {
+    transform: translateY(0) scale(1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes priceDown {
+  0% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(3px) scale(1.02);
+  }
+  30% {
+    transform: translateY(1px) scale(1.05);
+  }
+  50% {
+    transform: translateY(0) scale(1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bounceUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bounceDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGreen {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+@keyframes pulseRed {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* Number Morphing Effect */
+.animated-price.animating .price-value {
+  background: linear-gradient(45deg, currentColor 0%, currentColor 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.animated-price.direction-up.animating .price-value {
+  background: linear-gradient(45deg, #22c55e 0%, #16a34a 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.animated-price.direction-down.animating .price-value {
+  background: linear-gradient(45deg, #ef4444 0%, #dc2626 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+/* Component-specific styles */
+
+/* Ticker-specific styles */
+.stock-ticker .animated-price {
+  align-items: center;
+}
+
+.stock-ticker .animated-price .price-container {
+  gap: 4px;
+}
+
+.stock-ticker .animated-price.size-small .price-value {
+  font-size: 13px;
+}
+
+.ticker-animated-price {
+  width: 100%;
+}
+
+.ticker-animated-price .price-container {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.ticker-animated-price .change-container {
+  margin-top: 0;
+  margin-left: 8px;
+}
+
+.ticker-animated-price .price-value {
+  color: #e5e7eb !important;
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 90px;
+}
+
+.ticker-animated-price.change-positive .price-value {
+  color: #22c55e !important;
+}
+
+.ticker-animated-price.change-negative .price-value {
+  color: #ef4444 !important;
+}
+
+/* StockList-specific styles */
+.stock-list-price .price-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Watchlist-specific styles */
+.watchlist-price .price-container {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.watchlist-price .change-container {
+  margin-top: 0;
+  font-size: 14px;
+}
+
+/* Portfolio-specific styles */
+.portfolio-price .price-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Dashboard-specific styles */
+.dashboard-stat .price-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: inherit !important;
+}
+
+.dashboard .stat-value .animated-price.change-positive .price-value {
+  color: #22c55e !important;
+}
+
+.dashboard .stat-value .animated-price.change-negative .price-value {
+  color: #ef4444 !important;
+}
+
+.dashboard .stat-value .animated-price.change-neutral .price-value {
+  color: #374151 !important;
+}
+
+/* Highlight section specific styles */
+.highlight-animated-price .price-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.highlight-item .highlight-animated-price.change-positive .price-value {
+  color: #22c55e;
+}
+
+.highlight-item .highlight-animated-price.change-negative .price-value {
+  color: #ef4444;
+}
+
+.highlight-animated-price.animating .price-value {
+  transform: scale(1.1);
+  text-shadow: 0 0 4px currentColor;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .animated-price.size-large .price-value {
+    font-size: 16px;
+  }
+  
+  .animated-price.size-xlarge .price-value {
+    font-size: 20px;
+  }
+  
+  .price-arrow {
+    transform: scale(0.9);
+  }
+  
+  .dashboard-stat .price-value {
+    font-size: 20px;
+  }
+  
+  .ticker-animated-price .price-value {
+    font-size: 13px;
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-stat .price-value {
+    font-size: 18px;
+  }
+  
+  .ticker-animated-price .price-value {
+    font-size: 12px;
+    min-width: 60px;
+  }
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .animated-price.change-neutral .price-value {
+    color: #d1d5db;
+  }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .animated-price,
+  .price-value,
+  .price-arrow,
+  .pulse-overlay {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .animated-price.animating .price-value {
+    transform: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .animated-price.change-positive .price-value {
+    color: #008000;
+  }
+  
+  .animated-price.change-negative .price-value {
+    color: #ff0000;
+  }
+  
+  .pulse-overlay {
+    display: none;
+  }
+}
+
+/* Enhanced Animation Effects for Financial Apps */
+.animated-price.financial-grade {
+  position: relative;
+  overflow: hidden;
+}
+
+.animated-price.financial-grade::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.animated-price.financial-grade.animating::before {
+  left: 100%;
+}
+
+/* Professional trading platform effects */
+.animated-price.trading-platform {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.animated-price.trading-platform.animating {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.animated-price.trading-platform.direction-up.animating {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.animated-price.trading-platform.direction-down.animating {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}

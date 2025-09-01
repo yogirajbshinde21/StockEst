@@ -14,6 +14,8 @@ import Trans from '../components/Trans';
 import AchievementsList from '../components/AchievementsList';
 import AchievementNotification from '../components/AchievementNotification';
 import StockAnalysis from '../components/StockAnalysis';
+import AnimatedPrice from '../components/AnimatedPrice';
+import { usePriceTracker, usePortfolioTracker } from '../hooks/usePriceTracker';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -28,7 +30,10 @@ import {
   Newspaper,
   Heart,
   Trophy,
-  BarChart3
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -38,6 +43,7 @@ const Dashboard = () => {
   const [selectedStock, setSelectedStock] = useState(null);
   const [tradingAction, setTradingAction] = useState('BUY');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [portfolioData, setPortfolioData] = useState(null);
   const [achievementNotification, setAchievementNotification] = useState(null);
   const [showAchievementNotification, setShowAchievementNotification] = useState(false);
@@ -51,6 +57,10 @@ const Dashboard = () => {
     getTopLosers 
   } = useSocket();
   const navigate = useNavigate();
+
+  // Add price tracking hooks
+  const { getPriceInfo } = usePriceTracker(stockData?.stocks || [], 'instrumentKey', 'currentPrice');
+  const { getPreviousValue } = usePortfolioTracker(portfolioData, user);
 
   // Update portfolio data from socket
   useEffect(() => {
@@ -91,14 +101,6 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
   
 
   const topGainers = getTopGainers(3);
@@ -106,19 +108,34 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
+      {/* Sidebar Overlay for Mobile */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>}
+      
       {/* Sidebar */}
-      <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="brand">
-            <TrendingUp className="brand-icon" />
-            <Trans>Stock Simulator</Trans>
+            <div className="brand-icon-wrapper">
+              <TrendingUp className="brand-icon" />
+              <Zap className="brand-lightning" size={12} />
+            </div>
+            {!sidebarCollapsed && <Trans>Stock Simulator</Trans>}
           </div>
-          <button 
-            className="sidebar-close"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X size={20} />
-          </button>
+          <div className="sidebar-controls">
+            <button 
+              className="sidebar-toggle desktop-only"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            </button>
+            <button 
+              className="sidebar-close mobile-only"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="sidebar-nav">
@@ -128,9 +145,12 @@ const Dashboard = () => {
               setActiveTab('stocks');
               setSidebarOpen(false);
             }}
+            title="Market"
           >
-            <Activity size={20} />
-            <Trans>Market</Trans>
+            <div className="nav-icon-wrapper">
+              <Activity size={20} />
+            </div>
+            {!sidebarCollapsed && <Trans>Market</Trans>}
           </button>
           
           <button
@@ -139,9 +159,12 @@ const Dashboard = () => {
               setActiveTab('portfolio');
               setSidebarOpen(false);
             }}
+            title="Portfolio"
           >
-            <PieChart size={20} />
-            <Trans>Portfolio</Trans>
+            <div className="nav-icon-wrapper">
+              <PieChart size={20} />
+            </div>
+            {!sidebarCollapsed && <Trans>Portfolio</Trans>}
           </button>
 
           <button
@@ -150,9 +173,12 @@ const Dashboard = () => {
               setActiveTab('watchlist');
               setSidebarOpen(false);
             }}
+            title="Watchlist"
           >
-            <Heart size={20} />
-            <Trans>Watchlist</Trans>
+            <div className="nav-icon-wrapper">
+              <Heart size={20} />
+            </div>
+            {!sidebarCollapsed && <Trans>Watchlist</Trans>}
           </button>
 
           <button
@@ -161,9 +187,12 @@ const Dashboard = () => {
               setActiveTab('analysis');
               setSidebarOpen(false);
             }}
+            title="Analysis"
           >
-            <BarChart3 size={20} />
-            <Trans>Analysis</Trans>
+            <div className="nav-icon-wrapper">
+              <BarChart3 size={20} />
+            </div>
+            {!sidebarCollapsed && <Trans>Analysis</Trans>}
           </button>
 
           <button
@@ -172,9 +201,12 @@ const Dashboard = () => {
               setActiveTab('news');
               setSidebarOpen(false);
             }}
+            title="News"
           >
-            <Newspaper size={20} />
-            <Trans>News</Trans>
+            <div className="nav-icon-wrapper">
+              <Newspaper size={20} />
+            </div>
+            {!sidebarCollapsed && <Trans>News</Trans>}
           </button>
 
           <button
@@ -183,32 +215,41 @@ const Dashboard = () => {
               setActiveTab('achievements');
               setSidebarOpen(false);
             }}
+            title="Leaderboard"
           >
-            <Trophy size={20} />
-            <Trans>Leaderboard</Trans>
+            <div className="nav-icon-wrapper">
+              <Trophy size={20} />
+            </div>
+            {!sidebarCollapsed && <Trans>Leaderboard</Trans>}
           </button>
         </div>
 
         <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">
-              {user?.name?.charAt(0).toUpperCase()}
+          {!sidebarCollapsed && (
+            <div className="user-info">
+              <div className="user-avatar">
+                {user?.name?.charAt(0).toUpperCase()}
+              </div>
+              <div className="user-details">
+                <div className="user-name">{user?.name}</div>
+                <div className="user-email">{user?.email}</div>
+              </div>
             </div>
-            <div className="user-details">
-              <div className="user-name">{user?.name}</div>
-              <div className="user-email">{user?.email}</div>
-            </div>
-          </div>
+          )}
           
-          <button className="logout-btn" onClick={handleLogout}>
+          <button 
+            className={`logout-btn ${sidebarCollapsed ? 'collapsed' : ''}`} 
+            onClick={handleLogout} 
+            title="Logout"
+          >
             <LogOut size={18} />
-            <Trans>Logout</Trans>
+            {!sidebarCollapsed && <Trans>Logout</Trans>}
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="dashboard-main">
+      <div className={`dashboard-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Top Bar */}
         <div className="dashboard-topbar">
           <div className="topbar-left">
@@ -261,7 +302,18 @@ const Dashboard = () => {
               <Wallet size={24} />
             </div>
             <div className="stat-content">
-              <div className="stat-value">{formatCurrency(user?.virtualBalance || 0)}</div>
+              <div className="stat-value">
+                <AnimatedPrice
+                  value={user?.virtualBalance || 0}
+                  previousValue={getPreviousValue('balance')}
+                  currency={true}
+                  decimals={0}
+                  showArrow={false}
+                  showChange={false}
+                  size="large"
+                  className="dashboard-stat"
+                />
+              </div>
               <div className="stat-label"><Trans>Available Balance</Trans></div>
             </div>
           </div>
@@ -271,7 +323,18 @@ const Dashboard = () => {
               <Target size={24} />
             </div>
             <div className="stat-content">
-              <div className="stat-value">{formatCurrency(portfolioData?.summary?.totalInvested || user?.totalInvested || 0)}</div>
+              <div className="stat-value">
+                <AnimatedPrice
+                  value={portfolioData?.summary?.totalInvested || user?.totalInvested || 0}
+                  previousValue={getPreviousValue('invested')}
+                  currency={true}
+                  decimals={0}
+                  showArrow={false}
+                  showChange={false}
+                  size="large"
+                  className="dashboard-stat"
+                />
+              </div>
               <div className="stat-label"><Trans>Total Invested</Trans></div>
             </div>
           </div>
@@ -281,7 +344,18 @@ const Dashboard = () => {
               <PieChart size={24} />
             </div>
             <div className="stat-content">
-              <div className="stat-value">{formatCurrency(portfolioData?.summary?.currentValue || user?.totalPortfolioValue || 0)}</div>
+              <div className="stat-value">
+                <AnimatedPrice
+                  value={portfolioData?.summary?.currentValue || user?.totalPortfolioValue || 0}
+                  previousValue={getPreviousValue('portfolioValue')}
+                  currency={true}
+                  decimals={0}
+                  showArrow={false}
+                  showChange={false}
+                  size="large"
+                  className="dashboard-stat"
+                />
+              </div>
               <div className="stat-label">Portfolio Value</div>
             </div>
           </div>
@@ -293,7 +367,17 @@ const Dashboard = () => {
             </div>
             <div className="stat-content">
               <div className={`stat-value ${(portfolioData?.summary?.totalProfitLoss || user?.totalProfitLoss || 0) >= 0 ? 'profit' : 'loss'}`}>
-                {formatCurrency(portfolioData?.summary?.totalProfitLoss || user?.totalProfitLoss || 0)}
+                <AnimatedPrice
+                  value={portfolioData?.summary?.totalProfitLoss || user?.totalProfitLoss || 0}
+                  previousValue={getPreviousValue('profitLoss')}
+                  currency={true}
+                  decimals={0}
+                  showArrow={false}
+                  showChange={false}
+                  changeValue={portfolioData?.summary?.totalProfitLoss || user?.totalProfitLoss || 0}
+                  size="large"
+                  className="dashboard-stat"
+                />
               </div>
               <div className="stat-label">
                 P&L ({((portfolioData?.summary?.totalProfitLossPercent || user?.totalProfitLossPercent || 0)).toFixed(2)}%)
@@ -315,7 +399,18 @@ const Dashboard = () => {
                   <div key={stock.instrumentKey} className="highlight-item">
                     <div className="highlight-info">
                       <div className="highlight-symbol">{stock.symbol}</div>
-                      <div className="highlight-price">₹{stock.currentPrice.toFixed(2)}</div>
+                      <div className="highlight-price">
+                        <AnimatedPrice
+                          value={stock.currentPrice}
+                          previousValue={getPriceInfo(stock.instrumentKey).previousPrice}
+                          currency={true}
+                          decimals={2}
+                          showArrow={false}
+                          showChange={false}
+                          size="medium"
+                          className="highlight-animated-price"
+                        />
+                      </div>
                     </div>
                     <div className="highlight-change profit">
                       +{stock.changePercent.toFixed(2)}%
@@ -335,7 +430,18 @@ const Dashboard = () => {
                   <div key={stock.instrumentKey} className="highlight-item">
                     <div className="highlight-info">
                       <div className="highlight-symbol">{stock.symbol}</div>
-                      <div className="highlight-price">₹{stock.currentPrice.toFixed(2)}</div>
+                      <div className="highlight-price">
+                        <AnimatedPrice
+                          value={stock.currentPrice}
+                          previousValue={getPriceInfo(stock.instrumentKey).previousPrice}
+                          currency={true}
+                          decimals={2}
+                          showArrow={false}
+                          showChange={false}
+                          size="medium"
+                          className="highlight-animated-price"
+                        />
+                      </div>
                     </div>
                     <div className="highlight-change loss">
                       {stock.changePercent.toFixed(2)}%

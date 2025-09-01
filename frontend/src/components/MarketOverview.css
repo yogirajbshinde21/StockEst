@@ -1,0 +1,382 @@
+/* Market Overview Component Styles */
+.market-overview {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.overview-header h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.connection-status.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.connection-status.connected .status-dot {
+  background: #22c55e;
+}
+
+.connection-status.disconnected .status-dot {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Stock Grid */
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  min-height: 200px;
+}
+
+.stock-grid.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-message {
+  color: #6b7280;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Stock Card */
+.stock-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stock-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #d1d5db;
+}
+
+.stock-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #10b981, #f59e0b, #ef4444);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stock-card:hover::before {
+  opacity: 1;
+}
+
+/* Stock Header */
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.stock-symbol {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: 0.5px;
+}
+
+.trend-indicator {
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.trend-indicator.positive {
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+}
+
+.trend-indicator.negative {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Stock Company */
+.stock-company {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+/* Stock Price */
+.stock-price {
+  margin-bottom: 12px;
+}
+
+.market-overview-price .price-value {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #1f2937;
+}
+
+/* Stock Change */
+.stock-change {
+  margin-bottom: 16px;
+}
+
+.change-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.change-value.positive {
+  color: #15803d;
+}
+
+.change-value.negative {
+  color: #dc2626;
+}
+
+.change-amount {
+  font-weight: 700;
+}
+
+.change-percent {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Stock Meta */
+.stock-meta {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.meta-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.meta-value {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* No Data State */
+.no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .market-overview {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .overview-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .overview-header h2 {
+    font-size: 20px;
+  }
+  
+  .stock-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .stock-card {
+    padding: 16px;
+  }
+  
+  .market-overview-price .price-value {
+    font-size: 24px !important;
+  }
+  
+  .stock-symbol {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-overview {
+    padding: 12px;
+  }
+  
+  .stock-card {
+    padding: 12px;
+  }
+  
+  .market-overview-price .price-value {
+    font-size: 20px !important;
+  }
+  
+  .stock-symbol {
+    font-size: 16px;
+  }
+  
+  .change-value {
+    font-size: 14px;
+  }
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .market-overview {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border-color: #4b5563;
+  }
+  
+  .overview-header {
+    border-bottom-color: #4b5563;
+  }
+  
+  .overview-header h2 {
+    background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+  
+  .stock-card {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .stock-symbol {
+    color: #f9fafb;
+  }
+  
+  .stock-company {
+    color: #d1d5db;
+  }
+  
+  .market-overview-price .price-value {
+    color: #f9fafb !important;
+  }
+  
+  .meta-label {
+    color: #d1d5db;
+  }
+  
+  .meta-value {
+    color: #f3f4f6;
+  }
+  
+  .stock-meta {
+    border-top-color: #4b5563;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .stock-card {
+    border-width: 2px;
+  }
+  
+  .trend-indicator.positive {
+    background: #22c55e;
+    color: #ffffff;
+  }
+  
+  .trend-indicator.negative {
+    background: #ef4444;
+    color: #ffffff;
+  }
+  
+  .change-value.positive {
+    color: #15803d;
+    font-weight: 700;
+  }
+  
+  .change-value.negative {
+    color: #dc2626;
+    font-weight: 700;
+  }
+}

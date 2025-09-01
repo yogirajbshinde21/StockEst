@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { WavyBackground } from '../components/ui/WavyBackground';
 import './Landing.css';
+
 
 // Custom LazyVideo component with auto-start functionality
 const LazyVideo = ({ videoId, title, height = '300px' }) => {
@@ -437,57 +439,31 @@ const Landing = () => {
         </div>
       </div>
 
-      {/* Animated Background */}
-      <div className="animated-bg">
-        <div className="stock-chart-pattern"></div>
-        <div className="floating-bubbles">
-          <div className="bubble profit">NIFTY +1.2%</div>
-          <div className="bubble loss">SENSEX -0.8%</div>
-          <div className="bubble profit">BANK NIFTY +2.1%</div>
-        </div>
-        <div className="particles">
-          {[...Array(30)].map((_, i) => (
-            <div key={i} className="particle" />
-          ))}
-        </div>
-      </div>
+     
 
-      {/* Header */}
-      <header className="landing-header">
-        <nav className="navbar">
-          <div className="nav-brand">
-            <span className="logo">📊 Stockest</span>
-          </div>
-          <div className="nav-links">
-            
-            <Link to="/login" className="nav-btn login-btn" onClick={createRipple}>
-              {currentLanguage === 'en' ? 'Login' : 'लॉगिन'}
-            </Link>
-            <Link to="/register" className="nav-btn signup-btn" onClick={createRipple}>
-              {currentLanguage === 'en' ? 'Sign Up' : 'साइन अप'}
-            </Link>
-          </div>
-        </nav>
-      </header>
-
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="hero-text">
-            <h1 className="hero-title">
-              <span className="title-highlight typewriter">{typewriterText}</span>
-              <br />
-              {currentLanguage === 'en' 
-                ? 'AI-Powered Stock Market Simulator' 
-                : 'AI-संचालित स्टॉक मार्केट सिम्युलेटर'}
+      {/* Hero Section with Wavy Background */}
+      <section className="hero-section-wavy">
+        <WavyBackground
+          className="max-w-4xl mx-auto pb-40"
+          containerClassName="hero-wavy-container"
+colors={["#FF9933", "#FFFFFF", "#138808"]}
+waveWidth={45}
+backgroundFill="#0f0f23"
+blur={6}
+speed="slow"
+waveOpacity={0.35}
+        >
+          <div className="hero-wavy-content">
+            <h1 className="mega-title font-bold text-center mb-6 fade-in">
+              <span className="bg-gradient-text text-glow">{typewriterText}</span>
             </h1>
-            <p className="hero-subtitle">
+            <p className="text-xl md:text-2xl text-center text-white/80 fade-in subtitle">
               {currentLanguage === 'en'
-                ? 'Experience professional stock trading with AI guidance. Breaking barriers, building wealth for everyone, everywhere in rural India.'
-                : 'AI मार्गदर्शन के साथ पेशेवर स्टॉक ट्रेडिंग का अनुभव करें। बाधाओं को तोड़ना, ग्रामीण भारत में हर जगह सभी के लिए संपत्ति का निर्माण।'}
+                ? 'AI-Powered Stock Market Simulator for Every Indian'
+                : 'ग्रामीण भारत के लिए AI-संचालित स्टॉक मार्केट सिम्युलेटर'}
             </p>
-            <div className="hero-buttons">
-              <Link to="/register" className="cta-primary" onClick={createRipple}>
+            <div className="wavy-hero-buttons">
+              <Link to="/register" className="wavy-cta-primary" onClick={createRipple}>
                 🚀 {currentLanguage === 'en' ? 'Start Your Journey' : 'अपनी यात्रा शुरू करें'}
               </Link>
               <button 
@@ -495,11 +471,29 @@ const Landing = () => {
                   createRipple(e);
                   scrollToFeatures();
                 }} 
-                className="cta-secondary"
+                className="wavy-cta-secondary"
               >
                 📈 {currentLanguage === 'en' ? 'Explore Features' : 'फीचर्स देखें'}
               </button>
             </div>
+          </div>
+        </WavyBackground>
+      </section>
+
+      {/* Additional Content Section */}
+      <section className="hero-content-section">
+        <div className="hero-content-grid">
+          <div className="hero-description">
+            <h2 className="hero-content-title">
+              {currentLanguage === 'en' 
+                ? 'Breaking Financial Barriers in Rural India' 
+                : 'ग्रामीण भारत में वित्तीय बाधाओं को तोड़ना'}
+            </h2>
+            <p className="hero-content-text">
+              {currentLanguage === 'en'
+                ? 'Experience professional stock trading with AI guidance. Breaking barriers, building wealth for everyone, everywhere in rural India.'
+                : 'AI मार्गदर्शन के साथ पेशेवर स्टॉक ट्रेडिंग का अनुभव करें। बाधाओं को तोड़ना, ग्रामीण भारत में हर जगह सभी के लिए संपत्ति का निर्माण।'}
+            </p>
             <div className="stock-cards">
               {['RELIANCE', 'TCS', 'INFOSYS'].map(symbol => {
                 const priceData = stockPrices[symbol];

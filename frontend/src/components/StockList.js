@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
+import AnimatedPrice from './AnimatedPrice';
+import { usePriceTracker } from '../hooks/usePriceTracker';
 import Trans from './Trans';
 import toast from 'react-hot-toast';
 import { 
@@ -24,6 +26,7 @@ const StockList = ({ onTrade }) => {
 
   const { stockData, refreshStockData, isConnected } = useSocket();
   const { token } = useAuth();
+  const { getPriceInfo } = usePriceTracker(stockData?.stocks || [], 'instrumentKey', 'currentPrice');
 
   // Fetch user's watchlist on mount
   useEffect(() => {
@@ -335,9 +338,16 @@ const StockList = ({ onTrade }) => {
                   </div>
 
                   <div className="table-cell price-cell">
-                    <div className="current-price">
-                      {formatCurrency(stock.currentPrice)}
-                    </div>
+                    <AnimatedPrice
+                      value={stock.currentPrice}
+                      previousValue={getPriceInfo(stock.instrumentKey).previousPrice}
+                      currency={true}
+                      decimals={2}
+                      showArrow={false}
+                      showChange={false}
+                      size="medium"
+                      className="stock-list-price"
+                    />
                   </div>
 
                   <div className="table-cell change-cell">

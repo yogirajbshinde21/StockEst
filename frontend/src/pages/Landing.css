@@ -686,42 +686,13 @@
   outline: none !important;
 }
 
-/* Aggressively hide all YouTube UI elements */
+/* Ensure no YouTube controls show on any interaction */
 .video-container iframe:hover {
   pointer-events: none !important;
 }
 
 .video-container:hover iframe {
   pointer-events: none !important;
-}
-
-/* Block YouTube UI with CSS */
-.video-container {
-  position: relative !important;
-}
-
-.video-container iframe::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  pointer-events: none;
-  z-index: 999;
-}
-
-/* Hide any YouTube overlay elements */
-.video-container iframe[src*="youtube"] {
-  background: transparent !important;
-}
-
-/* Prevent any YouTube control visibility */
-.video-container iframe[src*="youtube"]::-webkit-media-controls,
-.video-container iframe[src*="youtube"]::-webkit-media-controls-panel {
-  display: none !important;
-  -webkit-appearance: none !important;
 }
 
 /* Pulse animation for video loading indicator */
@@ -1178,4 +1149,458 @@ iframe.demo-video {
     background: white;
     color: black;
   }
+}
+
+/* ========================================
+   MODERN WAVY BACKGROUND HERO SECTION STYLES
+   ======================================== */
+
+.hero-section-wavy {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  overflow: hidden;
+  width: 100%;
+}
+
+.hero-wavy-container {
+  position: relative !important;
+  height: 100vh !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.hero-wavy-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  text-align: center;
+  max-width: 1000px;
+  width: 100%;
+  padding: 2rem;
+}
+
+/* Modern gradient text styling with stock market colors */
+.bg-gradient-text {
+  background: linear-gradient(135deg, #22c25d 0%, #e14141 50%, #22c25d 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: stockMarketPulse 6s ease-in-out infinite;
+}
+
+/* Custom large title class for even bigger text */
+.mega-title {
+  font-size: clamp(4rem, 15vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+/* Stock market inspired animation - transitions between green and red */
+@keyframes stockMarketPulse {
+  0% { 
+    background-position: 0% 50%;
+    transform: scale(1);
+    filter: drop-shadow(0 0 30px rgba(34, 194, 93, 0.6));
+  }
+  25% { 
+    background-position: 50% 50%;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 40px rgba(34, 194, 93, 0.8));
+  }
+  50% { 
+    background-position: 100% 50%;
+    transform: scale(1);
+    filter: drop-shadow(0 0 40px rgba(225, 65, 65, 0.8));
+  }
+  75% { 
+    background-position: 50% 50%;
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 30px rgba(225, 65, 65, 0.6));
+  }
+  100% { 
+    background-position: 0% 50%;
+    transform: scale(1);
+    filter: drop-shadow(0 0 30px rgba(34, 194, 93, 0.6));
+  }
+}
+
+.text-glow {
+  filter: drop-shadow(0 0 20px rgba(118, 75, 162, 0.4));
+}
+
+.fade-in {
+  animation: fadeIn 2s ease forwards;
+  opacity: 0;
+}
+
+.fade-in:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* Legacy wavy title styles - kept for backwards compatibility */
+.wavy-title {
+  font-size: clamp(2.5rem, 7vw, 7rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.wavy-title-gradient {
+  color: white;
+  display: inline-block;
+  font-weight: 700;
+}
+
+/* Simple, clean animations for modern look */
+@keyframes subtleFloat {
+  0%, 100% { 
+    transform: translateY(0px);
+  }
+  50% { 
+    transform: translateY(-5px);
+  }
+}
+
+.wavy-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: white;
+  font-weight: 400;
+  margin-bottom: 2.5rem;
+  opacity: 0.9;
+  line-height: 1.5;
+  text-align: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.wavy-hero-buttons {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+}
+
+.wavy-cta-primary, .wavy-cta-secondary {
+  position: relative;
+  padding: 1.25rem 2.5rem;
+  border-radius: 1rem;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  backdrop-filter: blur(20px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.wavy-cta-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #4facfe 100%);
+  color: white;
+  border: 2px solid transparent;
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+.wavy-cta-primary:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
+  animation-duration: 1.5s;
+}
+
+.wavy-cta-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.wavy-cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 20px 40px rgba(245, 158, 11, 0.2);
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Hero Content Section - Below the Wavy Title */
+.hero-content-section {
+  padding: 6rem 2rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+  backdrop-filter: blur(20px);
+}
+
+.hero-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.hero-description {
+  z-index: 10;
+}
+
+.hero-content-title {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, var(--text-light), var(--gold-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-content-text {
+  font-size: 1.25rem;
+  color: var(--text-gray);
+  line-height: 1.6;
+  margin-bottom: 3rem;
+}
+
+/* Enhanced Stock Cards for Hero Section */
+.hero-content-section .stock-cards {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.hero-content-section .stock-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  min-width: 180px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content-section .stock-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(245, 158, 11, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.hero-content-section .stock-card:hover::before {
+  opacity: 1;
+}
+
+.hero-content-section .stock-card:hover {
+  transform: translateY(-8px) scale(1.08);
+  border-color: var(--gold-accent);
+  box-shadow: 0 25px 50px rgba(245, 158, 11, 0.3);
+}
+
+/* Responsive adjustments for wavy background */
+@media (max-width: 1024px) {
+  .hero-content-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
+  }
+  
+  .wavy-hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .wavy-cta-primary, .wavy-cta-secondary {
+    width: 100%;
+    max-width: 400px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-wavy-container {
+    padding: 0 !important;
+    min-height: 80vh !important;
+  }
+  
+  .hero-wavy-content {
+    padding: 1rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .hero-wavy-content h1 {
+    font-size: clamp(2.5rem, 10vw, 5rem) !important;
+    line-height: 1.1;
+  }
+  
+  .hero-wavy-content p {
+    font-size: clamp(1rem, 4vw, 1.25rem) !important;
+    margin-bottom: 2rem;
+  }
+  
+  .wavy-hero-buttons {
+    gap: 1rem;
+  }
+  
+  .wavy-cta-primary, .wavy-cta-secondary {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
+  
+  .hero-content-section {
+    padding: 4rem 1rem;
+  }
+  
+  .hero-content-section .stock-cards {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-wavy-content h1 {
+    font-size: clamp(2rem, 12vw, 3.5rem) !important;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+  }
+  
+  .hero-wavy-content p {
+    margin-bottom: 1.5rem;
+    font-size: clamp(0.9rem, 3.5vw, 1rem) !important;
+  }
+  
+  .wavy-cta-primary, .wavy-cta-secondary {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .hero-content-section .stock-card {
+    min-width: 150px;
+    padding: 1rem;
+  }
+}
+
+/* Accessibility and Performance */
+@media (prefers-reduced-motion: reduce) {
+  .bg-gradient-text {
+    animation: none !important;
+    background: #22c25d; /* Default to green for reduced motion */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  
+  .wavy-cta-primary {
+    animation: none !important;
+  }
+  
+  .wavy-cta-primary:hover,
+  .wavy-cta-secondary:hover {
+    transform: none !important;
+  }
+}
+
+/* Focus styles for wavy buttons */
+.wavy-cta-primary:focus,
+.wavy-cta-secondary:focus {
+  outline: 3px solid var(--gold-accent);
+  outline-offset: 3px;
+}
+
+
+/* Video Card with Canvas Effect Styles */
+.video-container-with-effect {
+  position: relative;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.video-container-with-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Enhanced feature content layout */
+.feature-content {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.feature-info {
+  flex: 1;
+  min-width: 300px;
+}
+
+.feature-video {
+  flex: 1;
+  min-width: 400px;
+}
+
+@media (max-width: 768px) {
+  .feature-content {
+    flex-direction: column;
+  }
+  
+  .feature-info,
+  .feature-video {
+    min-width: 100%;
+  }
+}
+
+
+.subtitle{
+  background: linear-gradient(135deg, var(--text-light), var(--gold-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

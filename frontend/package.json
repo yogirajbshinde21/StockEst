@@ -5,13 +5,17 @@
   "private": true,
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@react-three/fiber": "^8.18.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "axios": "^1.11.0",
+    "clsx": "^2.1.1",
     "date-fns": "^2.30.0",
+    "gsap": "^3.13.0",
     "lite-youtube-embed": "^0.3.3",
     "lucide-react": "^0.263.1",
+    "motion": "^12.23.12",
     "node-cron": "^4.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -19,7 +23,10 @@
     "react-router-dom": "^6.15.0",
     "react-scripts": "5.0.1",
     "recharts": "^2.8.0",
-    "socket.io-client": "^4.7.2"
+    "simplex-noise": "^4.0.3",
+    "socket.io-client": "^4.7.2",
+    "tailwind-merge": "^3.3.1",
+    "three": "^0.179.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -45,5 +52,10 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost:5000",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.12"
+  }
 }
