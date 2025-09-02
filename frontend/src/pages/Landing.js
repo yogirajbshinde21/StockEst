@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { WavyBackground } from '../components/ui/WavyBackground';
+import AnimatedStockestTitle from '../components/AnimatedStockestTitle';
 import './Landing.css';
 
 
@@ -94,7 +95,6 @@ const Landing = () => {
   const [progress, setProgress] = useState(0);
   const [achievement, setAchievement] = useState({ show: false, message: '' });
   const [stockPrices, setStockPrices] = useState({});
-  const [typewriterText, setTypewriterText] = useState('');
   const { currentLanguage } = useLanguage();
   const observerRef = useRef(null);
   const achievementsUnlocked = useRef(new Set());
@@ -232,24 +232,6 @@ const Landing = () => {
       setAchievement({ show: false, message: '' });
     }, 3000);
   }, [currentLanguage, achievements]);
-
-  // Typewriter Effect
-  useEffect(() => {
-    const text = currentLanguage === 'en' ? 'Stockest' : 'Stockest';
-    let i = 0;
-    const timer = setTimeout(() => {
-      const typeTimer = setInterval(() => {
-        if (i < text.length) {
-          setTypewriterText(text.substring(0, i + 1));
-          i++;
-        } else {
-          clearInterval(typeTimer);
-        }
-      }, 150);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [currentLanguage]);
 
   // Stock Price Updates
   useEffect(() => {
@@ -455,7 +437,7 @@ waveOpacity={0.35}
         >
           <div className="hero-wavy-content">
             <h1 className="mega-title font-bold text-center mb-6 fade-in">
-              <span className="bg-gradient-text text-glow">{typewriterText}</span>
+              <AnimatedStockestTitle />
             </h1>
             <p className="text-xl md:text-2xl text-center text-white/80 fade-in subtitle">
               {currentLanguage === 'en'

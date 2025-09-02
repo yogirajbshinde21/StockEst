@@ -1189,14 +1189,34 @@ iframe.demo-video {
   padding: 2rem;
 }
 
-/* Modern gradient text styling with stock market colors */
+/* Elegant glassmorphism text with subtle golden animation */
 .bg-gradient-text {
-  background: linear-gradient(135deg, #22c25d 0%, #e14141 50%, #22c25d 100%);
-  background-size: 300% 300%;
+  /* Multiple layered backgrounds for glassmorphism effect */
+  background: linear-gradient(
+    90deg,
+    rgba(212, 175, 55, 0.65) 0%,
+    rgba(255, 229, 92, 0.75) 25%,
+    rgba(212, 175, 55, 0.65) 50%,
+    rgba(255, 229, 92, 0.75) 75%,
+    rgba(212, 175, 55, 0.65) 100%
+  );
+  background-size: 400% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: stockMarketPulse 6s ease-in-out infinite;
+  animation: goldenFlow 3.5s ease-in-out infinite;
+  
+  /* Glass effect properties applied to text */
+  position: relative;
+  
+  /* Fallback for browsers that don't support background-clip: text */
+  color: rgba(212, 175, 55, 0.9);
+  
+  /* Enhanced text stroke for glass definition */
+  -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.15);
+  
+  /* Additional glass-like properties */
+  filter: brightness(1.1) contrast(1.05);
 }
 
 /* Custom large title class for even bigger text */
@@ -1206,37 +1226,71 @@ iframe.demo-video {
   letter-spacing: -0.05em;
 }
 
-/* Stock market inspired animation - transitions between green and red */
-@keyframes stockMarketPulse {
+/* Smooth golden flow animation */
+@keyframes goldenFlow {
   0% { 
     background-position: 0% 50%;
-    transform: scale(1);
-    filter: drop-shadow(0 0 30px rgba(34, 194, 93, 0.6));
-  }
-  25% { 
-    background-position: 50% 50%;
-    transform: scale(1.02);
-    filter: drop-shadow(0 0 40px rgba(34, 194, 93, 0.8));
   }
   50% { 
     background-position: 100% 50%;
-    transform: scale(1);
-    filter: drop-shadow(0 0 40px rgba(225, 65, 65, 0.8));
-  }
-  75% { 
-    background-position: 50% 50%;
-    transform: scale(1.02);
-    filter: drop-shadow(0 0 30px rgba(225, 65, 65, 0.6));
   }
   100% { 
     background-position: 0% 50%;
-    transform: scale(1);
-    filter: drop-shadow(0 0 30px rgba(34, 194, 93, 0.6));
   }
 }
 
+/* Enhanced text glow for glassmorphism effect */
 .text-glow {
-  filter: drop-shadow(0 0 20px rgba(118, 75, 162, 0.4));
+  filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3)) 
+          drop-shadow(0 0 40px rgba(255, 229, 92, 0.2))
+          drop-shadow(0 0 60px rgba(212, 175, 55, 0.1));
+  text-shadow: 
+    0 0 10px rgba(212, 175, 55, 0.5),
+    0 0 20px rgba(255, 229, 92, 0.3),
+    0 0 30px rgba(212, 175, 55, 0.2);
+}
+
+/* Mobile responsiveness and accessibility */
+@media (max-width: 768px) {
+  .bg-gradient-text {
+    -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.1);
+    filter: brightness(1.15) contrast(1.1);
+  }
+  
+  .text-glow {
+    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4)) 
+            drop-shadow(0 0 30px rgba(255, 229, 92, 0.3));
+    text-shadow: 
+      0 0 8px rgba(212, 175, 55, 0.6),
+      0 0 16px rgba(255, 229, 92, 0.4);
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .bg-gradient-text {
+    animation: none;
+    background: linear-gradient(
+      90deg,
+      rgba(212, 175, 55, 0.7) 0%,
+      rgba(255, 229, 92, 0.8) 50%,
+      rgba(212, 175, 55, 0.7) 100%
+    );
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .bg-gradient-text {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+    filter: brightness(1.3) contrast(1.2);
+  }
+  
+  .text-glow {
+    text-shadow: 
+      0 0 5px rgba(212, 175, 55, 0.8),
+      0 0 10px rgba(255, 229, 92, 0.6);
+  }
 }
 
 .fade-in {

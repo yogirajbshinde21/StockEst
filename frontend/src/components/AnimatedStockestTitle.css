@@ -1,0 +1,271 @@
+/* Animated Stockest Title - Market-themed with Golden Glass Effect */
+.animated-stockest-container {
+  display: inline-block;
+  position: relative;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+}
+
+.stockest-title-wrapper {
+  display: flex;
+  align-items: baseline;
+  position: relative;
+  font-size: clamp(4rem, 15vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+/* Stock Letters - Market Animation with Ultra Smooth Transitions */
+.stock-letters {
+  display: inline-flex;
+  position: relative;
+}
+
+.stock-letters .letter {
+  display: inline-block;
+  /* Ultra smooth transitions for seamless color changes */
+  transition: 
+    color 2.5s cubic-bezier(0.4, 0.0, 0.2, 1),
+    text-shadow 2.5s cubic-bezier(0.4, 0.0, 0.2, 1),
+    filter 2.5s cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 1.0s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  margin-right: 0.02em;
+  /* Default neutral state with warm tone matching golden "est" */
+  color: rgba(255, 215, 120, 0.85);
+  text-shadow: 
+    0 0 8px rgba(255, 215, 120, 0.4),
+    0 0 16px rgba(255, 215, 120, 0.2),
+    0 0 24px rgba(255, 215, 120, 0.1);
+  filter: brightness(1.05) contrast(1.02);
+  /* Prevent flickering during transitions */
+  will-change: color, text-shadow, filter;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Extra smooth transitioning state */
+.stock-letters.transitioning .letter {
+  transition: 
+    color 3.0s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    text-shadow 3.0s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    filter 3.0s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Green Phase Animation for Stock - Ultra Smooth */
+.stock-letters.green-phase .letter {
+  color: #22c55e;
+  text-shadow: 
+    0 0 12px rgba(34, 197, 94, 0.7),
+    0 0 24px rgba(34, 197, 94, 0.5),
+    0 0 36px rgba(34, 197, 94, 0.3),
+    0 0 48px rgba(34, 197, 94, 0.15);
+  filter: brightness(1.25) contrast(1.15) drop-shadow(0 0 20px rgba(34, 197, 94, 0.6));
+  /* Remove abrupt animations, rely on smooth transitions */
+}
+
+/* Red Phase Animation for Stock - Ultra Smooth */
+.stock-letters.red-phase .letter {
+  color: #ef4444;
+  text-shadow: 
+    0 0 12px rgba(239, 68, 68, 0.7),
+    0 0 24px rgba(239, 68, 68, 0.5),
+    0 0 36px rgba(239, 68, 68, 0.3),
+    0 0 48px rgba(239, 68, 68, 0.15);
+  filter: brightness(1.25) contrast(1.15) drop-shadow(0 0 20px rgba(239, 68, 68, 0.6));
+  /* Remove abrupt animations, rely on smooth transitions */
+}
+
+/* Subtle stagger effect for letters */
+.stock-letters .letter:nth-child(1) { transition-delay: 0.05s; }
+.stock-letters .letter:nth-child(2) { transition-delay: 0.10s; }
+.stock-letters .letter:nth-child(3) { transition-delay: 0.15s; }
+.stock-letters .letter:nth-child(4) { transition-delay: 0.20s; }
+.stock-letters .letter:nth-child(5) { transition-delay: 0.25s; }
+
+/* Est Letters - Golden Glass Effect */
+.est-letters {
+  display: inline-flex;
+  position: relative;
+}
+
+.est-letters .letter {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    rgba(212, 175, 55, 0.65) 0%,
+    rgba(255, 229, 92, 0.75) 25%,
+    rgba(212, 175, 55, 0.65) 50%,
+    rgba(255, 229, 92, 0.75) 75%,
+    rgba(212, 175, 55, 0.65) 100%
+  );
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: goldenFlow 3.5s ease-in-out infinite;
+  
+  /* Glassmorphism effects */
+  -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.15);
+  filter: brightness(1.1) contrast(1.05);
+  
+  text-shadow: 
+    0 0 10px rgba(212, 175, 55, 0.5),
+    0 0 20px rgba(255, 229, 92, 0.3),
+    0 0 30px rgba(212, 175, 55, 0.2);
+  
+  margin-right: 0.02em;
+  transition: all 0.3s ease;
+}
+
+/* Market Direction Arrow */
+.market-arrow {
+  position: absolute;
+  top: -0.3em;
+  right: -0.8em;
+  font-size: 0.4em;
+  font-weight: 900;
+  /* Ultra smooth transitions for arrow - matching letter transitions */
+  transition: 
+    color 2.5s cubic-bezier(0.4, 0.0, 0.2, 1),
+    text-shadow 2.5s cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 1.0s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+  /* Default neutral state matching the letter neutral state */
+  color: rgba(255, 215, 120, 0.7);
+  text-shadow: 0 0 8px rgba(255, 215, 120, 0.3);
+  /* Prevent flickering during transitions */
+  will-change: color, text-shadow, transform;
+  backface-visibility: hidden;
+}
+
+/* Extra smooth transitioning state for arrow */
+.market-arrow.transitioning {
+  transition: 
+    color 3.0s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    text-shadow 3.0s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.market-arrow.arrow-up {
+  color: #22c55e;
+  text-shadow: 
+    0 0 10px rgba(34, 197, 94, 0.8),
+    0 0 20px rgba(34, 197, 94, 0.5),
+    0 0 30px rgba(34, 197, 94, 0.3);
+  /* Remove abrupt animation, rely on smooth transitions */
+}
+
+.market-arrow.arrow-down {
+  color: #ef4444;
+  text-shadow: 
+    0 0 10px rgba(239, 68, 68, 0.8),
+    0 0 20px rgba(239, 68, 68, 0.5),
+    0 0 30px rgba(239, 68, 68, 0.3);
+  /* Remove abrupt animation, rely on smooth transitions */
+}
+
+/* Keyframe Animations */
+
+/* Golden flow animation for 'est' */
+@keyframes goldenFlow {
+  0% { 
+    background-position: 0% 50%;
+  }
+  50% { 
+    background-position: 100% 50%;
+  }
+  100% { 
+    background-position: 0% 50%;
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .stockest-title-wrapper {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+  }
+  
+  .market-arrow {
+    font-size: 0.35em;
+    right: -0.6em;
+    top: -0.2em;
+  }
+  
+  .stock-letters.green-phase .letter,
+  .stock-letters.red-phase .letter {
+    text-shadow: 
+      0 0 8px currentColor,
+      0 0 16px rgba(255, 255, 255, 0.1);
+  }
+  
+  .est-letters .letter {
+    -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.1);
+    filter: brightness(1.15) contrast(1.1);
+  }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .stock-letters .letter,
+  .market-arrow,
+  .est-letters .letter {
+    animation: none !important;
+    transition: color 0.5s ease, text-shadow 0.5s ease;
+  }
+  
+  .est-letters .letter {
+    background: linear-gradient(
+      90deg,
+      rgba(212, 175, 55, 0.7) 0%,
+      rgba(255, 229, 92, 0.8) 50%,
+      rgba(212, 175, 55, 0.7) 100%
+    );
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .stock-letters.green-phase .letter {
+    color: #16a34a;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  }
+  
+  .stock-letters.red-phase .letter {
+    color: #dc2626;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  }
+  
+  .est-letters .letter {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+    filter: brightness(1.3) contrast(1.2);
+  }
+  
+  .market-arrow {
+    -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Hover Effects for Interactive Feel */
+.animated-stockest-container:hover .stock-letters .letter {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+.animated-stockest-container:hover .est-letters .letter {
+  filter: brightness(1.2) contrast(1.1);
+  transition: filter 0.2s ease;
+}
+
+.animated-stockest-container:hover .market-arrow {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Focus states for accessibility */
+.animated-stockest-container:focus-within {
+  outline: 2px solid rgba(212, 175, 55, 0.5);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
