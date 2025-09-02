@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { usePlaceholderTranslation } from '../hooks/usePlaceholderTranslation';
 import axios from 'axios';
 import Trans from './Trans';
 import { 
@@ -27,6 +28,10 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
   const [saleCalculation, setSaleCalculation] = useState(null);
 
   const { user, updateUserData } = useAuth();
+
+  // Translate placeholders
+  const quantityPlaceholder = usePlaceholderTranslation('Enter quantity');
+  const pricePlaceholder = usePlaceholderTranslation('Enter price');
 
   useEffect(() => {
     if (stock) {
@@ -338,7 +343,7 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
         <form onSubmit={handleSubmit} className="order-form">
           {/* Order Type */}
           <div className="form-group">
-            <label>Order Type</label>
+            <label><Trans>Order Type</Trans></label>
             <div className="order-type-tabs">
               <button
                 type="button"
@@ -348,28 +353,28 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
                   setPrice(stock.currentPrice.toFixed(2));
                 }}
               >
-                Market
+                <Trans>Market</Trans>
               </button>
               <button
                 type="button"
                 className={`tab ${orderType === 'LIMIT' ? 'active' : ''}`}
                 onClick={() => setOrderType('LIMIT')}
               >
-                Limit
+                <Trans>Limit</Trans>
               </button>
             </div>
           </div>
 
           {/* Quantity Input */}
           <div className="form-group">
-            <label htmlFor="quantity">Quantity</label>
+            <label htmlFor="quantity"><Trans>Quantity</Trans></label>
             <div className="input-with-button">
               <input
                 type="number"
                 id="quantity"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="Enter quantity"
+                placeholder={quantityPlaceholder}
                 min="1"
                 max={action === 'SELL' && userHolding ? userHolding.quantity : undefined}
                 required
@@ -381,7 +386,7 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
                 onClick={handleMaxQuantity}
                 disabled={loading}
               >
-                Max
+                <Trans>Max</Trans>
               </button>
             </div>
             {action === 'SELL' && userHolding && (
@@ -393,13 +398,13 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
 
           {/* Price Input */}
           <div className="form-group">
-            <label htmlFor="price">Price per share</label>
+            <label htmlFor="price"><Trans>Price per share</Trans></label>
             <input
               type="number"
               id="price"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              placeholder="Enter price"
+              placeholder={pricePlaceholder}
               step="0.01"
               min="0.01"
               required
@@ -407,7 +412,7 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
             />
             {orderType === 'MARKET' && (
               <div className="input-note">
-                Market orders execute at current market price
+                <Trans>Market orders execute at current market price</Trans>
               </div>
             )}
           </div>
@@ -417,7 +422,7 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
             <div className="order-preview">
               <h4>
                 <Calculator size={16} />
-                Order Preview
+                <Trans>Order Preview</Trans>
               </h4>
               <div className="preview-details">
                 <div className="preview-row">
@@ -468,7 +473,7 @@ const TradingModal = ({ stock, action, onClose, onSuccess }) => {
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              <Trans>Cancel</Trans>
             </button>
             <button
               type="submit"

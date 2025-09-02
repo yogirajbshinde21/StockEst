@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Trans from './Trans';
 import axios from 'axios';
 import { 
   TrendingUp, 
@@ -61,18 +62,18 @@ const PortfolioIntelligence = () => {
   };
 
   const timeframes = [
-    { value: '7', label: '7D' },
-    { value: '30', label: '1M' },
-    { value: '90', label: '3M' },
-    { value: '180', label: '6M' },
-    { value: '365', label: '1Y' }
+    { value: '7', label: <Trans>7D</Trans> },
+    { value: '30', label: <Trans>1M</Trans> },
+    { value: '90', label: <Trans>3M</Trans> },
+    { value: '180', label: <Trans>6M</Trans> },
+    { value: '365', label: <Trans>1Y</Trans> }
   ];
 
   const views = [
-    { value: 'overview', label: 'Overview', icon: Activity },
-    { value: 'performance', label: 'Performance', icon: LineChart },
-    { value: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { value: 'milestones', label: 'Milestones', icon: Award }
+    { value: 'overview', label: <Trans>Overview</Trans>, icon: Activity },
+    { value: 'performance', label: <Trans>Performance</Trans>, icon: LineChart },
+    { value: 'analytics', label: <Trans>Analytics</Trans>, icon: BarChart3 },
+    { value: 'milestones', label: <Trans>Milestones</Trans>, icon: Award }
   ];
 
   if (loading) {
@@ -81,7 +82,7 @@ const PortfolioIntelligence = () => {
         <div className="loading-spinner">
           <RefreshCw className="spin" size={48} />
         </div>
-        <p>Loading Portfolio Intelligence...</p>
+        <p><Trans>Loading Portfolio Intelligence...</Trans></p>
       </div>
     );
   }
@@ -90,11 +91,11 @@ const PortfolioIntelligence = () => {
     return (
       <div className="portfolio-intelligence-error">
         <AlertCircle size={48} />
-        <h3>Failed to load portfolio data</h3>
+        <h3><Trans>Failed to load portfolio data</Trans></h3>
         <p>{error}</p>
         <button onClick={fetchDashboardData} className="retry-btn">
           <RefreshCw size={16} />
-          Try Again
+          <Trans>Try Again</Trans>
         </button>
       </div>
     );
@@ -109,10 +110,10 @@ const PortfolioIntelligence = () => {
         <div className="header-content">
           <h1 className="intelligence-title">
             <Zap className="title-icon" />
-            Portfolio Intelligence Dashboard
+            <Trans>Portfolio Intelligence Dashboard</Trans>
           </h1>
           <p className="intelligence-subtitle">
-            Advanced analytics and insights for your investment journey
+            <Trans>Advanced analytics and insights for your investment journey</Trans>
           </p>
         </div>
         
@@ -131,7 +132,7 @@ const PortfolioIntelligence = () => {
           
           <button onClick={fetchDashboardData} className="refresh-btn" disabled={loading}>
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
-            Refresh
+            <Trans>Refresh</Trans>
           </button>
         </div>
       </div>

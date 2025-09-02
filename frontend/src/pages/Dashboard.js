@@ -356,7 +356,7 @@ const Dashboard = () => {
                   className="dashboard-stat"
                 />
               </div>
-              <div className="stat-label">Portfolio Value</div>
+              <div className="stat-label"><Trans>Portfolio Value</Trans></div>
             </div>
           </div>
 
@@ -380,7 +380,7 @@ const Dashboard = () => {
                 />
               </div>
               <div className="stat-label">
-                P&L ({((portfolioData?.summary?.totalProfitLossPercent || user?.totalProfitLossPercent || 0)).toFixed(2)}%)
+                <Trans>P&L</Trans> ({((portfolioData?.summary?.totalProfitLossPercent || user?.totalProfitLossPercent || 0)).toFixed(2)}%)
               </div>
             </div>
           </div>
@@ -392,7 +392,7 @@ const Dashboard = () => {
             <div className="highlight-section">
               <h3 className="section-title">
                 <TrendingUp className="section-icon profit" />
-                <span className="section-text">Top Gainers</span>
+                <span className="section-text"><Trans>Top Gainers</Trans></span>
               </h3>
               <div className="highlight-list">
                 {topGainers.map((stock, index) => (
@@ -423,7 +423,7 @@ const Dashboard = () => {
             <div className="highlight-section">
               <h3 className="section-title">
                 <TrendingDown className="section-icon loss " />
-                <span className="section-text">Top Losers</span>
+                <span className="section-text"><Trans>Top Losers</Trans></span>
               </h3>
               <div className="highlight-list">
                 {topLosers.map((stock, index) => (

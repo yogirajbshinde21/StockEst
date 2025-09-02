@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AnimatedPrice from './AnimatedPrice';
 import PortfolioIntelligence from './PortfolioIntelligence';
+import Trans from './Trans';
 import { usePriceTracker } from '../hooks/usePriceTracker';
 import axios from 'axios';
 import { 
@@ -102,7 +103,7 @@ const Portfolio = ({ portfolioData, onTrade }) => {
         <div className="loading-spinner">
           <RefreshCw className="spin" size={32} />
         </div>
-        <p>Loading your portfolio...</p>
+        <p><Trans>Loading your portfolio...</Trans></p>
       </div>
     );
   }
@@ -111,11 +112,11 @@ const Portfolio = ({ portfolioData, onTrade }) => {
     return (
       <div className="portfolio-error">
         <AlertCircle size={48} />
-        <h3>Failed to load portfolio</h3>
+        <h3><Trans>Failed to load portfolio</Trans></h3>
         <p>{error}</p>
         <button onClick={fetchPortfolioData} className="retry-btn">
           <RefreshCw size={16} />
-          Try Again
+          <Trans>Try Again</Trans>
         </button>
       </div>
     );
@@ -130,14 +131,14 @@ const Portfolio = ({ portfolioData, onTrade }) => {
           onClick={() => setActiveView('overview')}
         >
           <PieChart size={18} />
-          Portfolio Overview
+          <Trans>Portfolio Overview</Trans>
         </button>
         <button 
           className={`nav-tab ${activeView === 'intelligence' ? 'active' : ''}`}
           onClick={() => setActiveView('intelligence')}
         >
           <BarChart3 size={18} />
-          Intelligence Dashboard
+          <Trans>Intelligence Dashboard</Trans>
         </button>
       </div>
 
@@ -155,7 +156,7 @@ const Portfolio = ({ portfolioData, onTrade }) => {
             </div>
             <div className="card-content">
               <div className="card-value">{formatCurrency(currentData.summary.cashBalance)}</div>
-              <div className="card-label">Cash Balance</div>
+              <div className="card-label"><Trans>Cash Balance</Trans></div>
             </div>
           </div>
 
@@ -165,7 +166,7 @@ const Portfolio = ({ portfolioData, onTrade }) => {
             </div>
             <div className="card-content">
               <div className="card-value">{formatCurrency(currentData.summary.totalInvested)}</div>
-              <div className="card-label">Total Invested</div>
+              <div className="card-label"><Trans>Total Invested</Trans></div>
             </div>
           </div>
 
@@ -175,7 +176,7 @@ const Portfolio = ({ portfolioData, onTrade }) => {
             </div>
             <div className="card-content">
               <div className="card-value">{formatCurrency(currentData.summary.currentValue)}</div>
-              <div className="card-label">Current Value</div>
+              <div className="card-label"><Trans>Current Value</Trans></div>
             </div>
           </div>
 
@@ -189,14 +190,14 @@ const Portfolio = ({ portfolioData, onTrade }) => {
                 {formatCurrency(currentData.summary.totalProfitLoss)}
               </div>
               <div className="card-label">
-                Total P&L ({formatPercent(currentData.summary.totalProfitLossPercent)})
+                <Trans>Total P&L</Trans> ({formatPercent(currentData.summary.totalProfitLossPercent)})
               </div>
             </div>
           </div>
         </div>
 
         <div className="portfolio-allocation">
-          <h3>Portfolio Allocation</h3>
+          <h3><Trans>Portfolio Allocation</Trans></h3>
           <div className="allocation-chart">
             <div className="cash-allocation">
               <div className="allocation-bar">
@@ -216,11 +217,11 @@ const Portfolio = ({ portfolioData, onTrade }) => {
               <div className="allocation-labels">
                 <div className="label-item">
                   <div className="label-color cash"></div>
-                  <span>Cash ({((currentData.summary.cashBalance / currentData.summary.totalBalance) * 100).toFixed(1)}%)</span>
+                  <span><Trans>Cash</Trans> ({((currentData.summary.cashBalance / currentData.summary.totalBalance) * 100).toFixed(1)}%)</span>
                 </div>
                 <div className="label-item">
                   <div className="label-color invested"></div>
-                  <span>Invested ({((currentData.summary.currentValue / currentData.summary.totalBalance) * 100).toFixed(1)}%)</span>
+                  <span><Trans>Invested</Trans> ({((currentData.summary.currentValue / currentData.summary.totalBalance) * 100).toFixed(1)}%)</span>
                 </div>
               </div>
             </div>
@@ -231,7 +232,7 @@ const Portfolio = ({ portfolioData, onTrade }) => {
       {/* Holdings Table */}
       <div className="portfolio-holdings">
         <div className="holdings-header">
-          <h3>Your Holdings</h3>
+          <h3><Trans>Your Holdings</Trans></h3>
           <div className="header-actions">
             <button 
               onClick={fetchPortfolioData} 
@@ -239,7 +240,7 @@ const Portfolio = ({ portfolioData, onTrade }) => {
               disabled={loading}
             >
               <RefreshCw size={16} className={loading ? 'spin' : ''} />
-              Refresh
+              <Trans>Refresh</Trans>
             </button>
           </div>
         </div>
@@ -249,26 +250,26 @@ const Portfolio = ({ portfolioData, onTrade }) => {
             <div className="no-holdings-icon">
               <PieChart size={64} />
             </div>
-            <h3>No holdings yet</h3>
-            <p>Start trading to build your portfolio</p>
+            <h3><Trans>No holdings yet</Trans></h3>
+            <p><Trans>Start trading to build your portfolio</Trans></p>
             <button 
               onClick={() => setShowTransactions(true)}
               className="view-market-btn"
             >
-              View Market
+              <Trans>View Market</Trans>
             </button>
           </div>
         ) : (
           <div className="holdings-table">
             <div className="table-header">
-              <div className="header-cell">Stock</div>
-              <div className="header-cell">Quantity</div>
-              <div className="header-cell">Avg Price</div>
-              <div className="header-cell">Current Price</div>
-              <div className="header-cell">Investment</div>
-              <div className="header-cell">Current Value</div>
-              <div className="header-cell">P&L</div>
-              <div className="header-cell">Actions</div>
+              <div className="header-cell"><Trans>Stock</Trans></div>
+              <div className="header-cell"><Trans>Quantity</Trans></div>
+              <div className="header-cell"><Trans>Avg Price</Trans></div>
+              <div className="header-cell"><Trans>Current Price</Trans></div>
+              <div className="header-cell"><Trans>Investment</Trans></div>
+              <div className="header-cell"><Trans>Current Value</Trans></div>
+              <div className="header-cell"><Trans>P&L</Trans></div>
+              <div className="header-cell"><Trans>Actions</Trans></div>
             </div>
 
             <div className="table-body">
@@ -345,12 +346,12 @@ const Portfolio = ({ portfolioData, onTrade }) => {
       {/* Recent Transactions */}
       <div className="recent-transactions">
         <div className="transactions-header">
-          <h3>Recent Transactions</h3>
+          <h3><Trans>Recent Transactions</Trans></h3>
           <button 
             onClick={() => setShowTransactions(!showTransactions)}
             className="toggle-transactions-btn"
           >
-            {showTransactions ? 'Hide' : 'Show'} Transactions
+            <Trans>{showTransactions ? 'Hide' : 'Show'}</Trans> <Trans>Transactions</Trans>
           </button>
         </div>
 
@@ -358,18 +359,18 @@ const Portfolio = ({ portfolioData, onTrade }) => {
           <div className="transactions-list">
             {transactions.length === 0 ? (
               <div className="no-transactions">
-                <p>No transactions yet</p>
+                <p><Trans>No transactions yet</Trans></p>
               </div>
             ) : (
               <div className="transactions-table">
                 <div className="table-header">
-                  <div className="header-cell">Date</div>
-                  <div className="header-cell">Type</div>
-                  <div className="header-cell">Stock</div>
-                  <div className="header-cell">Quantity</div>
-                  <div className="header-cell">Price</div>
-                  <div className="header-cell">Amount</div>
-                  <div className="header-cell">P&L</div>
+                  <div className="header-cell"><Trans>Date</Trans></div>
+                  <div className="header-cell"><Trans>Type</Trans></div>
+                  <div className="header-cell"><Trans>Stock</Trans></div>
+                  <div className="header-cell"><Trans>Quantity</Trans></div>
+                  <div className="header-cell"><Trans>Price</Trans></div>
+                  <div className="header-cell"><Trans>Amount</Trans></div>
+                  <div className="header-cell"><Trans>P&L</Trans></div>
                 </div>
                 
                 <div className="table-body">

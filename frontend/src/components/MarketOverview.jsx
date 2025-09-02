@@ -3,6 +3,7 @@ import { useSocket } from '../context/SocketContext';
 import AnimatedPrice from './AnimatedPrice';
 import { usePriceTracker } from '../hooks/usePriceTracker';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import Trans from './Trans';
 import './MarketOverview.css';
 
 const MarketOverview = () => {
@@ -57,10 +58,10 @@ const MarketOverview = () => {
   return (
     <div className="market-overview">
       <div className="overview-header">
-        <h2>Market Overview</h2>
+        <h2><Trans>Market Overview</Trans></h2>
         <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
           <div className="status-dot"></div>
-          {isConnected ? 'Live' : 'Disconnected'}
+          <Trans>{isConnected ? 'Live' : 'Disconnected'}</Trans>
         </div>
       </div>
       
@@ -108,11 +109,11 @@ const MarketOverview = () => {
             
             <div className="stock-meta">
               <div className="meta-item">
-                <span className="meta-label">High:</span>
+                <span className="meta-label"><Trans>High:</Trans></span>
                 <span className="meta-value">₹{stock.dayHigh?.toFixed(2) || 'N/A'}</span>
               </div>
               <div className="meta-item">
-                <span className="meta-label">Low:</span>
+                <span className="meta-label"><Trans>Low:</Trans></span>
                 <span className="meta-value">₹{stock.dayLow?.toFixed(2) || 'N/A'}</span>
               </div>
             </div>
@@ -122,7 +123,7 @@ const MarketOverview = () => {
       
       {mainStocks.length === 0 && (
         <div className="no-data">
-          <p>No market data available</p>
+          <p><Trans>No market data available</Trans></p>
         </div>
       )}
     </div>

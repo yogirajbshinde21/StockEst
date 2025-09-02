@@ -3,6 +3,7 @@ import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import AnimatedPrice from './AnimatedPrice';
 import { usePriceTracker } from '../hooks/usePriceTracker';
+import { usePlaceholderTranslation } from '../hooks/usePlaceholderTranslation';
 import Trans from './Trans';
 import toast from 'react-hot-toast';
 import { 
@@ -27,6 +28,9 @@ const StockList = ({ onTrade }) => {
   const { stockData, refreshStockData, isConnected } = useSocket();
   const { token } = useAuth();
   const { getPriceInfo } = usePriceTracker(stockData?.stocks || [], 'instrumentKey', 'currentPrice');
+  
+  // Translate placeholder text
+  const searchPlaceholder = usePlaceholderTranslation('Search stocks by name or symbol...');
 
   // Fetch user's watchlist on mount
   useEffect(() => {
@@ -180,7 +184,7 @@ const StockList = ({ onTrade }) => {
           <Search className="search-icon" size={20} />
           <input
             type="text"
-            placeholder="Search stocks by name or symbol..."
+            placeholder={searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -199,7 +203,7 @@ const StockList = ({ onTrade }) => {
           </button>
 
           <div className="sort-controls">
-            <label htmlFor="sort-select">Sort by:</label>
+            <label htmlFor="sort-select"><Trans>Sort by:</Trans></label>
             <select
               id="sort-select"
               value={`${sortBy}-${sortOrder}`}
@@ -210,14 +214,14 @@ const StockList = ({ onTrade }) => {
               }}
               className="sort-select"
             >
-              <option value="symbol-asc">Symbol A-Z</option>
-              <option value="symbol-desc">Symbol Z-A</option>
-              <option value="companyName-asc">Company A-Z</option>
-              <option value="companyName-desc">Company Z-A</option>
-              <option value="currentPrice-desc">Price High-Low</option>
-              <option value="currentPrice-asc">Price Low-High</option>
-              <option value="changePercent-desc">Gainers First</option>
-              <option value="changePercent-asc">Losers First</option>
+              <option value="symbol-asc"><Trans>Symbol A-Z</Trans></option>
+              <option value="symbol-desc"><Trans>Symbol Z-A</Trans></option>
+              <option value="companyName-asc"><Trans>Company A-Z</Trans></option>
+              <option value="companyName-desc"><Trans>Company Z-A</Trans></option>
+              <option value="currentPrice-desc"><Trans>Price High-Low</Trans></option>
+              <option value="currentPrice-asc"><Trans>Price Low-High</Trans></option>
+              <option value="changePercent-desc"><Trans>Gainers First</Trans></option>
+              <option value="changePercent-asc"><Trans>Losers First</Trans></option>
             </select>
           </div>
         </div>
@@ -231,8 +235,8 @@ const StockList = ({ onTrade }) => {
               <TrendingDown size={20} />
             </div>
             <div className="banner-text">
-              <strong>Market is currently {stockData.marketStatus.toLowerCase()}</strong>
-              <span>Prices shown are from the last trading session</span>
+              <strong><Trans>Market is currently</Trans> {stockData.marketStatus.toLowerCase()}</strong>
+              <span><Trans>Prices shown are from the last trading session</Trans></span>
             </div>
           </div>
         </div>
@@ -245,16 +249,16 @@ const StockList = ({ onTrade }) => {
             <div className="loading-icon">
               <RefreshCw size={48} className="spin" />
             </div>
-            <h3>Loading market data...</h3>
-            <p>Please wait while we fetch the latest stock prices</p>
+            <h3><Trans>Loading market data...</Trans></h3>
+            <p><Trans>Please wait while we fetch the latest stock prices</Trans></p>
           </div>
         ) : filteredAndSortedStocks.length === 0 ? (
           <div className="no-stocks">
             <div className="no-stocks-icon">
               <Search size={48} />
             </div>
-            <h3>No stocks found</h3>
-            <p>Try adjusting your search terms or check your connection</p>
+            <h3><Trans>No stocks found</Trans></h3>
+            <p><Trans>Try adjusting your search terms or check your connection</Trans></p>
           </div>
         ) : (
           <div className="stock-table">
@@ -264,7 +268,7 @@ const StockList = ({ onTrade }) => {
                 className="header-cell symbol-cell"
                 onClick={() => handleSort('symbol')}
               >
-                <span>Symbol</span>
+                <span><Trans>Symbol</Trans></span>
                 {sortBy === 'symbol' && (
                   <span className={`sort-arrow ${sortOrder}`}>
                     {sortOrder === 'asc' ? '↑' : '↓'}
@@ -275,7 +279,7 @@ const StockList = ({ onTrade }) => {
                 className="header-cell company-cell"
                 onClick={() => handleSort('companyName')}
               >
-                <span>Company</span>
+                <span><Trans>Company</Trans></span>
                 {sortBy === 'companyName' && (
                   <span className={`sort-arrow ${sortOrder}`}>
                     {sortOrder === 'asc' ? '↑' : '↓'}
@@ -286,7 +290,7 @@ const StockList = ({ onTrade }) => {
                 className="header-cell price-cell"
                 onClick={() => handleSort('currentPrice')}
               >
-                <span>Price</span>
+                <span><Trans>Price</Trans></span>
                 {sortBy === 'currentPrice' && (
                   <span className={`sort-arrow ${sortOrder}`}>
                     {sortOrder === 'asc' ? '↑' : '↓'}
@@ -297,7 +301,7 @@ const StockList = ({ onTrade }) => {
                 className="header-cell change-cell"
                 onClick={() => handleSort('change')}
               >
-                <span>Change</span>
+                <span><Trans>Change</Trans></span>
                 {sortBy === 'change' && (
                   <span className={`sort-arrow ${sortOrder}`}>
                     {sortOrder === 'asc' ? '↑' : '↓'}
@@ -308,7 +312,7 @@ const StockList = ({ onTrade }) => {
                 className="header-cell percent-cell"
                 onClick={() => handleSort('changePercent')}
               >
-                <span>Change %</span>
+                <span><Trans>Change %</Trans></span>
                 {sortBy === 'changePercent' && (
                   <span className={`sort-arrow ${sortOrder}`}>
                     {sortOrder === 'asc' ? '↑' : '↓'}
@@ -316,7 +320,7 @@ const StockList = ({ onTrade }) => {
                 )}
               </div>
               <div className="header-cell actions-cell">
-                <span>Actions</span>
+                <span><Trans>Actions</Trans></span>
               </div>
             </div>
 
@@ -386,7 +390,7 @@ const StockList = ({ onTrade }) => {
                         title={`Buy ${stock.symbol}`}
                       >
                         <ShoppingCart size={16} />
-                        <span>Buy</span>
+                        <span><Trans>Buy</Trans></span>
                       </button>
                       <button
                         className="sell-btn"
@@ -394,7 +398,7 @@ const StockList = ({ onTrade }) => {
                         title={`Sell ${stock.symbol}`}
                       >
                         <Minus size={16} />
-                        <span>Sell</span>
+                        <span><Trans>Sell</Trans></span>
                       </button>
                     </div>
                   </div>
@@ -408,17 +412,17 @@ const StockList = ({ onTrade }) => {
       {/* Footer Info */}
       <div className="stock-list-footer">
         <div className="footer-info">
-          <span>Showing {filteredAndSortedStocks.length} of {stockData.stocks.length} stocks</span>
+          <span><Trans>Showing</Trans> {filteredAndSortedStocks.length} <Trans>of</Trans> {stockData.stocks.length} <Trans>stocks</Trans></span>
           {stockData.lastUpdated && (
             <span>
-              Last updated: {new Date(stockData.lastUpdated).toLocaleTimeString()}
+              <Trans>Last updated:</Trans> {new Date(stockData.lastUpdated).toLocaleTimeString()}
             </span>
           )}
         </div>
         
         {!isConnected && (
           <div className="connection-warning">
-            <span>⚠️ Not connected to live data</span>
+            <span>⚠️ <Trans>Not connected to live data</Trans></span>
           </div>
         )}
       </div>
