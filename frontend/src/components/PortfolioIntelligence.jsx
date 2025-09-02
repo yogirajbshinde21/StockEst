@@ -17,7 +17,54 @@ import {
   Shield,
   Clock
 } from 'lucide-react';
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 import './PortfolioIntelligence.css';
+
+// Error Boundary Component
+class ChartErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Chart Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="chart-error">
+          <div className="chart-no-data">
+            <div className="no-data-icon">
+              <AlertCircle size={48} />
+            </div>
+            <h3>Chart Error</h3>
+            <p>Unable to display chart. Please try refreshing.</p>
+            <button onClick={() => this.setState({ hasError: false, error: null })}>
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const PortfolioIntelligence = () => {
   const [loading, setLoading] = useState(true);
@@ -32,9 +79,22 @@ const PortfolioIntelligence = () => {
       setError(null);
       
       const response = await axios.get(`/api/analytics/dashboard-data?timeframe=${selectedTimeframe}`);
-      setDashboardData(response.data.data);
+      
+      // Validate response data structure
+      const responseData = response.data?.data;
+      if (!responseData) {
+        throw new Error('Invalid response data structure');
+      }
+
+      // Ensure timeline is properly formatted
+      if (responseData.timeline && Array.isArray(responseData.timeline)) {
+        responseData.timeline = responseData.timeline.filter(item => item !== null && item !== undefined);
+      }
+
+      setDashboardData(responseData);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch dashboard data');
+      console.error('Dashboard data fetch error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
@@ -101,7 +161,17 @@ const PortfolioIntelligence = () => {
     );
   }
 
-  const { timeline, analytics, milestones } = dashboardData || {};
+  // Safely extract data with fallbacks
+  const timeline = dashboardData?.timeline || [];
+  const analytics = dashboardData?.analytics || {};
+  const milestones = dashboardData?.milestones || [];
+
+  // Debug logging
+  console.log('Dashboard data:', { 
+    timelineLength: timeline.length, 
+    hasAnalytics: !!analytics, 
+    milestonesLength: milestones.length 
+  });
 
   return (
     <div className="portfolio-intelligence">
@@ -199,8 +269,12 @@ const PortfolioIntelligence = () => {
 
 // Overview Section Component
 const OverviewSection = ({ analytics, timeline, timeframe, formatCurrency, formatPercent }) => {
-  const currentValue = timeline?.length > 0 ? timeline[timeline.length - 1]?.totalValue : 0;
-  const invested = timeline?.length > 0 ? timeline[timeline.length - 1]?.totalInvested : 0;
+  // Safely extract values with proper fallbacks
+  const safeTimeline = Array.isArray(timeline) ? timeline.filter(item => item && typeof item === 'object') : [];
+  const lastEntry = safeTimeline.length > 0 ? safeTimeline[safeTimeline.length - 1] : {};
+  
+  const currentValue = typeof lastEntry.totalValue === 'number' ? lastEntry.totalValue : 0;
+  const invested = typeof lastEntry.totalInvested === 'number' ? lastEntry.totalInvested : 0;
   const profitLoss = currentValue - invested;
   const profitLossPercent = invested > 0 ? (profitLoss / invested) * 100 : 0;
 
@@ -276,10 +350,12 @@ const OverviewSection = ({ analytics, timeline, timeframe, formatCurrency, forma
             </div>
           </div>
         </div>
-        <PortfolioTimelineChart 
-          timeline={timeline} 
-          formatCurrency={formatCurrency}
-        />
+        <ChartErrorBoundary>
+          <PortfolioTimelineChart 
+            timeline={timeline} 
+            formatCurrency={formatCurrency}
+          />
+        </ChartErrorBoundary>
       </div>
 
       {/* Quick Stats */}
@@ -684,83 +760,279 @@ const ProgressItem = ({ title, current, target, formatCurrency, isCount = false 
 
 // Portfolio Timeline Chart Component
 const PortfolioTimelineChart = ({ timeline, formatCurrency }) => {
-  if (!timeline || timeline.length === 0) {
-    return <div className="chart-no-data">No timeline data available</div>;
+  console.log('PortfolioTimelineChart received timeline:', timeline);
+  
+  // Early return for missing data
+  if (!timeline) {
+    console.log('No timeline data provided');
+    return <PortfolioTimelineChartRender timeline={generateSampleData()} formatCurrency={formatCurrency} isSample={true} />;
   }
 
-  const maxValue = Math.max(...timeline.map(d => Math.max(d.totalValue, d.totalInvested)));
-  const minValue = Math.min(...timeline.map(d => Math.min(d.totalValue, d.totalInvested)));
-  const range = maxValue - minValue;
+  // Filter and validate timeline data
+  const validTimeline = timeline.filter(d => {
+    return d && 
+           typeof d === 'object' &&
+           d.date && 
+           typeof d.totalValue === 'number' && 
+           typeof d.totalInvested === 'number' &&
+           !isNaN(d.totalValue) &&
+           !isNaN(d.totalInvested);
+  });
+  
+  console.log('Valid timeline data:', validTimeline);
+  
+  // If no valid data, create sample data to show how the chart works
+  if (validTimeline.length === 0) {
+    console.log('No valid timeline data, showing sample');
+    return <PortfolioTimelineChartRender timeline={generateSampleData()} formatCurrency={formatCurrency} isSample={true} />;
+  }
+
+  // If only 1 data point (like today), enhance with historical projection
+  if (validTimeline.length === 1) {
+    console.log('Only one data point found, enhancing with projected historical data');
+    const realData = validTimeline[0];
+    const enhancedData = generateHistoricalData(realData);
+    return <PortfolioTimelineChartRender 
+      timeline={enhancedData} 
+      formatCurrency={formatCurrency} 
+      isSample={true}
+      realDataCount={1}
+    />;
+  }
+
+  return <PortfolioTimelineChartRender timeline={validTimeline} formatCurrency={formatCurrency} />;
+};
+
+// Generate historical data projection from current real data
+const generateHistoricalData = (currentData) => {
+  const today = new Date();
+  const currentValue = currentData.totalValue || 20120;
+  const currentInvested = currentData.totalInvested || 20116;
+  
+  return Array.from({ length: 30 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() - (29 - i));
+    
+    if (i === 29) {
+      // Last day is real data
+      return {
+        date: currentData.date,
+        totalValue: currentValue,
+        totalInvested: currentInvested,
+        totalProfitLoss: currentValue - currentInvested,
+        totalProfitLossPercent: ((currentValue - currentInvested) / currentInvested) * 100,
+        isReal: true
+      };
+    }
+    
+    // Generate backwards projection
+    const daysFromToday = 29 - i;
+    const dailyGrowthRate = 0.002; // 0.2% average daily growth
+    const volatility = (Math.sin(i * 0.3) * 0.02) + (Math.random() - 0.5) * 0.015;
+    
+    const projectedInvested = Math.max(5000, currentInvested - (daysFromToday * 500)); // Assuming ₹500/day investment
+    const baseValue = projectedInvested * (1 + (dailyGrowthRate * (30 - daysFromToday)));
+    const projectedValue = baseValue * (1 + volatility);
+    
+    return {
+      date: date.toISOString(),
+      totalValue: Math.round(projectedValue),
+      totalInvested: projectedInvested,
+      totalProfitLoss: Math.round(projectedValue - projectedInvested),
+      totalProfitLossPercent: ((projectedValue - projectedInvested) / projectedInvested) * 100,
+      isProjected: true
+    };
+  });
+};
+
+// Generate sample data for demonstration
+const generateSampleData = () => {
+  const today = new Date();
+  return Array.from({ length: 30 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() - (29 - i));
+    
+    // Create realistic portfolio progression
+    const baseInvestment = 20000;
+    const dailyInvestment = 700; // Investing ₹700 per day
+    const totalInvested = baseInvestment + (i * dailyInvestment);
+    
+    // Portfolio value with some volatility but overall growth
+    const growthFactor = 1 + (i * 0.008); // 0.8% daily average growth
+    const volatility = Math.sin(i * 0.4) * 0.03 + (Math.random() - 0.5) * 0.02; // ±2% daily volatility
+    const portfolioValue = totalInvested * (growthFactor + volatility);
+    
+    const profitLoss = portfolioValue - totalInvested;
+    const profitLossPercent = (profitLoss / totalInvested) * 100;
+    
+    return {
+      date: date.toISOString(),
+      totalValue: Math.round(portfolioValue),
+      totalInvested: totalInvested,
+      totalProfitLoss: Math.round(profitLoss),
+      totalProfitLossPercent: profitLossPercent,
+      dayChange: Math.round((Math.random() - 0.5) * 1000),
+      dayChangePercent: (Math.random() - 0.5) * 5
+    };
+  });
+};
+
+// Recharts-based chart rendering component
+const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = false, realDataCount = 0 }) => {
+  // Transform data for Recharts
+  const chartData = timeline.map(d => ({
+    date: d.date ? new Date(d.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : d.date,
+    portfolioValue: d.totalValue || d.portfolioValue || 0,
+    totalInvested: d.totalInvested || 0,
+    profitLoss: d.totalProfitLoss || d.profitLoss || 0
+  }));
+
+  // Simple compact tooltip formatter
+  const tooltipFormatter = (value, name) => {
+    if (name === 'portfolioValue') {
+      return [formatCurrency(value), 'Portfolio'];
+    }
+    if (name === 'totalInvested') {
+      return [formatCurrency(value), 'Invested'];
+    }
+    return [value, name];
+  };
+
+  const tooltipLabelFormatter = (label) => {
+    return label;
+  };
+
+  // Format Y-axis values
+  const formatYAxis = (value) => {
+    if (value >= 100000) {
+      return `₹${(value / 100000).toFixed(1)}L`;
+    } else if (value >= 1000) {
+      return `₹${(value / 1000).toFixed(0)}K`;
+    }
+    return `₹${value}`;
+  };
 
   return (
-    <div className="timeline-chart">
-      <svg viewBox="0 0 800 300" className="chart-svg">
-        {/* Grid lines */}
-        {[0, 25, 50, 75, 100].map(percent => (
-          <line
-            key={percent}
-            x1="50"
-            y1={50 + (percent * 200) / 100}
-            x2="750"
-            y2={50 + (percent * 200) / 100}
-            stroke="#f1f5f9"
-            strokeWidth="1"
-          />
-        ))}
-        
-        {/* Portfolio value line */}
-        <polyline
-          points={timeline.map((d, i) => {
-            const x = 50 + (i * 700) / (timeline.length - 1);
-            const y = 250 - ((d.totalValue - minValue) / range) * 200;
-            return `${x},${y}`;
-          }).join(' ')}
-          fill="none"
-          stroke="#667eea"
-          strokeWidth="3"
-          className="portfolio-line"
-        />
-        
-        {/* Invested value line */}
-        <polyline
-          points={timeline.map((d, i) => {
-            const x = 50 + (i * 700) / (timeline.length - 1);
-            const y = 250 - ((d.totalInvested - minValue) / range) * 200;
-            return `${x},${y}`;
-          }).join(' ')}
-          fill="none"
-          stroke="#f59e0b"
-          strokeWidth="2"
-          strokeDasharray="5,5"
-          className="invested-line"
-        />
-        
-        {/* Data points */}
-        {timeline.map((d, i) => {
-          const x = 50 + (i * 700) / (timeline.length - 1);
-          const y = 250 - ((d.totalValue - minValue) / range) * 200;
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r="4"
-              fill="#667eea"
-              className="data-point"
-            />
-          );
-        })}
-      </svg>
-      
-      {/* Chart labels */}
-      <div className="chart-labels">
-        <div className="y-axis-labels">
-          {[maxValue, (maxValue + minValue) / 2, minValue].map((value, i) => (
-            <div key={i} className="y-label" style={{ top: `${i * 50}%` }}>
-              {formatCurrency(value)}
-            </div>
-          ))}
+    <div className={`timeline-chart ${isSample ? 'sample-chart' : ''}`}>
+      {isSample && (
+        <div className="sample-indicator">
+          {realDataCount === 1 ? (
+            <span>📊 Today's Data + Historical Projection - Chart will grow with real daily data from tomorrow</span>
+          ) : (
+            <span>📊 Sample Portfolio Data - This shows how your chart will look with real trading data</span>
+          )}
         </div>
+      )}
+      
+      <div className="chart-wrapper">
+        <ResponsiveContainer width="100%" height={400}>
+          <RechartsLineChart
+            data={chartData}
+            margin={{
+              top: 20,
+              right: 30,
+              left: 20,
+              bottom: 60,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="date" 
+              tick={{ fontSize: 12, fill: '#6b7280' }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+              interval={Math.floor(chartData.length / 6)}
+            />
+            <YAxis 
+              tick={{ fontSize: 12, fill: '#6b7280' }}
+              tickFormatter={formatYAxis}
+              width={80}
+            />
+            <Tooltip 
+              formatter={tooltipFormatter}
+              labelFormatter={tooltipLabelFormatter}
+              cursor={{ stroke: '#667eea', strokeWidth: 1, strokeDasharray: '3 3' }}
+              wrapperStyle={{ 
+                maxHeight: '80px', 
+                height: 'auto',
+                overflow: 'hidden',
+                zIndex: 1000 
+              }}
+              contentStyle={{
+                maxHeight: '80px',
+                height: 'auto',
+                padding: '6px 8px',
+                fontSize: '0.75rem',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+                backgroundColor: 'white',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                lineHeight: '1.2'
+              }}
+            />
+            <Legend 
+              wrapperStyle={{ paddingTop: '20px' }}
+              iconType="line"
+            />
+            <Line
+              type="monotone"
+              dataKey="portfolioValue"
+              stroke="#667eea"
+              strokeWidth={3}
+              dot={{ fill: '#667eea', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: '#667eea', strokeWidth: 2 }}
+              name="Portfolio Value"
+            />
+            <Line
+              type="monotone"
+              dataKey="totalInvested"
+              stroke="#f59e0b"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={{ fill: '#f59e0b', strokeWidth: 2, r: 3 }}
+              activeDot={{ r: 5, stroke: '#f59e0b', strokeWidth: 2 }}
+              name="Total Invested"
+            />
+          </RechartsLineChart>
+        </ResponsiveContainer>
+      </div>
+      
+      {/* Performance Summary */}
+      <div className="chart-info">
+        <div className="info-item">
+          <span className="info-label">Latest Portfolio Value:</span>
+          <span className="info-value">
+            {formatCurrency(chartData[chartData.length - 1]?.portfolioValue || 0)}
+          </span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">Total Invested:</span>
+          <span className="info-value">
+            {formatCurrency(chartData[chartData.length - 1]?.totalInvested || 0)}
+          </span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">Total Return:</span>
+          <span className={`info-value ${(chartData[chartData.length - 1]?.profitLoss || 0) >= 0 ? 'positive' : 'negative'}`}>
+            {formatCurrency(chartData[chartData.length - 1]?.profitLoss || 0)} 
+            ({(((chartData[chartData.length - 1]?.profitLoss || 0) / (chartData[chartData.length - 1]?.totalInvested || 1)) * 100).toFixed(2)}%)
+          </span>
+        </div>
+        {isSample && (
+          <div className="info-item">
+            <span className="info-label">📊 Chart Status:</span>
+            <span className="info-value positive">
+              {realDataCount === 1 ? 'Real data collection started today!' : 'Real-time chart ready with sample data'}
+            </span>
+          </div>
+        )}
+        {realDataCount === 1 && (
+          <div className="info-item">
+            <span className="info-label">📅 Data Collection:</span>
+            <span className="info-value">Daily snapshots will build your timeline</span>
+          </div>
+        )}
       </div>
     </div>
   );

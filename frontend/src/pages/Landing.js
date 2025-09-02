@@ -97,6 +97,7 @@ const Landing = () => {
   const [achievement, setAchievement] = useState({ show: false, message: '' });
   const [stockPrices, setStockPrices] = useState({});
   const [previousStockPrices, setPreviousStockPrices] = useState({});
+  const [openFAQ, setOpenFAQ] = useState(null);
   const { currentLanguage } = useLanguage();
   const observerRef = useRef(null);
   const achievementsUnlocked = useRef(new Set());
@@ -211,6 +212,160 @@ const Landing = () => {
       },
       icon: "🤖",
       key: "ai"
+    }
+  ];
+
+  // FAQ Data
+  const faqData = [
+    {
+      question: {
+        en: "Do you require real money to start trading?",
+        hi: "क्या ट्रेडिंग शुरू करने के लिए वास्तविक पैसे की आवश्यकता है?"
+      },
+      answer: {
+        en: "No, Stockest is completely free! We provide you with ₹1 Lakh virtual money to help you get started. Practice trading without any financial risk and learn the market dynamics safely.",
+        hi: "नहीं, Stockest पूरी तरह से मुफ्त है! हम आपको शुरुआत करने के लिए ₹1 लाख वर्चुअल पैसा प्रदान करते हैं। बिना किसी वित्तीय जोखिम के ट्रेडिंग का अभ्यास करें और सुरक्षित रूप से बाजार की गतिशीलता सीखें।"
+      }
+    },
+    {
+      question: {
+        en: "Is Stockest available in Indian languages?",
+        hi: "क्या Stockest भारतीय भाषाओं में उपलब्ध है?"
+      },
+      answer: {
+        en: "Yes! Stockest supports 10 Indian languages including Hindi, Telugu, Tamil, Bengali, Marathi, Gujarati, Kannada, Malayalam, and Punjabi. Our platform breaks language barriers to make stock market accessible for everyone.",
+        hi: "हाँ! Stockest हिंदी, तेलुगु, तमिल, बंगाली, मराठी, गुजराती, कन्नड़, मलयालम और पंजाबी सहित 10 भारतीय भाषाओं का समर्थन करता है। हमारा प्लेटफॉर्म भाषा की बाधाओं को तोड़कर सभी के लिए स्टॉक मार्केट को सुलभ बनाता है।"
+      }
+    },
+    {
+      question: {
+        en: "How accurate are the stock prices on your platform?",
+        hi: "आपके प्लेटफॉर्म पर स्टॉक की कीमतें कितनी सटीक हैं?"
+      },
+      answer: {
+        en: "We use real-time market data to ensure accuracy. While the trading is simulated, the stock prices, market movements, and company information are based on actual market conditions to provide realistic trading experience.",
+        hi: "हम सटीकता सुनिश्चित करने के लिए रियल-टाइम बाजार डेटा का उपयोग करते हैं। जबकि ट्रेडिंग सिमुलेटेड है, स्टॉक की कीमतें, बाजार की गतिविधियां और कंपनी की जानकारी वास्तविक बाजार की स्थितियों पर आधारित हैं।"
+      }
+    },
+    {
+      question: {
+        en: "Can I compete with other users on the platform?",
+        hi: "क्या मैं प्लेटफॉर्म पर अन्य उपयोगकर्ताओं के साथ प्रतिस्पर्धा कर सकता हूं?"
+      },
+      answer: {
+        en: "Absolutely! Stockest features a gamified leaderboard system where you can compete with investors nationwide, earn achievements, and climb rankings. Make learning fun through competitive trading challenges.",
+        hi: "बिल्कुल! Stockest में एक गेमिफाइड लीडरबोर्ड सिस्टम है जहां आप देशभर के निवेशकों के साथ प्रतिस्पर्धा कर सकते हैं, उपलब्धियां अर्जित कर सकते हैं और रैंकिंग में चढ़ सकते हैं।"
+      }
+    },
+    {
+      question: {
+        en: "Do I need any prior knowledge about stock markets?",
+        hi: "क्या मुझे स्टॉक मार्केट के बारे में पूर्व ज्ञान की आवश्यकता है?"
+      },
+      answer: {
+        en: "Not at all! Stockest is designed for beginners. Our AI-powered assistant provides personalized guidance, educational content, and smart recommendations. Learn by doing in a risk-free environment.",
+        hi: "बिल्कुल नहीं! Stockest शुरुआती लोगों के लिए डिज़ाइन किया गया है। हमारा AI-संचालित असिस्टेंट व्यक्तिगत मार्गदर्शन, शैक्षिक सामग्री और स्मार्ट सुझाव प्रदान करता है।"
+      }
+    },
+    {
+      question: {
+        en: "How does the AI assistant help me?",
+        hi: "AI असिस्टेंट मेरी कैसे मदद करता है?"
+      },
+      answer: {
+        en: "Our advanced AI chatbot (powered by Gemini) provides 24/7 personalized investment advice, real-time portfolio analysis, market insights, and answers your questions in your preferred language.",
+        hi: "हमारा उन्नत AI चैटबॉट (Gemini द्वारा संचालित) 24/7 व्यक्तिगत निवेश सलाह, रियल-टाइम पोर्टफोलियो विश्लेषण, बाजार की अंतर्दृष्टि प्रदान करता है।"
+      }
+    },
+    {
+      question: {
+        en: "Can I access real-time financial news?",
+        hi: "क्या मैं रियल-टाइम वित्तीय समाचार प्राप्त कर सकता हूं?"
+      },
+      answer: {
+        en: "Yes! Stay updated with the latest market news powered by advanced AI. Get curated insights that matter for your investment decisions with personalized news recommendations.",
+        hi: "हाँ! उन्नत AI द्वारा संचालित नवीनतम बाजार समाचारों के साथ अपडेट रहें। व्यक्तिगत समाचार सिफारिशों के साथ अपने निवेश निर्णयों के लिए महत्वपूर्ण अंतर्दृष्टि प्राप्त करें।"
+      }
+    },
+    {
+      question: {
+        en: "Is my data safe and secure on Stockest?",
+        hi: "क्या Stockest पर मेरा डेटा सुरक्षित है?"
+      },
+      answer: {
+        en: "Absolutely! We implement bank-grade security measures to protect your data. Since no real money is involved, your financial security is never at risk while you learn and practice.",
+        hi: "बिल्कुल! हम आपके डेटा की सुरक्षा के लिए बैंक-ग्रेड सुरक्षा उपाय लागू करते हैं। चूंकि कोई वास्तविक पैसा शामिल नहीं है, आपकी वित्तीय सुरक्षा कभी भी जोखिम में नहीं है।"
+      }
+    },
+    {
+      question: {
+        en: "Can I use Stockest on my mobile phone?",
+        hi: "क्या मैं अपने मोबाइल फोन पर Stockest का उपयोग कर सकता हूं?"
+      },
+      answer: {
+        en: "Yes! Stockest is fully responsive and works seamlessly on mobile devices, tablets, and desktops. Trade and monitor your portfolio anytime, anywhere.",
+        hi: "हाँ! Stockest पूरी तरह से रिस्पॉन्सिव है और मोबाइल डिवाइस, टैबलेट और डेस्कटॉप पर सहजता से काम करता है। कभी भी, कहीं भी ट्रेड करें और अपने पोर्टफोलियो की निगरानी करें।"
+      }
+    },
+    {
+      question: {
+        en: "How do watchlists and alerts work?",
+        hi: "वॉचलिस्ट और अलर्ट कैसे काम करते हैं?"
+      },
+      answer: {
+        en: "Create personalized watchlists of stocks you're interested in and set intelligent price alerts. Get instant notifications when your target stocks hit optimal price points, so you never miss opportunities.",
+        hi: "आपकी रुचि के स्टॉक्स की व्यक्तिगत वॉचलिस्ट बनाएं और बुद्धिमान प्राइस अलर्ट सेट करें। जब आपके लक्षित स्टॉक्स अनुकूल कीमत बिंदुओं पर पहुंचें तो तुरंत सूचना पाएं।"
+      }
+    },
+    {
+      question: {
+        en: "What makes Stockest different from other trading simulators?",
+        hi: "Stockest को अन्य ट्रेडिंग सिमुलेटर से क्या अलग बनाता है?"
+      },
+      answer: {
+        en: "Stockest is specifically designed for Indian users with multilingual support, cultural relevance, AI-powered guidance, gamification, and focus on rural financial inclusion. It's not just a simulator - it's a complete learning ecosystem.",
+        hi: "Stockest विशेष रूप से भारतीय उपयोगकर्ताओं के लिए बहुभाषी समर्थन, सांस्कृतिक प्रासंगिकता, AI-संचालित मार्गदर्शन, गेमिफिकेशन के साथ डिज़ाइन किया गया है। यह केवल एक सिमुलेटर नहीं है - यह एक पूर्ण शिक्षण पारिस्थितिकी तंत्र है।"
+      }
+    },
+    {
+      question: {
+        en: "Can I track my portfolio performance over time?",
+        hi: "क्या मैं समय के साथ अपने पोर्टफोलियो के प्रदर्शन को ट्रैक कर सकता हूं?"
+      },
+      answer: {
+        en: "Yes! Our Portfolio Intelligence Dashboard provides advanced analytics, performance tracking, profit/loss analysis, sector-wise breakdown, and milestone achievements to monitor your investment journey.",
+        hi: "हाँ! हमारा पोर्टफोलियो इंटेलिजेंस डैशबोर्ड उन्नत विश्लेषण, प्रदर्शन ट्रैकिंग, लाभ/हानि विश्लेषण, सेक्टर-वार ब्रेकडाउन प्रदान करता है।"
+      }
+    },
+    {
+      question: {
+        en: "Are there any hidden charges or subscription fees?",
+        hi: "क्या कोई छुपी हुई फीस या सब्सक्रिप्शन फीस है?"
+      },
+      answer: {
+        en: "No! Stockest is completely free to use. No hidden charges, no subscription fees, no premium tiers. Our mission is to make financial education accessible to everyone in India.",
+        hi: "नहीं! Stockest का उपयोग पूरी तरह से मुफ्त है। कोई छुपी हुई फीस नहीं, कोई सब्सक्रिप्शन फीस नहीं। हमारा मिशन भारत में सभी के लिए वित्तीय शिक्षा को सुलभ बनाना है।"
+      }
+    },
+    {
+      question: {
+        en: "How realistic is the trading experience?",
+        hi: "ट्रेडिंग अनुभव कितना वास्तविक है?"
+      },
+      answer: {
+        en: "Very realistic! We simulate actual market conditions including order execution, price fluctuations, market timings, and trading volumes. The only difference is you're using virtual money instead of real money.",
+        hi: "बहुत वास्तविक! हम वास्तविक बाजार की स्थितियों का अनुकरण करते हैं जिसमें ऑर्डर निष्पादन, कीमत में उतार-चढ़ाव, बाजार का समय और ट्रेडिंग वॉल्यूम शामिल है।"
+      }
+    },
+    {
+      question: {
+        en: "Can Stockest help me transition to real trading later?",
+        hi: "क्या Stockest बाद में वास्तविक ट्रेडिंग में संक्रमण में मेरी मदद कर सकता है?"
+      },
+      answer: {
+        en: "Absolutely! Stockest builds your confidence, knowledge, and trading skills in a risk-free environment. Once you're comfortable with market dynamics and have developed a trading strategy, you'll be well-prepared for real market trading.",
+        hi: "बिल्कुल! Stockest एक जोखिम-मुक्त वातावरण में आपका आत्मविश्वास, ज्ञान और ट्रेडिंग कौशल बनाता है। एक बार जब आप बाजार की गतिशीलता से सहज हो जाते हैं, तो आप वास्तविक बाजार ट्रेडिंग के लिए तैयार होंगे।"
+      }
     }
   ];
 
@@ -606,6 +761,44 @@ waveOpacity={0.35}
       <div className={`achievement ${achievement.show ? 'show' : ''}`}>
         {achievement.message}
       </div>
+
+      {/* FAQ Section */}
+      <section className="faq-section">
+        <div className="section-header">
+          <h2 className="section-title">
+            🙋‍♂️ {currentLanguage === 'en' ? 'Frequently Asked Questions' : 'अक्सर पूछे जाने वाले प्रश्न'}
+          </h2>
+          <p className="section-subtitle">
+            {currentLanguage === 'en'
+              ? 'Everything you need to know about Stockest'
+              : 'Stockest के बारे में आपको जो कुछ जानना चाहिए'}
+          </p>
+        </div>
+        
+        <div className="faq-container">
+          {faqData.map((faq, index) => (
+            <div 
+              key={index}
+              className={`faq-item ${openFAQ === index ? 'active' : ''}`}
+              onClick={() => setOpenFAQ(openFAQ === index ? null : index)}
+            >
+              <div className="faq-question">
+                <h3>{faq.question[currentLanguage]}</h3>
+                <div className={`faq-icon ${openFAQ === index ? 'rotated' : ''}`}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div className={`faq-answer ${openFAQ === index ? 'open' : ''}`}>
+                <div className="faq-answer-content">
+                  <p>{faq.answer[currentLanguage]}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="cta-section">
