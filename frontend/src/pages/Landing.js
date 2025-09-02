@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { WavyBackground } from '../components/ui/WavyBackground';
 import AnimatedStockestTitle from '../components/AnimatedStockestTitle';
+import AnimatedPrice from '../components/AnimatedPrice';
 import './Landing.css';
 
 
@@ -95,6 +96,7 @@ const Landing = () => {
   const [progress, setProgress] = useState(0);
   const [achievement, setAchievement] = useState({ show: false, message: '' });
   const [stockPrices, setStockPrices] = useState({});
+  const [previousStockPrices, setPreviousStockPrices] = useState({});
   const { currentLanguage } = useLanguage();
   const observerRef = useRef(null);
   const achievementsUnlocked = useRef(new Set());
@@ -237,6 +239,13 @@ const Landing = () => {
   useEffect(() => {
     const updatePrices = () => {
       const newPrices = {};
+      
+      // Store current prices as previous before updating
+      setStockPrices(currentPrices => {
+        setPreviousStockPrices({ ...currentPrices });
+        return currentPrices;
+      });
+      
       stocks.forEach(stock => {
         const change = (Math.random() - 0.5) * 10;
         const newPrice = stock.basePrice * (1 + change / 100);
@@ -247,7 +256,11 @@ const Landing = () => {
         };
         stock.basePrice = newPrice;
       });
-      setStockPrices(newPrices);
+      
+      // Update with new prices after storing previous
+      setTimeout(() => {
+        setStockPrices(newPrices);
+      }, 0);
     };
 
     updatePrices();
@@ -406,15 +419,29 @@ const Landing = () => {
         <div className="ticker-content">
           {stocks.map((stock, index) => {
             const priceData = stockPrices[stock.symbol];
+            const previousPriceData = previousStockPrices[stock.symbol];
+            const currentPrice = priceData ? priceData.price : stock.basePrice;
+            const previousPrice = previousPriceData ? previousPriceData.price : stock.basePrice;
+            const change = priceData ? priceData.change : 0;
+            
             return (
               <div key={`${stock.symbol}-${index}`} className="ticker-item">
                 <span className="ticker-symbol">{stock.symbol}</span>
-                <span className="ticker-price">
-                  ₹{priceData ? priceData.price.toFixed(2) : stock.basePrice.toFixed(2)}
-                </span>
-                <span className={`ticker-change ${priceData ? (priceData.isPositive ? 'positive' : 'negative') : 'positive'}`}>
-                  {priceData ? (priceData.isPositive ? '+' : '') + priceData.change.toFixed(2) : '+0.00'}%
-                </span>
+                <div className="ticker-price-container">
+                  <AnimatedPrice
+                    value={currentPrice}
+                    previousValue={previousPrice}
+                    currency={true}
+                    decimals={2}
+                    showArrow={true}
+                    showChange={true}
+                    changeValue={change}
+                    changePercent={change}
+                    size="small"
+                    className="ticker-animated-price"
+                    animate={true}
+                  />
+                </div>
               </div>
             );
           })}

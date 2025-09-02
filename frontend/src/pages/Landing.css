@@ -95,6 +95,75 @@
   color: var(--red-loss);
 }
 
+/* Landing page ticker-specific AnimatedPrice styles */
+.ticker-price-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.ticker-price-container .ticker-animated-price {
+  width: 100%;
+}
+
+.ticker-price-container .ticker-animated-price .price-container {
+  justify-content: flex-start;
+  gap: 8px;
+  align-items: center;
+}
+
+.ticker-price-container .ticker-animated-price .price-value {
+  color: var(--gold-accent) !important;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 90px;
+}
+
+.ticker-price-container .ticker-animated-price.change-positive .price-value {
+  color: var(--green-profit) !important;
+}
+
+.ticker-price-container .ticker-animated-price.change-negative .price-value {
+  color: var(--red-loss) !important;
+}
+
+.ticker-price-container .ticker-animated-price .change-container {
+  margin-top: 0;
+  margin-left: 0;
+}
+
+.ticker-price-container .ticker-animated-price .change-value,
+.ticker-price-container .ticker-animated-price .change-percent {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Enhanced animation effects for landing page ticker */
+.ticker-price-container .ticker-animated-price.animating .price-value {
+  transform: scale(1.1);
+  text-shadow: 0 0 8px currentColor;
+}
+
+.ticker-price-container .ticker-animated-price.direction-up.animating {
+  animation: landingPriceUp 0.8s ease-out;
+}
+
+.ticker-price-container .ticker-animated-price.direction-down.animating {
+  animation: landingPriceDown 0.8s ease-out;
+}
+
+@keyframes landingPriceUp {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes landingPriceDown {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(2px); }
+  100% { transform: translateY(0px); }
+}
+
 /* Animated Background */
 .animated-bg {
   position: fixed;
