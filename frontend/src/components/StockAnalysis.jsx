@@ -370,7 +370,7 @@ const StockAnalysis = () => {
               </div>
 
               {/* Chart */}
-              <div className="chart-container">
+              <div className="fix-chart">
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={data.chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

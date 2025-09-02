@@ -25,7 +25,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  ReferenceLine
 } from 'recharts';
 import './PortfolioIntelligence.css';
 
@@ -165,13 +168,6 @@ const PortfolioIntelligence = () => {
   const timeline = dashboardData?.timeline || [];
   const analytics = dashboardData?.analytics || {};
   const milestones = dashboardData?.milestones || [];
-
-  // Debug logging
-  console.log('Dashboard data:', { 
-    timelineLength: timeline.length, 
-    hasAnalytics: !!analytics, 
-    milestonesLength: milestones.length 
-  });
 
   return (
     <div className="portfolio-intelligence">
@@ -803,11 +799,18 @@ const PortfolioTimelineChart = ({ timeline, formatCurrency }) => {
   return <PortfolioTimelineChartRender timeline={validTimeline} formatCurrency={formatCurrency} />;
 };
 
-// Generate historical data projection from current real data
+// Generate stable historical data projection from current real data
 const generateHistoricalData = (currentData) => {
   const today = new Date();
   const currentValue = currentData.totalValue || 20120;
   const currentInvested = currentData.totalInvested || 20116;
+  
+  // Stable multipliers for consistent historical projection
+  const dailyMultipliers = [
+    0.995, 0.997, 1.001, 0.999, 1.003, 0.998, 1.002, 0.996, 1.004, 1.000,
+    0.999, 1.005, 0.997, 1.001, 1.003, 0.998, 1.006, 0.999, 1.002, 1.001,
+    0.997, 1.004, 0.998, 1.003, 1.000, 1.002, 0.999, 1.001, 1.005
+  ];
   
   return Array.from({ length: 30 }, (_, i) => {
     const date = new Date(today);
@@ -825,54 +828,56 @@ const generateHistoricalData = (currentData) => {
       };
     }
     
-    // Generate backwards projection
-    const daysFromToday = 29 - i;
-    const dailyGrowthRate = 0.002; // 0.2% average daily growth
-    const volatility = (Math.sin(i * 0.3) * 0.02) + (Math.random() - 0.5) * 0.015;
-    
-    const projectedInvested = Math.max(5000, currentInvested - (daysFromToday * 500)); // Assuming ₹500/day investment
-    const baseValue = projectedInvested * (1 + (dailyGrowthRate * (30 - daysFromToday)));
-    const projectedValue = baseValue * (1 + volatility);
+    // Generate backwards projection using stable multipliers
+    const daysFromEnd = 29 - i;
+    const projectedInvested = Math.max(5000, currentInvested - (daysFromEnd * 500)); // ₹500/day investment
+    const baseValue = projectedInvested * 1.002; // Small base growth
+    const projectedValue = Math.round(baseValue * dailyMultipliers[i]);
     
     return {
       date: date.toISOString(),
-      totalValue: Math.round(projectedValue),
+      totalValue: projectedValue,
       totalInvested: projectedInvested,
-      totalProfitLoss: Math.round(projectedValue - projectedInvested),
+      totalProfitLoss: projectedValue - projectedInvested,
       totalProfitLossPercent: ((projectedValue - projectedInvested) / projectedInvested) * 100,
       isProjected: true
     };
   });
 };
 
-// Generate sample data for demonstration
+// Generate stable sample data for demonstration
 const generateSampleData = () => {
   const today = new Date();
+  // Predefined stable progression for consistent display
+  const baseInvestments = [
+    20000, 20700, 21400, 22100, 22800, 23500, 24200, 24900, 25600, 26300,
+    27000, 27700, 28400, 29100, 29800, 30500, 31200, 31900, 32600, 33300,
+    34000, 34700, 35400, 36100, 36800, 37500, 38200, 38900, 39600, 40300
+  ];
+  
+  const portfolioMultipliers = [
+    1.001, 1.003, 0.998, 1.005, 1.002, 1.008, 0.996, 1.010, 1.004, 0.999,
+    1.006, 1.012, 0.995, 1.007, 1.003, 1.009, 0.997, 1.011, 1.005, 1.001,
+    1.008, 0.994, 1.013, 1.006, 1.002, 1.009, 0.998, 1.012, 1.007, 1.004
+  ];
+  
   return Array.from({ length: 30 }, (_, i) => {
     const date = new Date(today);
     date.setDate(date.getDate() - (29 - i));
     
-    // Create realistic portfolio progression
-    const baseInvestment = 20000;
-    const dailyInvestment = 700; // Investing ₹700 per day
-    const totalInvested = baseInvestment + (i * dailyInvestment);
-    
-    // Portfolio value with some volatility but overall growth
-    const growthFactor = 1 + (i * 0.008); // 0.8% daily average growth
-    const volatility = Math.sin(i * 0.4) * 0.03 + (Math.random() - 0.5) * 0.02; // ±2% daily volatility
-    const portfolioValue = totalInvested * (growthFactor + volatility);
-    
+    const totalInvested = baseInvestments[i];
+    const portfolioValue = Math.round(totalInvested * portfolioMultipliers[i]);
     const profitLoss = portfolioValue - totalInvested;
     const profitLossPercent = (profitLoss / totalInvested) * 100;
     
     return {
       date: date.toISOString(),
-      totalValue: Math.round(portfolioValue),
+      totalValue: portfolioValue,
       totalInvested: totalInvested,
-      totalProfitLoss: Math.round(profitLoss),
+      totalProfitLoss: profitLoss,
       totalProfitLossPercent: profitLossPercent,
-      dayChange: Math.round((Math.random() - 0.5) * 1000),
-      dayChangePercent: (Math.random() - 0.5) * 5
+      dayChange: i > 0 ? Math.round((portfolioValue - Math.round(baseInvestments[i-1] * portfolioMultipliers[i-1])) * 0.8) : 0,
+      dayChangePercent: i > 0 ? ((portfolioValue - Math.round(baseInvestments[i-1] * portfolioMultipliers[i-1])) / Math.round(baseInvestments[i-1] * portfolioMultipliers[i-1])) * 100 : 0
     };
   });
 };
@@ -1038,31 +1043,311 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
   );
 };
 
-// Daily Performance Chart Component
-const DailyPerformanceChart = ({ timeline, formatCurrency, formatPercent }) => {
-  if (!timeline || timeline.length === 0) {
-    return <div className="chart-no-data">No performance data available</div>;
-  }
+// Generate stable sample data once and reuse
+const SAMPLE_DAILY_DATA = (() => {
+  const today = new Date();
+  const predefinedChanges = [
+    0.8, -0.3, 1.2, 0.5, -0.7, 0.9, -0.4, 1.1, 0.2, -0.6,
+    0.7, 1.3, -0.8, 0.4, 0.6, -0.2, 1.0, -0.5, 0.3, 0.8,
+    -0.9, 0.1, 1.4, -0.1, 0.7, 0.9, -0.3, 0.5, 1.1, -0.4
+  ];
+  
+  return Array.from({ length: 30 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() - (29 - i));
+    
+    const dayChangePercent = predefinedChanges[i] || 0;
+    const dayChange = dayChangePercent * 200;
+    
+    return {
+      date: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+      fullDate: date.toISOString(),
+      dayChange: Math.round(dayChange),
+      dayChangePercent: Number(dayChangePercent.toFixed(2)),
+      isPositive: dayChangePercent >= 0,
+      portfolioValue: 20000 + Math.round(dayChange),
+    };
+  });
+})();
+
+// Daily Performance Chart Component - Shows daily P&L patterns
+const DailyPerformanceChart = React.memo(({ timeline, formatCurrency, formatPercent }) => {
+  // Use useMemo to prevent unnecessary re-computations
+  const chartData = React.useMemo(() => {
+    // Early return for missing data - show chart with sample data
+    if (!timeline || timeline.length === 0) {
+      return { data: SAMPLE_DAILY_DATA, isSample: true };
+    }
+
+    // Filter and validate timeline data for daily performance
+    const validTimeline = timeline.filter(d => {
+      return d && 
+             typeof d === 'object' &&
+             d.date && 
+             typeof d.dayChange === 'number' && 
+             typeof d.dayChangePercent === 'number' &&
+             !isNaN(d.dayChange) &&
+             !isNaN(d.dayChangePercent);
+    });
+    
+    // If only 1 data point, enhance with sample data to show trend
+    if (validTimeline.length === 1) {
+      const realData = validTimeline[0];
+      const historicalPattern = [
+        0.5, -0.2, 0.8, 0.3, -0.4, 0.6, -0.1, 0.9, 0.2, -0.3,
+        0.4, 0.7, -0.5, 0.1, 0.3, -0.2, 0.8, -0.3, 0.2, 0.5,
+        -0.4, 0.1, 0.6, -0.1, 0.4, 0.3, -0.2, 0.2, 0.5
+      ];
+      
+      const today = new Date();
+      const enhancedData = Array.from({ length: 29 }, (_, i) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() - (29 - i));
+        
+        const dayChangePercent = historicalPattern[i] || 0;
+        const dayChange = dayChangePercent * 200;
+        
+        return {
+          date: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+          fullDate: date.toISOString(),
+          dayChange: Math.round(dayChange),
+          dayChangePercent: Number(dayChangePercent.toFixed(2)),
+          isPositive: dayChangePercent >= 0,
+          portfolioValue: 20000 + Math.round(dayChange),
+        };
+      });
+      
+      // Add current real data
+      enhancedData.push({
+        date: new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+        fullDate: new Date().toISOString(),
+        dayChange: realData.dayChange,
+        dayChangePercent: realData.dayChangePercent,
+        isPositive: realData.dayChangePercent >= 0,
+        portfolioValue: realData.portfolioValue || 20000,
+      });
+      
+      return { data: enhancedData, isSample: false, realDataCount: 1 };
+    }
+    
+    // If no valid data, create sample data
+    if (validTimeline.length === 0) {
+      return { data: SAMPLE_DAILY_DATA, isSample: true };
+    }
+
+    return { data: validTimeline, isSample: false };
+  }, [timeline]);
 
   return (
-    <div className="daily-performance-chart">
-      <div className="performance-bars">
-        {timeline.map((day, index) => (
-          <div key={index} className="performance-day">
-            <div 
-              className={`performance-bar ${day.dayChangePercent >= 0 ? 'positive' : 'negative'}`}
-              style={{
-                height: `${Math.min(Math.abs(day.dayChangePercent || 0) * 10, 100)}px`,
-                minHeight: '2px'
-              }}
-              title={`${new Date(day.date).toLocaleDateString()}: ${formatPercent(day.dayChangePercent)}`}
-            ></div>
+    <DailyPerformanceChartRender 
+      timeline={chartData.data} 
+      formatCurrency={formatCurrency} 
+      formatPercent={formatPercent} 
+      isSample={chartData.isSample}
+      realDataCount={chartData.realDataCount || 0}
+    />
+  );
+});
+
+// Recharts-based daily performance chart rendering component
+const DailyPerformanceChartRender = React.memo(({ timeline, formatCurrency, formatPercent, isSample = false, realDataCount = 0 }) => {
+  // Transform data for Recharts Bar Chart
+  const chartData = timeline.map(d => ({
+    date: d.date,
+    dayChange: d.dayChange || 0,
+    dayChangePercent: d.dayChangePercent || 0,
+    isPositive: (d.dayChange || 0) >= 0,
+    fill: (d.dayChange || 0) >= 0 ? '#10b981' : '#ef4444', // Green for gains, red for losses
+    isReal: d.isReal || false
+  }));
+
+  // Calculate performance statistics
+  const totalDays = chartData.length;
+  const profitDays = chartData.filter(d => d.isPositive).length;
+  const lossDays = totalDays - profitDays;
+  const bestDay = Math.max(...chartData.map(d => d.dayChangePercent));
+  const worstDay = Math.min(...chartData.map(d => d.dayChangePercent));
+  const avgDaily = chartData.reduce((sum, d) => sum + d.dayChangePercent, 0) / totalDays;
+  const winRate = (profitDays / totalDays) * 100;
+
+  // Custom tooltip for daily performance
+  const DailyPerformanceTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="chart-tooltip daily-performance-tooltip">
+          <div className="tooltip-label">{label}</div>
+          <div className="tooltip-content">
+            <div className="tooltip-item">
+              <span className={`tooltip-indicator ${data.isPositive ? 'positive' : 'negative'}`}>
+                {data.isPositive ? '↗' : '↘'}
+              </span>
+              <span className="tooltip-amount">{formatCurrency(data.dayChange)}</span>
+            </div>
+            <div className="tooltip-item">
+              <span className={`tooltip-percent ${data.isPositive ? 'positive' : 'negative'}`}>
+                {formatPercent(data.dayChangePercent)}
+              </span>
+            </div>
+            {data.isReal && (
+              <div className="tooltip-item">
+                <span className="real-data-indicator">📊 Real Data</span>
+              </div>
+            )}
           </div>
-        ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Format Y-axis for percentage values
+  const formatYAxisPercent = (value) => {
+    return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+  };
+
+  return (
+    <div className={`daily-performance-chart ${isSample ? 'sample-chart' : ''}`}>
+      {isSample && (
+        <div className="sample-indicator">
+          {realDataCount === 1 ? (
+            <span>📊 Today's Performance + Historical Pattern - Daily bars will accumulate from tomorrow</span>
+          ) : (
+            <span>📊 Sample Daily Performance Data - Shows profit/loss patterns per day</span>
+          )}
+        </div>
+      )}
+      
+      <div className="chart-header">
+        <h4>Daily Profit & Loss Pattern</h4>
+        <div className="chart-legend">
+          <div className="legend-item">
+            <div className="legend-color positive"></div>
+            <span>Profit Days ({profitDays})</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color negative"></div>
+            <span>Loss Days ({lossDays})</span>
+          </div>
+          <div className="legend-item">
+            <span>Win Rate: {winRate.toFixed(1)}%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="chart-wrapper">
+        <ResponsiveContainer width="100%" height={500}>
+          <BarChart
+            data={chartData}
+            margin={{
+              top: 30,
+              right: 40,
+              left: 30,
+              bottom: 80,
+            }}
+            barCategoryGap="15%"
+            maxBarSize={30}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.6} />
+            <XAxis 
+              dataKey="date" 
+              tick={{ fontSize: 12, fill: '#6b7280' }}
+              angle={-45}
+              textAnchor="end"
+              height={80}
+              interval={0}
+            />
+            <YAxis 
+              tick={{ fontSize: 12, fill: '#6b7280' }}
+              tickFormatter={formatYAxisPercent}
+              width={70}
+              domain={['dataMin - 0.2', 'dataMax + 0.2']}
+            />
+            <Tooltip content={<DailyPerformanceTooltip />} />
+            <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="2 2" strokeWidth={1} />
+            <Bar
+              dataKey="dayChangePercent"
+              fill="#8884d8"
+              radius={[3, 3, 0, 0]}
+              stroke="#ffffff"
+              strokeWidth={1}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      
+      {/* Performance Statistics */}
+      <div className="performance-stats">
+        <div className="performance-summary">
+          <div className="performance-title">
+            📊 Today's Performance + Historical Pattern
+          </div>
+          <div className="performance-subtitle">Daily Profit & Loss Pattern</div>
+          
+          <div className="performance-overview">
+            <div className="overview-item">
+              <div className="overview-label">Profit Days</div>
+              <div className="overview-value positive">{profitDays}</div>
+            </div>
+            <div className="overview-item">
+              <div className="overview-label">Loss Days</div>
+              <div className="overview-value negative">{lossDays}</div>
+            </div>
+            <div className="overview-item">
+              <div className="overview-label">Win Rate</div>
+              <div className="overview-value">{winRate.toFixed(1)}%</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="performance-metrics">
+          <div className="stat-group">
+            <div className="stat-item">
+              <span className="stat-label">Best Day:</span>
+              <span className="stat-value positive">
+                {formatPercent(bestDay)} ({formatCurrency(chartData.find(d => d.dayChangePercent === bestDay)?.dayChange || 0)})
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Worst Day:</span>
+              <span className="stat-value negative">
+                {formatPercent(worstDay)} ({formatCurrency(chartData.find(d => d.dayChangePercent === worstDay)?.dayChange || 0)})
+              </span>
+            </div>
+          </div>
+          
+          <div className="stat-group">
+            <div className="stat-item">
+              <span className="stat-label">Avg Daily:</span>
+              <span className={`stat-value ${avgDaily >= 0 ? 'positive' : 'negative'}`}>
+                {formatPercent(avgDaily)}
+              </span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Volatility:</span>
+              <span className="stat-value">
+                {formatPercent(Math.sqrt(chartData.reduce((sum, d) => sum + Math.pow(d.dayChangePercent - avgDaily, 2), 0) / totalDays))}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {isSample && (
+          <div className="data-status-section">
+            <div className="data-status-title">
+              📅 Data Status: Daily tracking {realDataCount === 1 ? 'started' : 'will begin tomorrow'}
+            </div>
+            {realDataCount === 0 && (
+              <div style={{ marginTop: '8px', fontSize: '0.9rem', color: '#6b7280' }}>
+                Daily bars will accumulate from tomorrow
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
-};
+});
 
 // Portfolio Composition Chart Component
 const PortfolioCompositionChart = ({ sectorData, formatPercent }) => {

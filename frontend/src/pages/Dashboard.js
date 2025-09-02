@@ -115,7 +115,7 @@ const Dashboard = () => {
       <div className={`dashboard-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="brand">
-            <div className="brand-icon-wrapper">
+            <div className="brand-icon-wrapper special">
               <TrendingUp className="brand-icon" />
               <Zap className="brand-lightning" size={12} />
             </div>
