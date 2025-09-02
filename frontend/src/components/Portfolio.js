@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AnimatedPrice from './AnimatedPrice';
+import PortfolioIntelligence from './PortfolioIntelligence';
 import { usePriceTracker } from '../hooks/usePriceTracker';
 import axios from 'axios';
 import { 
@@ -12,7 +13,8 @@ import {
   ShoppingCart,
   Minus,
   Activity,
-  AlertCircle
+  AlertCircle,
+  BarChart3
 } from 'lucide-react';
 import './Portfolio.css';
 
@@ -22,6 +24,7 @@ const Portfolio = ({ portfolioData, onTrade }) => {
   const [localPortfolioData, setLocalPortfolioData] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [showTransactions, setShowTransactions] = useState(false);
+  const [activeView, setActiveView] = useState('overview');
   
   const { user } = useAuth();
   
@@ -120,8 +123,31 @@ const Portfolio = ({ portfolioData, onTrade }) => {
 
   return (
     <div className="portfolio">
-      {/* Portfolio Summary */}
-      <div className="portfolio-summary">
+      {/* Portfolio Navigation */}
+      <div className="portfolio-nav">
+        <button 
+          className={`nav-tab ${activeView === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveView('overview')}
+        >
+          <PieChart size={18} />
+          Portfolio Overview
+        </button>
+        <button 
+          className={`nav-tab ${activeView === 'intelligence' ? 'active' : ''}`}
+          onClick={() => setActiveView('intelligence')}
+        >
+          <BarChart3 size={18} />
+          Intelligence Dashboard
+        </button>
+      </div>
+
+      {/* Content based on active view */}
+      {activeView === 'intelligence' ? (
+        <PortfolioIntelligence />
+      ) : (
+        <>
+          {/* Portfolio Summary */}
+          <div className="portfolio-summary">
         <div className="summary-cards">
           <div className="summary-card">
             <div className="card-icon cash">
@@ -393,6 +419,8 @@ const Portfolio = ({ portfolioData, onTrade }) => {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 };

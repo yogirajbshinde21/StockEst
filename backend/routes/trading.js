@@ -4,6 +4,7 @@ const User = require('../models/User');
 const stockDataService = require('../services/stockDataService');
 const achievementService = require('../services/AchievementService');
 const chatbotService = require('../services/ChatbotService');
+const portfolioAnalyticsService = require('../services/PortfolioAnalyticsService');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -201,6 +202,15 @@ router.post('/buy', [
       // Don't fail the trade if cache refresh fails
     }
 
+    // Create/update portfolio snapshot for analytics
+    try {
+      await portfolioAnalyticsService.createDailySnapshot(userId);
+      console.log('✅ Portfolio snapshot updated after buy trade');
+    } catch (snapshotError) {
+      console.error('❌ Portfolio snapshot error:', snapshotError);
+      // Don't fail the trade if snapshot creation fails
+    }
+
     res.json({
       success: true,
       message: `Successfully bought ${quantity} shares of ${stock.companyName}`,
@@ -364,6 +374,15 @@ router.post('/sell', [
     } catch (cacheError) {
       console.error('❌ Chatbot cache refresh error:', cacheError);
       // Don't fail the trade if cache refresh fails
+    }
+
+    // Create/update portfolio snapshot for analytics
+    try {
+      await portfolioAnalyticsService.createDailySnapshot(userId);
+      console.log('✅ Portfolio snapshot updated after sell trade');
+    } catch (snapshotError) {
+      console.error('❌ Portfolio snapshot error:', snapshotError);
+      // Don't fail the trade if snapshot creation fails
     }
 
     res.json({

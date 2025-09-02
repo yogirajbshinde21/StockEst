@@ -17,10 +17,12 @@ const chatbotRoutes = require('./routes/chatbot');
 const watchlistRoutes = require('./routes/watchlist');
 const achievementRoutes = require('./routes/achievements');
 const analysisRoutes = require('./routes/analysis');
+const analyticsRoutes = require('./routes/analytics');
 
 // Import services
 const stockDataService = require('./services/stockDataService');
 const newsScheduler = require('./utils/newsScheduler');
+const portfolioAnalyticsScheduler = require('./utils/portfolioAnalyticsScheduler');
 const HistoricalDataService = require('./services/HistoricalDataService');
 
 // Import middleware
@@ -119,6 +121,7 @@ class StockSimulatorServer {
     this.app.use('/api/watchlist', watchlistRoutes);
     this.app.use('/api/achievements', achievementRoutes);
     this.app.use('/api/analysis', analysisRoutes);
+    this.app.use('/api/analytics', analyticsRoutes);
 
     // 404 handler for API routes
     this.app.use('/api/*', (req, res) => {
@@ -313,6 +316,10 @@ class StockSimulatorServer {
       // Start news scheduler
       newsScheduler.startScheduler();
       console.log('✅ News scheduler started for Perplexity API');
+
+      // Start portfolio analytics scheduler
+      portfolioAnalyticsScheduler.startScheduler();
+      console.log('✅ Portfolio analytics scheduler started');
 
       // Setup cron job for historical data refresh (daily at 4:00 PM IST, after market close)
       cron.schedule('0 16 * * 1-5', async () => {
