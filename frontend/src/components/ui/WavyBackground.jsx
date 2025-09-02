@@ -1,9 +1,12 @@
 "use client";
 import { cn } from "../../lib/utils";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { createNoise3D } from "simplex-noise";
 
-export const WavyBackground = ({
+// Animation start time to maintain continuity across re-renders
+const animationStartTime = Date.now();
+
+export const WavyBackground = React.memo(({
   children,
   className,
   containerClassName,
@@ -15,21 +18,22 @@ export const WavyBackground = ({
   waveOpacity = 0.95,
   ...props
 }) => {
-  const noise = createNoise3D();
+  // Use useMemo to create a stable noise instance
+  const noise = useMemo(() => createNoise3D(), []);
   const canvasRef = useRef(null);
 
   useEffect(() => {
     let animationId;
-    let w, h, nt, i, x, ctx, canvas;
+    let w, h, ctx, canvas;
     
     const getSpeed = () => {
       switch (speed) {
         case "slow": 
-          return 0.0013;
+          return 0.0003;
         case "fast": 
-          return 0.0015;
+          return 0.0010;
         default: 
-          return 0.0008;
+          return 0.0004;
       }
     };
     
@@ -41,17 +45,20 @@ export const WavyBackground = ({
     ];
 
     const drawWave = (n) => {
-      nt += getSpeed();
+      // Use continuous time based on actual elapsed time
+      const currentTime = Date.now();
+      const elapsedTime = (currentTime - animationStartTime) * getSpeed();
+      
       ctx.globalAlpha = waveOpacity;
       
-      for (i = 0; i < n; i++) {
+      for (let i = 0; i < n; i++) {
         ctx.beginPath();
         ctx.lineWidth = waveWidth + (i * 2);
         ctx.strokeStyle = waveColors[i % waveColors.length];
         
-        for (x = 0; x < w; x += 8) {
+        for (let x = 0; x < w; x += 8) {
           // Cleaner wave pattern with better spacing
-          const y = noise(x / 1000, 0.5 * i, nt) * 60;
+          const y = noise(x / 1000, 0.5 * i, elapsedTime) * 60;
           ctx.lineTo(x, y + h * 0.5 + (i * 40));
         }
         ctx.stroke();
@@ -61,20 +68,33 @@ export const WavyBackground = ({
     
     const init = () => {
       canvas = canvasRef.current;
+      if (!canvas) return;
+      
       ctx = canvas.getContext("2d");
       w = ctx.canvas.width = window.innerWidth;
       h = ctx.canvas.height = window.innerHeight;
       ctx.filter = `blur(${blur}px)`;
-      nt = 0;
-      window.onresize = function () {
-        w = ctx.canvas.width = window.innerWidth;
-        h = ctx.canvas.height = window.innerHeight;
-        ctx.filter = `blur(${blur}px)`;
+      
+      const handleResize = () => {
+        if (ctx) {
+          w = ctx.canvas.width = window.innerWidth;
+          h = ctx.canvas.height = window.innerHeight;
+          ctx.filter = `blur(${blur}px)`;
+        }
       };
+      
+      window.addEventListener('resize', handleResize);
       render();
+      
+      // Return cleanup function for resize listener
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
     };
 
     const render = () => {
+      if (!ctx) return;
+      
       // Clear and fill background
       ctx.fillStyle = backgroundFill;
       ctx.globalAlpha = 1;
@@ -85,11 +105,17 @@ export const WavyBackground = ({
       animationId = requestAnimationFrame(render);
     };
 
-    init();
+    const cleanup = init();
+    
     return () => {
-      cancelAnimationFrame(animationId);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      if (cleanup) {
+        cleanup();
+      }
     };
-  }, [blur, backgroundFill, waveOpacity, waveWidth, colors, speed, noise]); // Added dependencies
+  }, [blur, backgroundFill, waveOpacity, waveWidth, colors, speed, noise]);
 
   const [isSafari, setIsSafari] = useState(false);
   useEffect(() => {
@@ -120,4 +146,4 @@ export const WavyBackground = ({
       </div>
     </div>
   );
-};
+});
