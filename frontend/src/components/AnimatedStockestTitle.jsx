@@ -3,7 +3,6 @@ import './AnimatedStockestTitle.css';
 
 const AnimatedStockestTitle = () => {
   const [isGreenPhase, setIsGreenPhase] = useState(true);
-  const [animationKey, setAnimationKey] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const timeoutRef = useRef(null);
 
@@ -11,12 +10,11 @@ const AnimatedStockestTitle = () => {
     const changePhase = () => {
       setIsTransitioning(true);
       
-      // Allow CSS transitions to settle before changing phase
+      // Allow CSS transitions to settle before changing phase - increased for smoother transitions
       setTimeout(() => {
         setIsGreenPhase(prev => !prev);
-        setAnimationKey(prev => prev + 1);
         setIsTransitioning(false);
-      }, 100);
+      }, 200);
     };
 
     // Enhanced random interval between 4-8 seconds with better distribution
@@ -49,11 +47,6 @@ const AnimatedStockestTitle = () => {
         {/* Stock letters with market animation */}
         <span 
           className={`stock-letters ${isGreenPhase ? 'green-phase' : 'red-phase'} ${isTransitioning ? 'transitioning' : ''}`}
-          key={`stock-${animationKey}`}
-          style={{
-            // Additional inline style for smoother transitions
-            transition: 'all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)'
-          }}
         >
           <span className="letter">S</span>
           <span className="letter">t</span>
@@ -72,11 +65,6 @@ const AnimatedStockestTitle = () => {
         {/* Market direction arrow */}
         <span 
           className={`market-arrow ${isGreenPhase ? 'arrow-up' : 'arrow-down'} ${isTransitioning ? 'transitioning' : ''}`}
-          key={`arrow-${animationKey}`}
-          style={{
-            // Additional inline style for smoother arrow transitions
-            transition: 'all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)'
-          }}
         >
           {isGreenPhase ? '↗' : '↘'}
         </span>
