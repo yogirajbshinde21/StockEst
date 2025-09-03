@@ -977,13 +977,78 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
     isToday: d.isToday
   }));
 
-  // Enhanced tooltip for portfolio timeline
+  // Enhanced tooltip with hover zoom for portfolio timeline
   const PortfolioTimelineTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const portfolioValue = data.portfolioValue || 0;
+      const totalInvested = data.totalInvested || 0;
+      const difference = portfolioValue - totalInvested;
+      
+      // Create zoom data for mini visualization
+      const createZoomData = () => {
+        const min = Math.min(portfolioValue, totalInvested);
+        const max = Math.max(portfolioValue, totalInvested);
+        const range = max - min;
+        const padding = Math.max(range * 0.15, Math.max(max * 0.005, 200)); // Padding for visibility
+        
+        return {
+          zoomMin: min - padding,
+          zoomMax: max + padding,
+          range: Math.abs(range),
+          portfolioValue,
+          totalInvested,
+          difference
+        };
+      };
+
+      const zoomData = createZoomData();
+
       return (
         <div className="chart-tooltip portfolio-timeline-tooltip">
           <div className="tooltip-label">{label}</div>
+          
+          {/* Hover Zoom Visualization */}
+          <div className="tooltip-zoom-chart">
+            <div className="zoom-chart-header">
+              <span className="zoom-label">🔍 Zoomed View</span>
+              <span className="zoom-range">Diff: ₹{zoomData.range.toLocaleString()}</span>
+            </div>
+            <div className="zoom-chart-container">
+              <div className="zoom-axis">
+                <span className="zoom-max">₹{Math.round(zoomData.zoomMax).toLocaleString()}</span>
+                <div className="zoom-middle"></div>
+                <span className="zoom-min">₹{Math.round(zoomData.zoomMin).toLocaleString()}</span>
+              </div>
+              <div className="zoom-bars">
+                <div className="zoom-bar">
+                  <div className="zoom-bar-label">Portfolio</div>
+                  <div className="zoom-bar-container">
+                    <div 
+                      className="zoom-bar-fill portfolio-bar"
+                      style={{
+                        height: `${((portfolioValue - zoomData.zoomMin) / (zoomData.zoomMax - zoomData.zoomMin)) * 100}%`
+                      }}
+                    ></div>
+                  </div>
+                  <div className="zoom-value">₹{portfolioValue.toLocaleString()}</div>
+                </div>
+                <div className="zoom-bar">
+                  <div className="zoom-bar-label">Invested</div>
+                  <div className="zoom-bar-container">
+                    <div 
+                      className="zoom-bar-fill invested-bar"
+                      style={{
+                        height: `${((totalInvested - zoomData.zoomMin) / (zoomData.zoomMax - zoomData.zoomMin)) * 100}%`
+                      }}
+                    ></div>
+                  </div>
+                  <div className="zoom-value">₹{totalInvested.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="tooltip-content">
             <div className="tooltip-item">
               <span className="tooltip-indicator portfolio">📈</span>
@@ -1015,14 +1080,92 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
     return null;
   };
 
-  // Format Y-axis values
+  // Enhanced Y-axis formatting for better precision in zoomed views
   const formatYAxis = (value) => {
+    const [min, max] = yAxisDomain;
+    const range = max - min;
+    
+    // For very small ranges, show more decimal places
+    if (range < 1000) {
+      return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+    }
+    
     if (value >= 100000) {
       return `₹${(value / 100000).toFixed(1)}L`;
     } else if (value >= 1000) {
       return `₹${(value / 1000).toFixed(0)}K`;
     }
-    return `₹${value}`;
+    return `₹${value.toFixed(0)}`;
+  };
+
+  // Calculate dynamic Y-axis domain for ULTRA-AGGRESSIVE zooming into actual data range
+  const calculateDynamicDomain = () => {
+    // Only consider real data points (not zero-filled days)
+    const realDataValues = [];
+    chartData.forEach(d => {
+      if (d.isReal && (d.portfolioValue > 0 || d.totalInvested > 0)) {
+        if (d.portfolioValue > 0) realDataValues.push(d.portfolioValue);
+        if (d.totalInvested > 0) realDataValues.push(d.totalInvested);
+      }
+    });
+    
+    if (realDataValues.length === 0) return ['auto', 'auto'];
+    
+    const minValue = Math.min(...realDataValues);
+    const maxValue = Math.max(...realDataValues);
+    const range = maxValue - minValue;
+    
+    console.log('📊 ULTRA-ZOOM Portfolio Timeline Domain:', {
+      realDataValues,
+      minValue,
+      maxValue,
+      range,
+      rangePercentage: (range / maxValue * 100).toFixed(2) + '%'
+    });
+    
+    // ULTRA-AGGRESSIVE ZOOM: Always create tight range around actual data
+    if (range === 0) {
+      // If both values are exactly the same, create minimal range
+      const center = minValue;
+      const minRange = Math.max(center * 0.005, 100); // Minimum 0.5% of value or ₹100
+      return [
+        center - minRange / 2,
+        center + minRange / 2
+      ];
+    }
+    
+    // For any range, create very tight bounds around the data
+    // Use only 2% padding to maximize zoom effect
+    const padding = Math.max(range * 0.02, maxValue * 0.002);
+    
+    // Calculate domain ensuring we show the tightest possible range
+    const domainMin = minValue - padding;
+    const domainMax = maxValue + padding;
+    
+    console.log('📊 Final Ultra-Zoom Domain:', { 
+      domainMin: domainMin.toFixed(0), 
+      domainMax: domainMax.toFixed(0),
+      zoomRange: (domainMax - domainMin).toFixed(0)
+    });
+    
+    return [domainMin, domainMax];
+  };
+
+  const yAxisDomain = calculateDynamicDomain();
+  
+  // Calculate tick count based on domain range for maximum precision
+  const calculateTickCount = () => {
+    const [min, max] = yAxisDomain;
+    if (min === 'auto' || max === 'auto') return 8;
+    
+    const range = max - min;
+    
+    // More aggressive tick counts for better precision
+    if (range < 100) return 15;      // Very small range - show maximum detail
+    if (range < 500) return 12;      // Small range
+    if (range < 1000) return 10;     // Medium-small range
+    if (range < 5000) return 8;      // Medium range
+    return 6;                        // Large range
   };
 
   return (
@@ -1057,7 +1200,13 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
               bottom: 60,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid 
+              strokeDasharray="2 2" 
+              stroke="#e5e7eb" 
+              strokeWidth={1}
+              horizontal={true}
+              vertical={false}
+            />
             <XAxis 
               dataKey="date" 
               tick={{ fontSize: 12, fill: '#6b7280' }}
@@ -1070,8 +1219,19 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
               tick={{ fontSize: 12, fill: '#6b7280' }}
               tickFormatter={formatYAxis}
               width={80}
+              domain={yAxisDomain}
+              type="number"
+              tickCount={calculateTickCount()}
             />
             <Tooltip content={<PortfolioTimelineTooltip />} />
+            {/* Reference line to show break-even point */}
+            <ReferenceLine 
+              y={chartData.find(d => d.isReal && d.totalInvested > 0)?.totalInvested || 0} 
+              stroke="#94a3b8" 
+              strokeDasharray="4 4" 
+              strokeWidth={1}
+              label={{ value: "Break-even", position: "insideTopRight", fontSize: 10, fill: "#64748b" }}
+            />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
               iconType="line"
@@ -1080,9 +1240,9 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
               type="monotone"
               dataKey="portfolioValue"
               stroke="#667eea"
-              strokeWidth={3}
+              strokeWidth={4}
               dot={false}
-              activeDot={{ r: 6, stroke: '#667eea', strokeWidth: 2 }}
+              activeDot={{ r: 8, stroke: '#667eea', strokeWidth: 3, fill: '#667eea' }}
               name="Portfolio Value"
               connectNulls={false}
             />
@@ -1090,10 +1250,10 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
               type="monotone"
               dataKey="totalInvested"
               stroke="#f59e0b"
-              strokeWidth={2}
-              strokeDasharray="5 5"
+              strokeWidth={3}
+              strokeDasharray="8 4"
               dot={false}
-              activeDot={{ r: 5, stroke: '#f59e0b', strokeWidth: 2 }}
+              activeDot={{ r: 6, stroke: '#f59e0b', strokeWidth: 2, fill: '#f59e0b' }}
               name="Total Invested"
               connectNulls={false}
             />

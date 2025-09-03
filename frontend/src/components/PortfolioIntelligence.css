@@ -564,7 +564,7 @@
   margin-left: auto;
 }
 
-/* Enhanced Portfolio Timeline Tooltip */
+/* Enhanced Portfolio Timeline Tooltip with Hover Zoom */
 .portfolio-timeline-tooltip {
   background: white !important;
   border: 2px solid #667eea !important;
@@ -572,10 +572,143 @@
   padding: 12px 15px !important;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
   font-size: 0.8rem !important;
-  max-width: 220px !important;
-  min-width: 180px !important;
+  max-width: 280px !important;
+  min-width: 240px !important;
   line-height: 1.4 !important;
-  min-height: 100px;
+  min-height: 160px;
+}
+
+/* Hover Zoom Chart Styles */
+.tooltip-zoom-chart {
+  margin: 8px 0 12px 0;
+  padding: 10px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.zoom-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+}
+
+.zoom-label {
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+.zoom-range {
+  font-weight: 500;
+  color: #6b7280;
+  background: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+}
+
+.zoom-chart-container {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  height: 60px;
+}
+
+.zoom-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  font-size: 0.6rem;
+  color: #6b7280;
+  min-width: 40px;
+}
+
+.zoom-max, .zoom-min {
+  font-weight: 500;
+}
+
+.zoom-middle {
+  flex: 1;
+  border-left: 1px dashed #d1d5db;
+  margin: 2px 0;
+}
+
+.zoom-bars {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+  flex: 1;
+}
+
+.zoom-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+}
+
+.zoom-bar-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.zoom-bar-container {
+  flex: 1;
+  width: 20px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid #e5e7eb;
+}
+
+.zoom-bar-fill {
+  width: 100%;
+  border-radius: 0 0 9px 9px;
+  min-height: 2px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.zoom-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.portfolio-bar {
+  background: linear-gradient(180deg, #667eea 0%, #4f46e5 100%);
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.invested-bar {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.zoom-value {
+  font-size: 0.6rem;
+  font-weight: 600;
+  margin-top: 4px;
+  color: #374151;
+  text-align: center;
+  background: white;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  white-space: nowrap;
 }
 
 .portfolio-timeline-tooltip .tooltip-label {
@@ -750,6 +883,52 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Enhanced Chart Styling for Better Visibility */
+.portfolio-timeline-chart .recharts-cartesian-grid-horizontal line {
+  stroke: #e5e7eb !important;
+  stroke-width: 1 !important;
+  opacity: 0.6 !important;
+}
+
+.portfolio-timeline-chart .recharts-cartesian-grid-vertical line {
+  stroke: #f3f4f6 !important;
+  stroke-width: 0.5 !important;
+  opacity: 0.3 !important;
+}
+
+/* Enhanced Line Styling for Better Distinction */
+.portfolio-timeline-chart .recharts-line-curve {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.portfolio-timeline-chart .recharts-active-dot {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+  stroke-width: 3px !important;
+}
+
+/* Enhanced Y-axis for better precision */
+.portfolio-timeline-chart .recharts-cartesian-axis-tick text {
+  font-size: 11px !important;
+  fill: #6b7280 !important;
+  font-weight: 500 !important;
+}
+
+.portfolio-timeline-chart .recharts-cartesian-axis-line {
+  stroke: #d1d5db !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Better legend positioning and styling */
+.portfolio-timeline-chart .recharts-legend-wrapper {
+  padding-top: 25px !important;
+}
+
+.portfolio-timeline-chart .recharts-legend-item {
+  margin-right: 20px !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
 }
 
 /* Daily Performance Chart Styles */
