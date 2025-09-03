@@ -697,16 +697,64 @@
   transform: scale(1.05);
 }
 
-.speech-lang-btn.hindi {
+.speech-lang-btn.lang-hi {
   background: #f59e0b;
   color: white;
   box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
 }
 
-.speech-lang-btn.english {
+.speech-lang-btn.lang-en {
   background: #3b82f6;
   color: white;
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.speech-lang-btn.lang-te {
+  background: #8b5cf6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.speech-lang-btn.lang-ta {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.speech-lang-btn.lang-bn {
+  background: #059669;
+  color: white;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
+}
+
+.speech-lang-btn.lang-mr {
+  background: #d97706;
+  color: white;
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
+}
+
+.speech-lang-btn.lang-gu {
+  background: #dc2626;
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.speech-lang-btn.lang-kn {
+  background: #7c3aed;
+  color: white;
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.3);
+}
+
+.speech-lang-btn.lang-ml {
+  background: #059669;
+  color: white;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
+}
+
+.speech-lang-btn.lang-pa {
+  background: #ea580c;
+  color: white;
+  box-shadow: 0 2px 4px rgba(234, 88, 12, 0.3);
 }
 
 .voice-toggle-btn {

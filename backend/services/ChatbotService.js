@@ -288,9 +288,29 @@ class ChatbotService {
    * Create context prompt - portfolio data only included when needed
    */
   createContextPrompt(userQuery, portfolioData, userLanguage) {
-    const isHindi = userLanguage === 'hindi';
+    // Map of supported languages with their language instructions
+    const languageInstructions = {
+      'english': 'Respond in English only.',
+      'hindi': 'IMPORTANT: You MUST respond COMPLETELY in Hindi (हिंदी) language only. Do not use any English words. Use proper Hindi vocabulary for ALL financial terms and concepts. Example: Use "शेयर बाज़ार" not "stock market", "निवेश" not "investment", "कंपनी" not "company".',
+      'telugu': 'IMPORTANT: You MUST respond COMPLETELY in Telugu (తెలుగు) language only. Do not use any English words. Use proper Telugu vocabulary for ALL financial terms and concepts. Example: Use "షేర్ మార్కెట్" not "stock market", "పెట్టుబడి" not "investment".',
+      'tamil': 'IMPORTANT: You MUST respond COMPLETELY in Tamil (தமிழ்) language only. Do not use any English words. Use proper Tamil vocabulary for ALL financial terms and concepts. Example: Use "பங்குச் சந்தை" not "stock market", "முதலீடு" not "investment".',
+      'bengali': 'IMPORTANT: You MUST respond COMPLETELY in Bengali (বাংলা) language only. Do not use any English words. Use proper Bengali vocabulary for ALL financial terms and concepts. Example: Use "শেয়ার বাজার" not "stock market", "বিনিয়োগ" not "investment".',
+      'marathi': 'IMPORTANT: You MUST respond COMPLETELY in Marathi (मराठी) language only. Do not use any English words. Use proper Marathi vocabulary for ALL financial terms and concepts. Example: Use "शेअर बाजार" not "stock market", "गुंतवणूक" not "investment", "कंपनी" not "company".',
+      'gujarati': 'IMPORTANT: You MUST respond COMPLETELY in Gujarati (ગુજરાતી) language only. Do not use any English words. Use proper Gujarati vocabulary for ALL financial terms and concepts. Example: Use "શેર બજાર" not "stock market", "રોકાણ" not "investment".',
+      'kannada': 'IMPORTANT: You MUST respond COMPLETELY in Kannada (ಕನ್ನಡ) language only. Do not use any English words. Use proper Kannada vocabulary for ALL financial terms and concepts. Example: Use "ಷೇರು ಮಾರುಕಟ್ಟೆ" not "stock market", "ಹೂಡಿಕೆ" not "investment".',
+      'malayalam': 'IMPORTANT: You MUST respond COMPLETELY in Malayalam (മലയാളം) language only. Do not use any English words. Use proper Malayalam vocabulary for ALL financial terms and concepts. Example: Use "ഓഹരി വിപണി" not "stock market", "നിക്ഷേപം" not "investment".',
+      'punjabi': 'IMPORTANT: You MUST respond COMPLETELY in Punjabi (ਪੰਜਾਬੀ) language only. Do not use any English words. Use proper Punjabi vocabulary for ALL financial terms and concepts. Example: Use "ਸਟਾਕ ਮਾਰਕੀਟ" not "stock market", "ਨਿਵੇਸ਼" not "investment".'
+    };
     
-    let context = `You are StockEst AI, an intelligent stock market assistant for Indian investors.`;
+    const languageInstruction = languageInstructions[userLanguage] || languageInstructions['english'];
+    
+    console.log(`🌍 Language instruction for ${userLanguage}:`, languageInstruction);
+    
+    let context = `LANGUAGE REQUIREMENT: ${languageInstruction}
+
+You are StockEst AI, an intelligent stock market assistant for Indian investors.
+
+CRITICAL: ${languageInstruction}`;
     
     if (portfolioData) {
       // Only add portfolio context if portfolio data was actually needed and provided
@@ -405,19 +425,26 @@ You have complete access to the user's portfolio data above. Use this informatio
       context += ` You provide general stock market information and analysis for Indian markets.`;
     }
 
-    context += `\n\n=== GENERAL INSTRUCTIONS ===
+    context += `\n\n=== CRITICAL LANGUAGE REQUIREMENTS ===
+${languageInstruction}
+
+=== GENERAL INSTRUCTIONS ===
 1. Answer only stock market, investment, trading, and financial literacy questions
 2. Use simple language suitable for Indian investors
 3. Provide educational explanations with real-world examples
 4. Use current market data from Google Search when needed
 5. Be encouraging and supportive for investors
-6. ${isHindi ? 'Respond COMPLETELY in Hindi (हिंदी). Use proper Hindi vocabulary for financial terms and avoid English words wherever possible.' : 'Respond in English only.'}
+6. MANDATORY: ${languageInstruction}
 7. Keep responses concise but informative
 8. For general market questions, focus on broad market analysis and education
 
+REMINDER: Your response MUST be in the language specified above. Do not mix languages.
+
 Current Query: "${userQuery}"
 
-${portfolioData ? 'Remember: Use the specific portfolio data provided to give personalized advice.' : 'Note: This is a general market query - provide broad market insights and educational content.'}`;
+${portfolioData ? 'Remember: Use the specific portfolio data provided to give personalized advice.' : 'Note: This is a general market query - provide broad market insights and educational content.'}
+
+FINAL REMINDER: ${languageInstruction}`;
 
     return context;
   }
@@ -481,11 +508,21 @@ ${portfolioData ? 'Remember: Use the specific portfolio data provided to give pe
       
       // Check if query is stock market related
       if (!this.isStockMarketQuery(userQuery)) {
-        const isHindi = userLanguage === 'hindi';
+        const errorMessages = {
+          'english': 'I can only answer questions related to stock market, investments, and trading. Please ask a question related to the stock market.',
+          'hindi': 'मैं केवल शेयर बाज़ार, निवेश, और ट्रेडिंग के सवालों का जवाब दे सकता हूँ। कृपया स्टॉक मार्केट से जुड़ा प्रश्न पूछें।',
+          'telugu': 'నేను స్టాక్ మార్కెట్, పెట్టుబడులు మరియు ట్రేడింగ్‌కు సంబంధించిన ప్రశ్నలకు మాత్రమే సమాధానం ఇవ్వగలను।',
+          'tamil': 'நான் பங்குச் சந்தை, முதலீடுகள் மற்றும் வர்த்தகம் தொடர்பான கேள்விகளுக்கு மட்டுமே பதிலளிக்க முடியும்।',
+          'bengali': 'আমি শুধুমাত্র শেয়ার বাজার, বিনিয়োগ এবং ট্রেডিং সংক্রান্ত প্রশ্নের উত্তর দিতে পারি।',
+          'marathi': 'मी फक्त शेअर बाजार, गुंतवणूक आणि ट्रेडिंगशी संबंधित प्रश्नांची उत्तरे देऊ शकतो।',
+          'gujarati': 'હું ફક્ત શેર બજાર, રોકાણ અને ટ્રેડિંગ સંબંધિત પ્રશ્નોના જવાબ આપી શકું છું।',
+          'kannada': 'ನಾನು ಷೇರು ಮಾರುಕಟ್ಟೆ, ಹೂಡಿಕೆಗಳು ಮತ್ತು ವ್ಯಾಪಾರಕ್ಕೆ ಸಂಬಂಧಿಸಿದ ಪ್ರಶ್ನೆಗಳಿಗೆ ಮಾತ್ರ ಉತ್ತರಿಸಬಲ್ಲೆ।',
+          'malayalam': 'എനിക്ക് ഓഹരി വിപണി, നിക്ഷേപങ്ങൾ, ട്രേഡിംഗ് എന്നിവയുമായി ബന്ധപ്പെട്ട ചോദ്യങ്ങൾക്ക് മാത്രമേ ഉത്തരം നൽകാൻ കഴിയൂ।',
+          'punjabi': 'ਮੈਂ ਸਿਰਫ਼ ਸਟਾਕ ਮਾਰਕੀਟ, ਨਿਵੇਸ਼ ਅਤੇ ਵਪਾਰ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ।'
+        };
+        
         return {
-          text: isHindi 
-            ? 'मैं केवल शेयर बाज़ार, निवेश, और ट्रेडिंग के सवालों का जवाब दे सकता हूँ। कृपया स्टॉक मार्केट से जुड़ा प्रश्न पूछें।'
-            : 'I can only answer questions related to stock market, investments, and trading. Please ask a question related to the stock market.',
+          text: errorMessages[userLanguage] || errorMessages['english'],
           sources: [],
           isRelevant: false
         };
@@ -505,10 +542,21 @@ ${portfolioData ? 'Remember: Use the specific portfolio data provided to give pe
         
         if (!portfolioData) {
           console.log('⚠️ No portfolio data available for portfolio-specific query');
+          const portfolioErrorMessages = {
+            'english': 'I cannot access your portfolio data. Please make some trades first or ensure your account is properly set up.',
+            'hindi': 'मुझे आपका पोर्टफोलियो डेटा नहीं मिल पा रहा। कृपया पहले कुछ स्टॉक खरीदें या अपना खाता सेट करें।',
+            'telugu': 'మీ పోర్ట్‌ఫోలియో డేటాను నేను యాక్సెస్ చేయలేను. దయచేసి ముందుగా కొన్ని ట్రేడ్‌లు చేయండి.',
+            'tamil': 'உங்கள் போர்ட்ஃபோலியோ தரவை என்னால் அணுக முடியவில்லை. தயவுசெய்து முதலில் சில வர்த்தகங்களைச் செய்யுங்கள்.',
+            'bengali': 'আমি আপনার পোর্টফোলিও ডেটা অ্যাক্সেস করতে পারছি না। অনুগ্রহ করে প্রথমে কিছু ট্রেড করুন।',
+            'marathi': 'मी तुमचा पोर्टफोलिओ डेटा अॅक्सेस करू शकत नाही. कृपया आधी काही ट्रेड्स करा.',
+            'gujarati': 'હું તમારા પોર્ટફોલિયો ડેટાને ઍક્સેસ કરી શકતો નથી. કૃપા કરીને પહેલા કેટલાક ટ્રેડ્સ કરો.',
+            'kannada': 'ನಾನು ನಿಮ್ಮ ಪೋರ್ಟ್‌ಫೋಲಿಯೋ ಡೇಟಾವನ್ನು ಪ್ರವೇಶಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಮೊದಲು ಕೆಲವು ವ್ಯಾಪಾರಗಳನ್ನು ಮಾಡಿ.',
+            'malayalam': 'എനിക്ക് നിങ്ങളുടെ പോർട്ട്‌ഫോളിയോ ഡാറ്റ ആക്‌സസ് ചെയ്യാൻ കഴിയുന്നില്ല. ദയവായി ആദ്യം കുറച്ച് ട്രേഡുകൾ നടത്തുക.',
+            'punjabi': 'ਮੈਂ ਤੁਹਾਡਾ ਪੋਰਟਫੋਲੀਓ ਡੇਟਾ ਐਕਸੈਸ ਨਹੀਂ ਕਰ ਸਕਦਾ। ਕਿਰਪਾ ਕਰਕੇ ਪਹਿਲਾਂ ਕੁਝ ਵਪਾਰ ਕਰੋ।'
+          };
+          
           return {
-            text: userLanguage === 'hindi' 
-              ? 'मुझे आपका पोर्टफोलियो डेटा नहीं मिल पा रहा। कृपया पहले कुछ स्टॉक खरीदें या अपना खाता सेट करें।'
-              : 'I cannot access your portfolio data. Please make some trades first or ensure your account is properly set up.',
+            text: portfolioErrorMessages[userLanguage] || portfolioErrorMessages['english'],
             sources: [],
             isRelevant: true,
             portfolioRequired: true,
@@ -561,11 +609,21 @@ ${portfolioData ? 'Remember: Use the specific portfolio data provided to give pe
     } catch (error) {
       console.error('❌ Error generating chatbot response:', error.message);
       
-      const isHindi = userLanguage === 'hindi';
+      const generalErrorMessages = {
+        'english': 'Sorry, there seems to be a technical issue. Please try again in a moment.',
+        'hindi': 'क्षमा करें, अभी कुछ तकनीकी समस्या है। कृपया थोड़ी देर बाद फिर कोशिश करें।',
+        'telugu': 'క్షమించండి, ఇప్పుడు కొంత సాంకేతిక సమస్య ఉంది. దయచేసి కొద్దిసేపు తర్వాత మళ్లీ ప్రయత్నించండి.',
+        'tamil': 'மன்னிக்கவும், இப்போது சில தொழில்நுட்ப சிக்கல் உள்ளது. தயவுசெய்து சிறிது நேரத்தில் மீண்டும் முயற்சிக்கவும்.',
+        'bengali': 'দুঃখিত, এখন কিছু প্রযুক্তিগত সমস্যা আছে। অনুগ্রহ করে একটু পরে আবার চেষ্টা করুন।',
+        'marathi': 'क्षमस्व, सध्या काही तांत्रिक समस्या आहे. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.',
+        'gujarati': 'માફ કરશો, હવે કોઈ તકનીકી સમસ્યા છે. કૃપા કરીને થોડા સમય પછી ફરીથી પ્રયાસ કરો.',
+        'kannada': 'ಕ್ಷಮಿಸಿ, ಈಗ ಸ್ವಲ್ಪ ತಾಂತ್ರಿಕ ಸಮಸ್ಯೆ ಇದೆ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+        'malayalam': 'ക്ഷമിക്കണം, ഇപ്പോൾ കുറച്ച് സാങ്കേതിക പ്രശ്‌നമുണ്ട്. ദയവായി കുറച്ച് സമയത്തിന് ശേഷം വീണ്ടും ശ്രമിക്കുക.',
+        'punjabi': 'ਮਾਫ਼ ਕਰਨਾ, ਹੁਣ ਕੁਝ ਤਕਨੀਕੀ ਸਮੱਸਿਆ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਥੋੜ੍ਹੇ ਸਮੇਂ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।'
+      };
+      
       return {
-        text: isHindi 
-          ? 'क्षमा करें, अभी कुछ तकनीकी समस्या है। कृपया थोड़ी देर बाद फिर कोशिश करें।'
-          : 'Sorry, there seems to be a technical issue. Please try again in a moment.',
+        text: generalErrorMessages[userLanguage] || generalErrorMessages['english'],
         sources: [],
         isRelevant: true,
         error: error.message

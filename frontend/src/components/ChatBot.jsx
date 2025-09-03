@@ -3,6 +3,20 @@ import { useLanguage } from '../context/LanguageContext';
 import Trans from './Trans';
 import './ChatBot.css';
 
+// Voice language mappings for Indian languages
+const VOICE_LANGUAGES = [
+  { code: 'en-IN', name: 'English', nativeName: 'English', shortName: 'EN', backendCode: 'english' },
+  { code: 'hi-IN', name: 'Hindi', nativeName: 'हिंदी', shortName: 'हि', backendCode: 'hindi' },
+  { code: 'te-IN', name: 'Telugu', nativeName: 'తెలుగు', shortName: 'తె', backendCode: 'telugu' },
+  { code: 'ta-IN', name: 'Tamil', nativeName: 'தமிழ்', shortName: 'த', backendCode: 'tamil' },
+  { code: 'bn-IN', name: 'Bengali', nativeName: 'বাংলা', shortName: 'বং', backendCode: 'bengali' },
+  { code: 'mr-IN', name: 'Marathi', nativeName: 'मराठी', shortName: 'म', backendCode: 'marathi' },
+  { code: 'gu-IN', name: 'Gujarati', nativeName: 'ગુજરાતી', shortName: 'ગુ', backendCode: 'gujarati' },
+  { code: 'kn-IN', name: 'Kannada', nativeName: 'ಕನ್ನಡ', shortName: 'ಕ', backendCode: 'kannada' },
+  { code: 'ml-IN', name: 'Malayalam', nativeName: 'മലയാളം', shortName: 'മ', backendCode: 'malayalam' },
+  { code: 'pa-IN', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ', shortName: 'ਪੰ', backendCode: 'punjabi' }
+];
+
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -18,19 +32,23 @@ const ChatBot = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [recognition, setRecognition] = useState(null);
-  const [speechLanguage, setSpeechLanguage] = useState('en-IN'); // Separate state for speech recognition language
+  const [speechLanguageIndex, setSpeechLanguageIndex] = useState(0); // Index for VOICE_LANGUAGES array
   const speechSynthesisRef = useRef(null);
+
+  // Helper to get current voice language
+  const currentVoiceLanguage = VOICE_LANGUAGES[speechLanguageIndex];
 
   // Handle voice input - defined early to avoid dependency issues
   const handleVoiceInput = useCallback((transcript, detectedLanguage = null) => {
-    // Detect language from the recognition language used
-    // If speech recognition was in Hindi (hi-IN), set response language to hindi
-    const voiceLanguage = detectedLanguage === 'hi-IN' ? 'hindi' : 'english';
+    // Find the voice language config based on detected language
+    const voiceConfig = VOICE_LANGUAGES.find(lang => lang.code === detectedLanguage) || VOICE_LANGUAGES[0];
+    const voiceLanguage = voiceConfig.backendCode;
     
     console.log(`🎤 Voice input detected:`, {
       transcript,
       detectedLanguage,
-      voiceLanguage
+      voiceLanguage,
+      languageName: voiceConfig.name
     });
     
     // Create a temporary user message
@@ -100,16 +118,92 @@ const ChatBot = () => {
             if (cleanText) {
               speechSynthesisRef.current.cancel();
               const utterance = new SpeechSynthesisUtterance(cleanText);
-              // Use the same language that was detected from voice input
-              utterance.lang = detectedLanguage || (voiceLanguage === 'hindi' ? 'hi-IN' : 'en-IN');
-              utterance.rate = 0.8;
+              
+              // Use the language that was detected from voice input for TTS
+              const ttsLanguage = detectedLanguage || voiceConfig.code;
+              
+              // Try to find a suitable voice for the language
+              const voices = speechSynthesisRef.current.getVoices();
+              
+              // Voice fallback strategy for better support
+              const findBestVoice = (targetLang) => {
+                // 1. Try exact match
+                let voice = voices.find(v => v.lang === targetLang);
+                if (voice) return voice;
+                
+                // 2. Try language family match (e.g., 'mr' from 'mr-IN')
+                const langCode = targetLang.split('-')[0];
+                voice = voices.find(v => v.lang.startsWith(langCode));
+                if (voice) return voice;
+                
+                // 3. For Devanagari script languages (Hindi, Marathi, Nepali), use Hindi voice
+                if (['mr', 'hi', 'ne'].includes(langCode)) {
+                  voice = voices.find(v => v.lang.startsWith('hi'));
+                  if (voice) return voice;
+                }
+                
+                // 4. For other Indian languages, try any Indian English voice
+                if (targetLang.includes('-IN')) {
+                  voice = voices.find(v => v.lang === 'en-IN');
+                  if (voice) return voice;
+                }
+                
+                // 5. Fallback to any English voice
+                voice = voices.find(v => v.lang.startsWith('en'));
+                if (voice) return voice;
+                
+                // 6. Last resort - use default voice
+                return voices[0] || null;
+              };
+              
+              const selectedVoice = findBestVoice(ttsLanguage);
+              
+              if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                utterance.lang = selectedVoice.lang;
+                console.log(`🔊 Using voice: ${selectedVoice.name} (${selectedVoice.lang}) for ${ttsLanguage}`);
+              } else {
+                // Fallback language settings for better pronunciation
+                utterance.lang = ttsLanguage;
+                console.log(`⚠️ No suitable voice found, using system default for ${ttsLanguage}`);
+              }
+              
+              utterance.rate = 0.9;
+              utterance.pitch = 1.0;
+              utterance.volume = 1.0;
+              
               utterance.onstart = () => {
                 setIsSpeaking(true);
-                console.log(`🔊 Speaking in ${utterance.lang === 'hi-IN' ? 'Hindi' : 'English'}`);
+                console.log(`🔊 Speaking in ${voiceConfig.name} (${ttsLanguage})`);
               };
-              utterance.onend = () => setIsSpeaking(false);
-              utterance.onerror = () => setIsSpeaking(false);
-              speechSynthesisRef.current.speak(utterance);
+              utterance.onend = () => {
+                console.log(`✅ Finished speaking in ${voiceConfig.name}`);
+                setIsSpeaking(false);
+              };
+              utterance.onerror = (event) => {
+                console.error('TTS Error:', event.error);
+                console.log(`❌ TTS failed for ${voiceConfig.name}, trying fallback...`);
+                setIsSpeaking(false);
+                
+                // Try again with English fallback if original failed
+                if (utterance.lang !== 'en-US' && utterance.lang !== 'en-IN') {
+                  setTimeout(() => {
+                    const fallbackUtterance = new SpeechSynthesisUtterance(cleanText);
+                    fallbackUtterance.lang = 'en-US';
+                    fallbackUtterance.rate = 0.9;
+                    fallbackUtterance.onstart = () => console.log('🔊 Using English fallback voice');
+                    fallbackUtterance.onerror = (err) => console.error('Fallback TTS also failed:', err);
+                    speechSynthesisRef.current.speak(fallbackUtterance);
+                  }, 100);
+                }
+              };
+              
+              try {
+                speechSynthesisRef.current.speak(utterance);
+                console.log(`🎯 TTS initiated for: "${cleanText.substring(0, 50)}..."`);
+              } catch (error) {
+                console.error('Failed to initiate TTS:', error);
+              }
             }
           }
         } else {
@@ -117,12 +211,24 @@ const ChatBot = () => {
         }
       } catch (error) {
         console.error('Error sending voice message:', error);
+        
+        const errorMessages = {
+          'english': 'Sorry, there was a technical issue. Please try again.',
+          'hindi': 'क्षमा करें, कुछ तकनीकी समस्या है। कृपया फिर से कोशिश करें।',
+          'telugu': 'క్షమించండి, కొంత సాంకేతిక సమస్య ఉంది. దయచేసి మళ్లీ ప్రయత్నించండి.',
+          'tamil': 'மன்னிக்கவும், சில தொழில்நுட்ப சிக்கல் உள்ளது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.',
+          'bengali': 'দুঃখিত, কিছু প্রযুক্তিগত সমস্যা আছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+          'marathi': 'क्षमस्व, काही तांत्रिक समस्या आहे. कृपया पुन्हा प्रयत्न करा.',
+          'gujarati': 'માફ કરશો, કોઈ તકનીકી સમસ્યા છે. કૃપા કરીને ફરીથી પ્રયાસ કરો.',
+          'kannada': 'ಕ್ಷಮಿಸಿ, ಸ್ವಲ್ಪ ತಾಂತ್ರಿಕ ಸಮಸ್ಯೆ ಇದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+          'malayalam': 'ക്ഷമിക്കണം, കുറച്ച് സാങ്കേതിക പ്രശ്‌നമുണ്ട്. ദയവായി വീണ്ടും ശ്രമിക്കുക.',
+          'punjabi': 'ਮਾਫ਼ ਕਰਨਾ, ਕੁਝ ਤਕਨੀਕੀ ਸਮੱਸਿਆ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।'
+        };
+        
         const errorMessage = {
           id: Date.now() + 1,
           type: 'bot',
-          text: voiceLanguage === 'hindi' 
-            ? 'क्षमा करें, कुछ तकनीकी समस्या है। कृपया फिर से कोशिश करें।'
-            : 'Sorry, there was a technical issue. Please try again.',
+          text: errorMessages[voiceLanguage] || errorMessages['english'],
           timestamp: new Date().toISOString(),
           sources: [],
           isError: true
@@ -152,7 +258,7 @@ const ChatBot = () => {
       recognitionInstance.maxAlternatives = 1;
       
       // Set language based on speech language setting (not UI language)
-      recognitionInstance.lang = speechLanguage;
+      recognitionInstance.lang = currentVoiceLanguage.code;
       
       recognitionInstance.onstart = () => {
         setIsListening(true);
@@ -196,6 +302,29 @@ const ChatBot = () => {
       
       setRecognition(recognitionInstance);
       speechSynthesisRef.current = speechSynthesis;
+      
+      // Ensure voices are loaded
+      const loadVoices = () => {
+        const voices = speechSynthesis.getVoices();
+        console.log('📢 Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+        
+        // Log specific language support
+        const supportedLangs = ['hi-IN', 'mr-IN', 'en-IN', 'en-US'];
+        supportedLangs.forEach(lang => {
+          const voice = voices.find(v => v.lang === lang);
+          if (voice) {
+            console.log(`✅ ${lang} supported: ${voice.name}`);
+          } else {
+            console.log(`❌ ${lang} not supported`);
+          }
+        });
+      };
+      
+      // Load voices immediately if available
+      loadVoices();
+      
+      // Also load voices when they become available (some browsers load them asynchronously)
+      speechSynthesis.onvoiceschanged = loadVoices;
     } else {
       setVoiceSupported(false);
       console.log('Web Speech API not supported in this browser');
@@ -207,7 +336,7 @@ const ChatBot = () => {
         speechSynthesisRef.current.cancel();
       }
     };
-  }, [currentLanguage, handleVoiceInput, speechLanguage]);
+  }, [currentLanguage, handleVoiceInput, currentVoiceLanguage.code]);
 
   // Initialize chatbot with welcome message
   useEffect(() => {
@@ -412,13 +541,13 @@ const ChatBot = () => {
     }
     
     try {
-      // Update language for recognition based on speechLanguage setting
-      recognition.lang = speechLanguage;
+      // Update language for recognition based on current voice language setting
+      recognition.lang = currentVoiceLanguage.code;
       recognition.start();
     } catch (error) {
       console.error('Error starting speech recognition:', error);
     }
-  }, [voiceSupported, recognition, isListening, speechLanguage]);
+  }, [voiceSupported, recognition, isListening, currentVoiceLanguage.code]);
 
   const stopListening = useCallback(() => {
     if (recognition && isListening) {
@@ -442,21 +571,23 @@ const ChatBot = () => {
   }, [isVoiceEnabled, recognition, isListening]);
 
   const toggleSpeechLanguage = useCallback(() => {
-    const newLang = speechLanguage === 'en-IN' ? 'hi-IN' : 'en-IN';
-    setSpeechLanguage(newLang);
-    console.log(`🎤 Speech recognition language changed to: ${newLang}`);
+    const nextIndex = (speechLanguageIndex + 1) % VOICE_LANGUAGES.length;
+    setSpeechLanguageIndex(nextIndex);
+    const newLanguage = VOICE_LANGUAGES[nextIndex];
+    
+    console.log(`🎤 Speech recognition language changed to: ${newLanguage.name} (${newLanguage.code})`);
     
     // If currently listening, stop and restart with new language
     if (isListening && recognition) {
       recognition.stop();
       setTimeout(() => {
         if (recognition) {
-          recognition.lang = newLang;
+          recognition.lang = newLanguage.code;
           recognition.start();
         }
       }, 100);
     }
-  }, [speechLanguage, isListening, recognition]);
+  }, [speechLanguageIndex, isListening, recognition]);
 
   // Handle Enter key press
   const handleKeyPress = (e) => {
@@ -548,13 +679,11 @@ const ChatBot = () => {
               {voiceSupported && (
                 <>
                   <button 
-                    className={`speech-lang-btn ${speechLanguage === 'hi-IN' ? 'hindi' : 'english'}`}
+                    className={`speech-lang-btn lang-${currentVoiceLanguage.code.split('-')[0]}`}
                     onClick={toggleSpeechLanguage}
-                    title={speechLanguage === 'hi-IN' 
-                      ? 'Switch to English Speech Input (Currently: Hindi)'
-                      : 'Switch to Hindi Speech Input (Currently: English)'}
+                    title={`Voice: ${currentVoiceLanguage.name} (${currentVoiceLanguage.nativeName}) - Click to switch to next language`}
                   >
-                    {speechLanguage === 'hi-IN' ? 'हि' : 'EN'}
+                    {currentVoiceLanguage.shortName}
                   </button>
                   <button 
                     className={`voice-toggle-btn ${isVoiceEnabled ? 'active' : ''}`}
@@ -726,9 +855,9 @@ const ChatBot = () => {
                     className={`mic-btn ${isListening ? 'listening' : ''}`}
                     onClick={isListening ? stopListening : startListening}
                     disabled={isLoading || isSpeaking}
-                    title={speechLanguage === 'hi-IN'
-                      ? (isListening ? 'हिंदी रिकॉर्डिंग बंद करें' : 'हिंदी में वॉइस इनपुट')
-                      : (isListening ? 'Stop English Recording' : 'English Voice Input')}
+                    title={isListening 
+                      ? `Stop ${currentVoiceLanguage.name} Recording`
+                      : `${currentVoiceLanguage.name} Voice Input`}
                   >
                     {isListening ? '🔴' : '🎤'}
                   </button>
@@ -750,13 +879,13 @@ const ChatBot = () => {
                     <Trans>वॉइस उपलब्ध - Voice Available</Trans>
                   ) : isListening ? (
                     <span>
-                      🎤 {speechLanguage === 'hi-IN' ? 'हिंदी में सुन रहा है - Listening in Hindi' : 'अंग्रेजी में सुन रहा है - Listening in English'}
+                      🎤 Listening in {currentVoiceLanguage.name} ({currentVoiceLanguage.nativeName})
                     </span>
                   ) : isSpeaking ? (
                     <Trans>🔊 बोल रहा है - Speaking...</Trans>
                   ) : (
                     <span>
-                      ✅ {speechLanguage === 'hi-IN' ? 'हिंदी वॉइस तैयार - Hindi Voice Ready' : 'अंग्रेजी वॉइस तैयार - English Voice Ready'}
+                      ✅ {currentVoiceLanguage.name} Voice Ready ({currentVoiceLanguage.nativeName})
                     </span>
                   )}
                 </span>
