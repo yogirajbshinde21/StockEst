@@ -515,6 +515,243 @@
   background-color: #f59e0b !important;
 }
 
+/* Enhanced Portfolio Timeline Chart Styles */
+.portfolio-timeline-chart {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+  min-height: 480px;
+  display: block;
+  transition: all 0.3s ease;
+}
+
+.portfolio-timeline-chart:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.portfolio-timeline-chart .real-time-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #0ea5e9;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #0369a1;
+}
+
+.portfolio-timeline-chart .live-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse-green 2s infinite;
+}
+
+.portfolio-timeline-chart .live-text {
+  font-weight: 600;
+}
+
+.portfolio-timeline-chart .data-points {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-left: auto;
+}
+
+/* Enhanced Portfolio Timeline Tooltip */
+.portfolio-timeline-tooltip {
+  background: white !important;
+  border: 2px solid #667eea !important;
+  border-radius: 12px !important;
+  padding: 12px 15px !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  font-size: 0.8rem !important;
+  max-width: 220px !important;
+  min-width: 180px !important;
+  line-height: 1.4 !important;
+  min-height: 100px;
+}
+
+.portfolio-timeline-tooltip .tooltip-label {
+  font-weight: 700 !important;
+  color: #1f2937 !important;
+  margin-bottom: 8px !important;
+  font-size: 0.75rem !important;
+  border-bottom: 2px solid #667eea !important;
+  padding-bottom: 4px !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  
+}
+
+.portfolio-timeline-tooltip .tooltip-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 0.75rem !important;
+  padding: 2px 0 !important;
+  min-height: 10px;
+}
+
+.portfolio-timeline-tooltip .tooltip-indicator {
+  font-size: 1rem !important;
+  margin-right: 8px !important;
+  width: 20px !important;
+  text-align: center !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-indicator.portfolio {
+  color: #667eea !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-indicator.invested {
+  color: #f59e0b !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-indicator.positive {
+  color: #10b981 !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-indicator.negative {
+  color: #ef4444 !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-amount {
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-subtitle {
+  font-size: 0.7rem !important;
+  color: #6b7280 !important;
+  margin-left: 4px !important;
+}
+
+.portfolio-timeline-tooltip .tooltip-live-indicator {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin-top: 6px !important;
+  padding-top: 6px !important;
+  border-top: 1px solid #e5e7eb !important;
+  font-size: 0.7rem !important;
+  color: #10b981 !important;
+  font-weight: 600 !important;
+}
+
+.portfolio-timeline-tooltip .live-dot-small {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse-green 1.5s infinite;
+}
+
+/* Enhanced Portfolio Timeline Info */
+.portfolio-timeline-info {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fafbfc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.portfolio-timeline-info .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.portfolio-timeline-info .info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.portfolio-timeline-info .info-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.portfolio-timeline-info .info-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.portfolio-timeline-info .info-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.portfolio-timeline-info .info-value.positive {
+  color: #10b981;
+}
+
+.portfolio-timeline-info .info-value.negative {
+  color: #ef4444;
+}
+
+.portfolio-timeline-info .real-time-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #10b981;
+  margin-top: 15px;
+}
+
+.portfolio-timeline-info .status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.portfolio-timeline-info .status-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.portfolio-timeline-info .last-update {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+@keyframes pulse-green {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Daily Performance Chart Styles */
 .daily-performance-chart {
   background: white;
