@@ -105,6 +105,7 @@ export const usePriceTracker = (stockData, keyField = 'instrumentKey', priceFiel
     
     return {
       previousPrice: previousPrice || 0,
+      currentPrice: change?.currentValue || 0,
       hasChanged: change?.hasChanged || false,
       direction: change?.direction || null,
       changeInfo: change || null

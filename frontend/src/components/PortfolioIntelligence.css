@@ -1944,3 +1944,58 @@
     font-size: 0.9rem;
   }
 }
+
+/* No Data States */
+.no-chart-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem;
+}
+
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.no-data-message p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.no-data-message p:first-child {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.no-data-message p:last-child {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6b7280;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.no-data p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}

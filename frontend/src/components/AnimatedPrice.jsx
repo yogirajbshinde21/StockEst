@@ -13,7 +13,9 @@ const AnimatedPrice = ({
   changePercent = null,
   className = '',
   size = 'medium',
-  animate = true 
+  animate = true,
+  prefix = '',
+  suffix = ''
 }) => {
   const [displayValue, setDisplayValue] = useState(value);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -78,16 +80,19 @@ const AnimatedPrice = ({
 
   // Format the display value
   const formatValue = (val) => {
+    let formattedValue;
     if (currency) {
-      return new Intl.NumberFormat('en-IN', {
+      formattedValue = new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         maximumFractionDigits: decimals,
         minimumFractionDigits: decimals
       }).format(val);
     } else {
-      return val.toFixed(decimals);
+      formattedValue = val.toFixed(decimals);
     }
+    
+    return `${prefix}${formattedValue}${suffix}`;
   };
 
   // Format change values

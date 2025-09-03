@@ -75,6 +75,25 @@ const PortfolioIntelligence = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [activeView, setActiveView] = useState('overview');
+  const [currentPortfolioData, setCurrentPortfolioData] = useState(null);
+
+  // Fetch current portfolio data to get real-time P&L
+  const fetchCurrentPortfolioData = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/trading/portfolio');
+      const portfolioData = response.data?.data;
+      if (portfolioData?.summary) {
+        setCurrentPortfolioData({
+          totalProfitLoss: portfolioData.summary.totalProfitLoss || 0,
+          totalProfitLossPercent: portfolioData.summary.totalProfitLossPercent || 0,
+          totalValue: portfolioData.summary.currentValue || 0,
+          totalInvested: portfolioData.summary.totalInvested || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching current portfolio data:', error);
+    }
+  }, []);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -92,6 +111,56 @@ const PortfolioIntelligence = () => {
       // Ensure timeline is properly formatted
       if (responseData.timeline && Array.isArray(responseData.timeline)) {
         responseData.timeline = responseData.timeline.filter(item => item !== null && item !== undefined);
+        
+        // Enhance timeline with today's real-time data if available
+        if (currentPortfolioData && responseData.timeline.length > 0) {
+          console.log('🔄 Enhancing timeline with current portfolio data:', currentPortfolioData);
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+          
+          // Check if today's data exists
+          const todayDataIndex = responseData.timeline.findIndex(item => {
+            if (!item?.date) return false;
+            const itemDate = new Date(item.date);
+            return itemDate.toISOString().split('T')[0] === todayStr;
+          });
+          
+          console.log('📅 Today string:', todayStr, 'Today data index:', todayDataIndex);
+          
+          if (todayDataIndex >= 0) {
+            // Update today's data with real-time values
+            const yesterdayValue = todayDataIndex > 0 ? 
+              responseData.timeline[todayDataIndex - 1].totalValue : 
+              currentPortfolioData.totalInvested;
+            
+            const updatedTodayData = {
+              ...responseData.timeline[todayDataIndex],
+              totalValue: currentPortfolioData.totalValue,
+              totalProfitLoss: currentPortfolioData.totalProfitLoss,
+              totalProfitLossPercent: currentPortfolioData.totalProfitLossPercent,
+              dayChange: currentPortfolioData.totalValue - yesterdayValue,
+              dayChangePercent: yesterdayValue > 0 ? 
+                ((currentPortfolioData.totalValue - yesterdayValue) / yesterdayValue) * 100 : 0
+            };
+            
+            console.log('📊 Updated today data:', updatedTodayData);
+            responseData.timeline[todayDataIndex] = updatedTodayData;
+          } else if (currentPortfolioData.totalValue > 0) {
+            // Add today's data if not present
+            const newTodayData = {
+              date: today.toISOString(),
+              totalValue: currentPortfolioData.totalValue,
+              totalInvested: currentPortfolioData.totalInvested,
+              totalProfitLoss: currentPortfolioData.totalProfitLoss,
+              totalProfitLossPercent: currentPortfolioData.totalProfitLossPercent,
+              dayChange: currentPortfolioData.totalProfitLoss, // Use total P&L as day change for new entries
+              dayChangePercent: currentPortfolioData.totalProfitLossPercent
+            };
+            
+            console.log('📊 Adding new today data:', newTodayData);
+            responseData.timeline.push(newTodayData);
+          }
+        }
       }
 
       setDashboardData(responseData);
@@ -101,11 +170,27 @@ const PortfolioIntelligence = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedTimeframe]);
+  }, [selectedTimeframe, currentPortfolioData]);
+
+  // Fetch current portfolio data first, then dashboard data
+  useEffect(() => {
+    fetchCurrentPortfolioData();
+  }, [fetchCurrentPortfolioData]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    if (currentPortfolioData !== null) {
+      fetchDashboardData();
+    }
+  }, [fetchDashboardData, currentPortfolioData]);
+
+  // Set up real-time updates for portfolio data during market hours
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchCurrentPortfolioData();
+    }, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchCurrentPortfolioData]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -156,7 +241,10 @@ const PortfolioIntelligence = () => {
         <AlertCircle size={48} />
         <h3><Trans>Failed to load portfolio data</Trans></h3>
         <p>{error}</p>
-        <button onClick={fetchDashboardData} className="retry-btn">
+        <button onClick={() => {
+          fetchCurrentPortfolioData();
+          fetchDashboardData();
+        }} className="retry-btn">
           <RefreshCw size={16} />
           <Trans>Try Again</Trans>
         </button>
@@ -196,7 +284,10 @@ const PortfolioIntelligence = () => {
             ))}
           </div>
           
-          <button onClick={fetchDashboardData} className="refresh-btn" disabled={loading}>
+          <button onClick={() => {
+            fetchCurrentPortfolioData();
+            fetchDashboardData();
+          }} className="refresh-btn" disabled={loading}>
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
             <Trans>Refresh</Trans>
           </button>
@@ -761,7 +852,7 @@ const PortfolioTimelineChart = ({ timeline, formatCurrency }) => {
   // Early return for missing data
   if (!timeline) {
     console.log('No timeline data provided');
-    return <PortfolioTimelineChartRender timeline={generateSampleData()} formatCurrency={formatCurrency} isSample={true} />;
+    return <div className="no-chart-data">No timeline data available</div>;
   }
 
   // Filter and validate timeline data
@@ -777,109 +868,44 @@ const PortfolioTimelineChart = ({ timeline, formatCurrency }) => {
   
   console.log('Valid timeline data:', validTimeline);
   
-  // If no valid data, create sample data to show how the chart works
+  // If no valid data, show empty state with message
   if (validTimeline.length === 0) {
-    console.log('No valid timeline data, showing sample');
-    return <PortfolioTimelineChartRender timeline={generateSampleData()} formatCurrency={formatCurrency} isSample={true} />;
+    console.log('No valid timeline data found');
+    return (
+      <div className="no-chart-data">
+        <div className="no-data-message">
+          <p>Start trading to see your portfolio timeline</p>
+          <p>Your portfolio performance will appear here as you make investments</p>
+        </div>
+      </div>
+    );
   }
 
-  // If only 1 data point (like today), enhance with historical projection
+  // If only 1 data point (like today), add yesterday with same invested amount and zero growth
   if (validTimeline.length === 1) {
-    console.log('Only one data point found, enhancing with projected historical data');
+    console.log('Only one data point found, adding baseline data point');
     const realData = validTimeline[0];
-    const enhancedData = generateHistoricalData(realData);
+    const yesterday = new Date(new Date(realData.date).getTime() - 24 * 60 * 60 * 1000);
+    
+    const enhancedTimeline = [
+      {
+        date: yesterday.toISOString(),
+        totalValue: realData.totalInvested, // Start with invested amount
+        totalInvested: realData.totalInvested,
+        totalProfitLoss: 0
+      },
+      realData
+    ];
+    
     return <PortfolioTimelineChartRender 
-      timeline={enhancedData} 
+      timeline={enhancedTimeline} 
       formatCurrency={formatCurrency} 
-      isSample={true}
+      isSample={false}
       realDataCount={1}
     />;
   }
 
   return <PortfolioTimelineChartRender timeline={validTimeline} formatCurrency={formatCurrency} />;
-};
-
-// Generate stable historical data projection from current real data
-const generateHistoricalData = (currentData) => {
-  const today = new Date();
-  const currentValue = currentData.totalValue || 20120;
-  const currentInvested = currentData.totalInvested || 20116;
-  
-  // Stable multipliers for consistent historical projection
-  const dailyMultipliers = [
-    0.995, 0.997, 1.001, 0.999, 1.003, 0.998, 1.002, 0.996, 1.004, 1.000,
-    0.999, 1.005, 0.997, 1.001, 1.003, 0.998, 1.006, 0.999, 1.002, 1.001,
-    0.997, 1.004, 0.998, 1.003, 1.000, 1.002, 0.999, 1.001, 1.005
-  ];
-  
-  return Array.from({ length: 30 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(date.getDate() - (29 - i));
-    
-    if (i === 29) {
-      // Last day is real data
-      return {
-        date: currentData.date,
-        totalValue: currentValue,
-        totalInvested: currentInvested,
-        totalProfitLoss: currentValue - currentInvested,
-        totalProfitLossPercent: ((currentValue - currentInvested) / currentInvested) * 100,
-        isReal: true
-      };
-    }
-    
-    // Generate backwards projection using stable multipliers
-    const daysFromEnd = 29 - i;
-    const projectedInvested = Math.max(5000, currentInvested - (daysFromEnd * 500)); // ₹500/day investment
-    const baseValue = projectedInvested * 1.002; // Small base growth
-    const projectedValue = Math.round(baseValue * dailyMultipliers[i]);
-    
-    return {
-      date: date.toISOString(),
-      totalValue: projectedValue,
-      totalInvested: projectedInvested,
-      totalProfitLoss: projectedValue - projectedInvested,
-      totalProfitLossPercent: ((projectedValue - projectedInvested) / projectedInvested) * 100,
-      isProjected: true
-    };
-  });
-};
-
-// Generate stable sample data for demonstration
-const generateSampleData = () => {
-  const today = new Date();
-  // Predefined stable progression for consistent display
-  const baseInvestments = [
-    20000, 20700, 21400, 22100, 22800, 23500, 24200, 24900, 25600, 26300,
-    27000, 27700, 28400, 29100, 29800, 30500, 31200, 31900, 32600, 33300,
-    34000, 34700, 35400, 36100, 36800, 37500, 38200, 38900, 39600, 40300
-  ];
-  
-  const portfolioMultipliers = [
-    1.001, 1.003, 0.998, 1.005, 1.002, 1.008, 0.996, 1.010, 1.004, 0.999,
-    1.006, 1.012, 0.995, 1.007, 1.003, 1.009, 0.997, 1.011, 1.005, 1.001,
-    1.008, 0.994, 1.013, 1.006, 1.002, 1.009, 0.998, 1.012, 1.007, 1.004
-  ];
-  
-  return Array.from({ length: 30 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(date.getDate() - (29 - i));
-    
-    const totalInvested = baseInvestments[i];
-    const portfolioValue = Math.round(totalInvested * portfolioMultipliers[i]);
-    const profitLoss = portfolioValue - totalInvested;
-    const profitLossPercent = (profitLoss / totalInvested) * 100;
-    
-    return {
-      date: date.toISOString(),
-      totalValue: portfolioValue,
-      totalInvested: totalInvested,
-      totalProfitLoss: profitLoss,
-      totalProfitLossPercent: profitLossPercent,
-      dayChange: i > 0 ? Math.round((portfolioValue - Math.round(baseInvestments[i-1] * portfolioMultipliers[i-1])) * 0.8) : 0,
-      dayChangePercent: i > 0 ? ((portfolioValue - Math.round(baseInvestments[i-1] * portfolioMultipliers[i-1])) / Math.round(baseInvestments[i-1] * portfolioMultipliers[i-1])) * 100 : 0
-    };
-  });
 };
 
 // Recharts-based chart rendering component
@@ -1043,99 +1069,57 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
   );
 };
 
-// Generate stable sample data once and reuse
-const SAMPLE_DAILY_DATA = (() => {
-  const today = new Date();
-  const predefinedChanges = [
-    0.8, -0.3, 1.2, 0.5, -0.7, 0.9, -0.4, 1.1, 0.2, -0.6,
-    0.7, 1.3, -0.8, 0.4, 0.6, -0.2, 1.0, -0.5, 0.3, 0.8,
-    -0.9, 0.1, 1.4, -0.1, 0.7, 0.9, -0.3, 0.5, 1.1, -0.4
-  ];
-  
-  return Array.from({ length: 30 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(date.getDate() - (29 - i));
-    
-    const dayChangePercent = predefinedChanges[i] || 0;
-    const dayChange = dayChangePercent * 200;
-    
-    return {
-      date: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-      fullDate: date.toISOString(),
-      dayChange: Math.round(dayChange),
-      dayChangePercent: Number(dayChangePercent.toFixed(2)),
-      isPositive: dayChangePercent >= 0,
-      portfolioValue: 20000 + Math.round(dayChange),
-    };
-  });
-})();
-
 // Daily Performance Chart Component - Shows daily P&L patterns
 const DailyPerformanceChart = React.memo(({ timeline, formatCurrency, formatPercent }) => {
+  console.log('📈 DailyPerformanceChart received timeline:', timeline);
+  
   // Use useMemo to prevent unnecessary re-computations
   const chartData = React.useMemo(() => {
-    // Early return for missing data - show chart with sample data
-    if (!timeline || timeline.length === 0) {
-      return { data: SAMPLE_DAILY_DATA, isSample: true };
-    }
-
-    // Filter and validate timeline data for daily performance
-    const validTimeline = timeline.filter(d => {
-      return d && 
-             typeof d === 'object' &&
-             d.date && 
-             typeof d.dayChange === 'number' && 
-             typeof d.dayChangePercent === 'number' &&
-             !isNaN(d.dayChange) &&
-             !isNaN(d.dayChangePercent);
-    });
+    // Generate real data for exactly 30 days
+    const today = new Date();
+    const realDailyData = [];
     
-    // If only 1 data point, enhance with sample data to show trend
-    if (validTimeline.length === 1) {
-      const realData = validTimeline[0];
-      const historicalPattern = [
-        0.5, -0.2, 0.8, 0.3, -0.4, 0.6, -0.1, 0.9, 0.2, -0.3,
-        0.4, 0.7, -0.5, 0.1, 0.3, -0.2, 0.8, -0.3, 0.2, 0.5,
-        -0.4, 0.1, 0.6, -0.1, 0.4, 0.3, -0.2, 0.2, 0.5
-      ];
+    // Create 30 days of data structure
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
       
-      const today = new Date();
-      const enhancedData = Array.from({ length: 29 }, (_, i) => {
-        const date = new Date(today);
-        date.setDate(date.getDate() - (29 - i));
-        
-        const dayChangePercent = historicalPattern[i] || 0;
-        const dayChange = dayChangePercent * 200;
-        
-        return {
-          date: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-          fullDate: date.toISOString(),
-          dayChange: Math.round(dayChange),
-          dayChangePercent: Number(dayChangePercent.toFixed(2)),
-          isPositive: dayChangePercent >= 0,
-          portfolioValue: 20000 + Math.round(dayChange),
-        };
+      // Find matching timeline data for this date
+      const timelineMatch = timeline?.find(item => {
+        if (!item?.date) return false;
+        const itemDate = new Date(item.date);
+        return itemDate.toDateString() === date.toDateString();
       });
       
-      // Add current real data
-      enhancedData.push({
-        date: new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-        fullDate: new Date().toISOString(),
-        dayChange: realData.dayChange,
-        dayChangePercent: realData.dayChangePercent,
-        isPositive: realData.dayChangePercent >= 0,
-        portfolioValue: realData.portfolioValue || 20000,
-      });
+      let dayChange = 0;
+      let dayChangePercent = 0;
       
-      return { data: enhancedData, isSample: false, realDataCount: 1 };
+      if (timelineMatch) {
+        // For today (last entry), use total P&L if dayChange is 0
+        if (i === 0 && timelineMatch.dayChange === 0 && timelineMatch.totalProfitLoss !== undefined) {
+          // Use total P&L as today's change since market started
+          dayChange = timelineMatch.totalProfitLoss;
+          dayChangePercent = timelineMatch.totalProfitLossPercent || 0;
+          console.log('📊 Using total P&L for today:', { dayChange, dayChangePercent });
+        } else {
+          dayChange = timelineMatch.dayChange || 0;
+          dayChangePercent = timelineMatch.dayChangePercent || 0;
+        }
+      }
+      
+      realDailyData.push({
+        date: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+        fullDate: date.toISOString(),
+        dayChange: dayChange,
+        dayChangePercent: dayChangePercent,
+        isPositive: dayChange >= 0,
+        portfolioValue: timelineMatch?.totalValue || 0,
+        isReal: !!timelineMatch, // Mark if this is real data or zero fill
+      });
     }
     
-    // If no valid data, create sample data
-    if (validTimeline.length === 0) {
-      return { data: SAMPLE_DAILY_DATA, isSample: true };
-    }
-
-    return { data: validTimeline, isSample: false };
+    console.log('📈 Generated daily chart data:', realDailyData);
+    return { data: realDailyData, isSample: false, realDataCount: timeline?.length || 0 };
   }, [timeline]);
 
   return (

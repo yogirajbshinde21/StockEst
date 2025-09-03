@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import AnimatedPrice from './AnimatedPrice';
 import PortfolioIntelligence from './PortfolioIntelligence';
 import Trans from './Trans';
@@ -28,12 +29,25 @@ const Portfolio = ({ portfolioData, onTrade }) => {
   const [activeView, setActiveView] = useState('overview');
   
   const { user } = useAuth();
+  const { stockData } = useSocket(); // Get real-time stock data from socket
   
-  // Extract stocks from portfolio for price tracking
-  const portfolioStocks = localPortfolioData?.portfolio?.map(holding => ({
-    instrumentKey: holding.instrumentKey,
-    currentPrice: holding.currentPrice
-  })) || [];
+  // Extract stocks from portfolio for price tracking, but use real-time prices from stockData
+  const portfolioStocks = localPortfolioData?.portfolio?.map(holding => {
+    // Find matching stock data from real-time socket data
+    const liveStock = stockData?.stocks?.find(stock => stock.instrumentKey === holding.instrumentKey);
+    const currentPrice = liveStock?.currentPrice || holding.currentPrice;
+    
+    if (liveStock && liveStock.currentPrice !== holding.currentPrice) {
+      console.log(`🔄 Live price for ${holding.symbol}: ₹${holding.currentPrice} → ₹${liveStock.currentPrice}`);
+    }
+    
+    return {
+      instrumentKey: holding.instrumentKey,
+      currentPrice: currentPrice
+    };
+  }) || [];
+  
+  console.log('📊 Portfolio stocks for tracking:', portfolioStocks.length, portfolioStocks.map(s => `${s.instrumentKey}:₹${s.currentPrice}`));
   
   const { getPriceInfo } = usePriceTracker(portfolioStocks, 'instrumentKey', 'currentPrice');
 
@@ -49,6 +63,15 @@ const Portfolio = ({ portfolioData, onTrade }) => {
       setLocalPortfolioData(portfolioData);
     }
   }, [portfolioData]);
+
+  // Force re-render when stock prices change to update portfolio calculations
+  useEffect(() => {
+    // This effect will trigger when stockData changes, causing the component to re-render
+    // and recalculate portfolio values with updated stock prices
+    if (stockData?.stocks?.length > 0) {
+      console.log('📈 Stock data updated, portfolio will recalculate with new prices');
+    }
+  }, [stockData?.stocks, stockData?.lastUpdated]);
 
   const fetchPortfolioData = async () => {
     try {
@@ -80,12 +103,63 @@ const Portfolio = ({ portfolioData, onTrade }) => {
     }).format(amount);
   };
 
-  const formatPercent = (percent) => {
-    const sign = percent >= 0 ? '+' : '';
-    return `${sign}${percent.toFixed(2)}%`;
+  // Calculate real-time portfolio values based on live prices
+  const calculateRealTimePortfolio = (portfolio) => {
+    if (!portfolio || portfolio.length === 0) return null;
+
+    let totalCurrentValue = 0;
+    let totalInvested = 0;
+    
+    const updatedPortfolio = portfolio.map(holding => {
+      // Get price from multiple sources in order of preference:
+      // 1. Real-time stock data from socket
+      // 2. Price tracker 
+      // 3. Holding's stored price
+      const liveStock = stockData?.stocks?.find(stock => stock.instrumentKey === holding.instrumentKey);
+      const priceInfo = getPriceInfo(holding.instrumentKey);
+      const livePrice = liveStock?.currentPrice || priceInfo.currentPrice || holding.currentPrice;
+      
+      const currentValue = holding.quantity * livePrice;
+      const profitLoss = currentValue - holding.totalInvested;
+      const profitLossPercent = holding.totalInvested > 0 ? (profitLoss / holding.totalInvested) * 100 : 0;
+      
+      // Debug logging for price changes
+      if (livePrice !== holding.currentPrice) {
+        console.log(`💰 ${holding.symbol} price updated: ₹${holding.currentPrice} → ₹${livePrice} (${livePrice > holding.currentPrice ? '+' : ''}${((livePrice - holding.currentPrice) / holding.currentPrice * 100).toFixed(2)}%)`);
+      }
+      
+      totalCurrentValue += currentValue;
+      totalInvested += holding.totalInvested;
+      
+      return {
+        ...holding,
+        currentPrice: livePrice,
+        currentValue,
+        profitLoss,
+        profitLossPercent
+      };
+    });
+    
+    const totalProfitLoss = totalCurrentValue - totalInvested;
+    const totalProfitLossPercent = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
+    
+    return {
+      portfolio: updatedPortfolio,
+      summary: {
+        ...localPortfolioData?.summary,
+        currentValue: totalCurrentValue,
+        totalInvested,
+        totalProfitLoss,
+        totalProfitLossPercent,
+        cashBalance: localPortfolioData?.summary?.cashBalance || user?.virtualBalance || 0,
+        totalBalance: (localPortfolioData?.summary?.cashBalance || user?.virtualBalance || 0) + totalCurrentValue
+      }
+    };
   };
 
-  const currentData = localPortfolioData || {
+  // Get real-time portfolio data
+  const realTimePortfolio = calculateRealTimePortfolio(localPortfolioData?.portfolio);
+  const currentData = realTimePortfolio || {
     portfolio: [],
     summary: {
       totalInvested: 0,
@@ -175,7 +249,18 @@ const Portfolio = ({ portfolioData, onTrade }) => {
               <Activity size={24} />
             </div>
             <div className="card-content">
-              <div className="card-value">{formatCurrency(currentData.summary.currentValue)}</div>
+              <div className="card-value">
+                <AnimatedPrice
+                  value={currentData.summary.currentValue}
+                  previousValue={localPortfolioData?.summary?.currentValue || currentData.summary.currentValue}
+                  currency={true}
+                  decimals={2}
+                  showArrow={false}
+                  showChange={false}
+                  size="large"
+                  className="summary-current-value"
+                />
+              </div>
               <div className="card-label"><Trans>Current Value</Trans></div>
             </div>
           </div>
@@ -187,10 +272,31 @@ const Portfolio = ({ portfolioData, onTrade }) => {
             </div>
             <div className="card-content">
               <div className={`card-value ${currentData.summary.totalProfitLoss >= 0 ? 'profit' : 'loss'}`}>
-                {formatCurrency(currentData.summary.totalProfitLoss)}
+                <AnimatedPrice
+                  value={currentData.summary.totalProfitLoss}
+                  previousValue={localPortfolioData?.summary?.totalProfitLoss || currentData.summary.totalProfitLoss}
+                  currency={true}
+                  decimals={2}
+                  showArrow={false}
+                  showChange={false}
+                  size="large"
+                  className="summary-pnl"
+                />
               </div>
               <div className="card-label">
-                <Trans>Total P&L</Trans> ({formatPercent(currentData.summary.totalProfitLossPercent)})
+                <Trans>Total P&L</Trans> (
+                <AnimatedPrice
+                  value={currentData.summary.totalProfitLossPercent}
+                  previousValue={localPortfolioData?.summary?.totalProfitLossPercent || currentData.summary.totalProfitLossPercent}
+                  currency={false}
+                  decimals={2}
+                  showArrow={false}
+                  showChange={false}
+                  size="small"
+                  suffix="%"
+                  prefix={currentData.summary.totalProfitLossPercent >= 0 ? '+' : ''}
+                  className="summary-pnl-percent"
+                />)
               </div>
             </div>
           </div>
@@ -308,13 +414,46 @@ const Portfolio = ({ portfolioData, onTrade }) => {
                   </div>
 
                   <div className="table-cell value-cell">
-                    <div className="current-value">{formatCurrency(holding.currentValue)}</div>
+                    <AnimatedPrice
+                      value={holding.currentValue}
+                      previousValue={localPortfolioData?.portfolio?.find(h => h.instrumentKey === holding.instrumentKey)?.currentValue || holding.currentValue}
+                      currency={true}
+                      decimals={2}
+                      showArrow={false}
+                      showChange={false}
+                      size="medium"
+                      className="portfolio-value"
+                    />
                   </div>
 
                   <div className="table-cell pnl-cell">
                     <div className={`pnl ${holding.profitLoss >= 0 ? 'profit' : 'loss'}`}>
-                      <div className="pnl-amount">{formatCurrency(holding.profitLoss)}</div>
-                      <div className="pnl-percent">({formatPercent(holding.profitLossPercent)})</div>
+                      <div className="pnl-amount">
+                        <AnimatedPrice
+                          value={holding.profitLoss}
+                          previousValue={localPortfolioData?.portfolio?.find(h => h.instrumentKey === holding.instrumentKey)?.profitLoss || holding.profitLoss}
+                          currency={true}
+                          decimals={2}
+                          showArrow={false}
+                          showChange={false}
+                          size="small"
+                          className="portfolio-pnl"
+                        />
+                      </div>
+                      <div className="pnl-percent">
+                        (<AnimatedPrice
+                          value={holding.profitLossPercent}
+                          previousValue={localPortfolioData?.portfolio?.find(h => h.instrumentKey === holding.instrumentKey)?.profitLossPercent || holding.profitLossPercent}
+                          currency={false}
+                          decimals={2}
+                          showArrow={false}
+                          showChange={false}
+                          size="small"
+                          suffix="%"
+                          prefix={holding.profitLossPercent >= 0 ? '+' : ''}
+                          className="portfolio-pnl-percent"
+                        />)
+                      </div>
                     </div>
                   </div>
 
