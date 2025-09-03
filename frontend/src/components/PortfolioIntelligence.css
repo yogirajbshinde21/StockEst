@@ -7,6 +7,43 @@
   background: #fafbfc;
   min-height: 100vh;
   position: relative;
+  scroll-behavior: auto; /* Prevent smooth scrolling that can interfere with updates */
+  overflow-anchor: auto; /* Maintain scroll position during content updates */
+}
+
+/* Dashboard Real-time Indicator */
+.dashboard-realtime-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #0ea5e9;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #0369a1;
+  width: fit-content;
+}
+
+.dashboard-realtime-indicator .live-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse-green 2s infinite;
+}
+
+.dashboard-realtime-indicator .live-text {
+  font-weight: 600;
+}
+
+.dashboard-realtime-indicator .update-info {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid #d1d5db;
 }
 
 /* Loading States */

@@ -103,6 +103,10 @@ const PortfolioIntelligence = () => {
         }
       }
     } catch (error) {
+      if (error.response?.status === 429) {
+        console.log('⚠️ Rate limited - skipping portfolio data fetch');
+        return;
+      }
       console.error('Error fetching current portfolio data:', error);
     }
   }, [currentPortfolioData]);
@@ -196,6 +200,11 @@ const PortfolioIntelligence = () => {
 
       setDashboardData(responseData);
     } catch (err) {
+      if (err.response?.status === 429) {
+        setError('Too many requests. Please wait a moment and try again.');
+        console.log('⚠️ Rate limited - dashboard data fetch failed');
+        return;
+      }
       console.error('Dashboard data fetch error:', err);
       setError(err.response?.data?.message || err.message || 'Failed to fetch dashboard data');
     } finally {
@@ -203,7 +212,7 @@ const PortfolioIntelligence = () => {
     }
   }, [selectedTimeframe, currentPortfolioData]);
 
-  // Fetch current portfolio data first, then dashboard data
+  // Initial fetch only - no aggressive refresh intervals to prevent rate limiting
   useEffect(() => {
     fetchCurrentPortfolioData();
   }, [fetchCurrentPortfolioData]);
@@ -213,15 +222,6 @@ const PortfolioIntelligence = () => {
       fetchDashboardData();
     }
   }, [fetchDashboardData, currentPortfolioData]);
-
-  // Set up real-time updates for portfolio data during market hours
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchCurrentPortfolioData();
-    }, 30000); // Update every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [fetchCurrentPortfolioData]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -239,6 +239,67 @@ const PortfolioIntelligence = () => {
   const formatNumber = (num) => {
     return new Intl.NumberFormat('en-IN').format(num || 0);
   };
+
+  // 🚀 Smart real-time refresh strategy - balanced between updates and API limits
+  useEffect(() => {
+    let refreshInterval;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    const BASE_INTERVAL = 5 * 60 * 1000; // 5 minutes base interval
+    const MARKET_HOURS_INTERVAL = 2 * 60 * 1000; // 2 minutes during market hours
+    
+    const smartRefresh = async () => {
+      try {
+        // Check if it's market hours (9:15 AM to 3:30 PM IST)
+        const now = new Date();
+        const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        const hour = istTime.getHours();
+        const minute = istTime.getMinutes();
+        const isMarketHours = (hour === 9 && minute >= 15) || (hour >= 10 && hour <= 14) || (hour === 15 && minute <= 30);
+        
+        console.log('🔄 Smart refresh triggered', { 
+          isMarketHours, 
+          time: istTime.toLocaleTimeString(),
+          retryCount 
+        });
+        
+        // Refresh dashboard data with rate limiting protection
+        await Promise.all([
+          fetchCurrentPortfolioData(),
+          fetchDashboardData()
+        ]);
+        
+        retryCount = 0; // Reset retry count on success
+        
+        // Schedule next refresh based on market hours
+        const nextInterval = isMarketHours ? MARKET_HOURS_INTERVAL : BASE_INTERVAL;
+        refreshInterval = setTimeout(smartRefresh, nextInterval);
+        
+      } catch (error) {
+        console.error('❌ Smart refresh failed:', error);
+        retryCount++;
+        
+        if (retryCount < MAX_RETRIES) {
+          // Exponential backoff for retries
+          const backoffDelay = Math.min(30000 * Math.pow(2, retryCount), 300000); // Max 5 minutes
+          console.log(`🔄 Retrying in ${backoffDelay/1000} seconds (attempt ${retryCount}/${MAX_RETRIES})`);
+          refreshInterval = setTimeout(smartRefresh, backoffDelay);
+        } else {
+          console.log('⚠️ Max retries reached, disabling smart refresh');
+        }
+      }
+    };
+    
+    // Start smart refresh after initial load
+    const initialDelay = 60000; // 1 minute after component mount
+    refreshInterval = setTimeout(smartRefresh, initialDelay);
+    
+    return () => {
+      if (refreshInterval) {
+        clearTimeout(refreshInterval);
+      }
+    };
+  }, [fetchCurrentPortfolioData, fetchDashboardData]);
 
   const timeframes = [
     { value: '7', label: <Trans>7D</Trans> },
@@ -887,7 +948,7 @@ const ProgressItem = ({ title, current, target, formatCurrency, isCount = false 
 // - Zero-fill for missing days (no sample data)
 // - Day transition support (today → yesterday → new today)
 // - Stable data management to prevent re-renders
-const PortfolioTimelineChart = ({ timeline, formatCurrency, lastUpdateTime }) => {
+const PortfolioTimelineChart = React.memo(({ timeline, formatCurrency, lastUpdateTime }) => {
   console.log('📈 PortfolioTimelineChart received timeline:', timeline, 'lastUpdateTime:', lastUpdateTime);
   
   // Use useMemo to prevent unnecessary re-computations and re-renders
@@ -958,7 +1019,7 @@ const PortfolioTimelineChart = ({ timeline, formatCurrency, lastUpdateTime }) =>
       lastUpdateTime={lastUpdateTime}
     />
   );
-};
+});
 
 // Recharts-based portfolio timeline chart rendering component - Enhanced for real-time updates
 // 🎯 Solution: Prevents page refresh/re-render by:
@@ -966,19 +1027,22 @@ const PortfolioTimelineChart = ({ timeline, formatCurrency, lastUpdateTime }) =>
 // 2. Minimal state updates with short delays for CSS transitions
 // 3. Real-time portfolio value animations
 // 4. 30-day view with zero-fill for missing days
-const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = false, realDataCount = 0, lastUpdateTime }) => {
-  // Transform data for Recharts with stable structure
-  const chartData = timeline.map(d => ({
-    date: d.date,
-    portfolioValue: d.portfolioValue || 0,
-    totalInvested: d.totalInvested || 0,
-    profitLoss: d.profitLoss || 0,
-    isReal: d.isReal,
-    isToday: d.isToday
-  }));
+const PortfolioTimelineChartRender = React.memo(({ timeline, formatCurrency, isSample = false, realDataCount = 0, lastUpdateTime }) => {
+  // Transform data for Recharts with stable structure - Memoized for performance
+  const chartData = React.useMemo(() => {
+    return timeline.map(d => ({
+      date: d.date,
+      portfolioValue: d.portfolioValue || 0,
+      totalInvested: d.totalInvested || 0,
+      profitLoss: d.profitLoss || 0,
+      isReal: d.isReal,
+      isToday: d.isToday
+    }));
+  }, [timeline]);
 
-  // Enhanced tooltip with hover zoom for portfolio timeline
-  const PortfolioTimelineTooltip = ({ active, payload, label }) => {
+  // Enhanced tooltip with hover zoom for portfolio timeline - Memoized for performance
+  const PortfolioTimelineTooltip = React.useMemo(() => {
+    return ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const portfolioValue = data.portfolioValue || 0;
@@ -1078,7 +1142,8 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
       );
     }
     return null;
-  };
+    };
+  }, [formatCurrency]);
 
   // Enhanced Y-axis formatting for better precision in zoomed views
   const formatYAxis = (value) => {
@@ -1098,63 +1163,65 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
     return `₹${value.toFixed(0)}`;
   };
 
-  // Calculate dynamic Y-axis domain for ULTRA-AGGRESSIVE zooming into actual data range
-  const calculateDynamicDomain = () => {
-    // Only consider real data points (not zero-filled days)
-    const realDataValues = [];
-    chartData.forEach(d => {
-      if (d.isReal && (d.portfolioValue > 0 || d.totalInvested > 0)) {
-        if (d.portfolioValue > 0) realDataValues.push(d.portfolioValue);
-        if (d.totalInvested > 0) realDataValues.push(d.totalInvested);
+  // Calculate dynamic Y-axis domain for ULTRA-AGGRESSIVE zooming into actual data range - Memoized
+  const yAxisDomain = React.useMemo(() => {
+    const calculateDynamicDomain = () => {
+      // Only consider real data points (not zero-filled days)
+      const realDataValues = [];
+      chartData.forEach(d => {
+        if (d.isReal && (d.portfolioValue > 0 || d.totalInvested > 0)) {
+          if (d.portfolioValue > 0) realDataValues.push(d.portfolioValue);
+          if (d.totalInvested > 0) realDataValues.push(d.totalInvested);
+        }
+      });
+      
+      if (realDataValues.length === 0) return ['auto', 'auto'];
+      
+      const minValue = Math.min(...realDataValues);
+      const maxValue = Math.max(...realDataValues);
+      const range = maxValue - minValue;
+      
+      console.log('📊 ULTRA-ZOOM Portfolio Timeline Domain:', {
+        realDataValues,
+        minValue,
+        maxValue,
+        range,
+        rangePercentage: (range / maxValue * 100).toFixed(2) + '%'
+      });
+      
+      // ULTRA-AGGRESSIVE ZOOM: Always create tight range around actual data
+      if (range === 0) {
+        // If both values are exactly the same, create minimal range
+        const center = minValue;
+        const minRange = Math.max(center * 0.005, 100); // Minimum 0.5% of value or ₹100
+        return [
+          center - minRange / 2,
+          center + minRange / 2
+        ];
       }
-    });
+      
+      // For any range, create very tight bounds around the data
+      // Use only 2% padding to maximize zoom effect
+      const padding = Math.max(range * 0.02, maxValue * 0.002);
+      
+      // Calculate domain ensuring we show the tightest possible range
+      const domainMin = minValue - padding;
+      const domainMax = maxValue + padding;
+      
+      console.log('📊 Final Ultra-Zoom Domain:', { 
+        domainMin: domainMin.toFixed(0), 
+        domainMax: domainMax.toFixed(0),
+        zoomRange: (domainMax - domainMin).toFixed(0)
+      });
+      
+      return [domainMin, domainMax];
+    };
     
-    if (realDataValues.length === 0) return ['auto', 'auto'];
-    
-    const minValue = Math.min(...realDataValues);
-    const maxValue = Math.max(...realDataValues);
-    const range = maxValue - minValue;
-    
-    console.log('📊 ULTRA-ZOOM Portfolio Timeline Domain:', {
-      realDataValues,
-      minValue,
-      maxValue,
-      range,
-      rangePercentage: (range / maxValue * 100).toFixed(2) + '%'
-    });
-    
-    // ULTRA-AGGRESSIVE ZOOM: Always create tight range around actual data
-    if (range === 0) {
-      // If both values are exactly the same, create minimal range
-      const center = minValue;
-      const minRange = Math.max(center * 0.005, 100); // Minimum 0.5% of value or ₹100
-      return [
-        center - minRange / 2,
-        center + minRange / 2
-      ];
-    }
-    
-    // For any range, create very tight bounds around the data
-    // Use only 2% padding to maximize zoom effect
-    const padding = Math.max(range * 0.02, maxValue * 0.002);
-    
-    // Calculate domain ensuring we show the tightest possible range
-    const domainMin = minValue - padding;
-    const domainMax = maxValue + padding;
-    
-    console.log('📊 Final Ultra-Zoom Domain:', { 
-      domainMin: domainMin.toFixed(0), 
-      domainMax: domainMax.toFixed(0),
-      zoomRange: (domainMax - domainMin).toFixed(0)
-    });
-    
-    return [domainMin, domainMax];
-  };
-
-  const yAxisDomain = calculateDynamicDomain();
+    return calculateDynamicDomain();
+  }, [chartData]);
   
-  // Calculate tick count based on domain range for maximum precision
-  const calculateTickCount = () => {
+  // Calculate tick count based on domain range for maximum precision - Memoized
+  const tickCount = React.useMemo(() => {
     const [min, max] = yAxisDomain;
     if (min === 'auto' || max === 'auto') return 8;
     
@@ -1166,7 +1233,7 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
     if (range < 1000) return 10;     // Medium-small range
     if (range < 5000) return 8;      // Medium range
     return 6;                        // Large range
-  };
+  }, [yAxisDomain]);
 
   return (
     <div className={`timeline-chart portfolio-timeline-chart ${isSample ? 'sample-chart' : ''}`}>
@@ -1192,6 +1259,7 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
       <div className="chart-wrapper">
         <ResponsiveContainer width="100%" height={400}>
           <RechartsLineChart
+            key={`portfolio-chart-${chartData.length}-${lastUpdateTime}`}
             data={chartData}
             margin={{
               top: 20,
@@ -1221,7 +1289,7 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
               width={80}
               domain={yAxisDomain}
               type="number"
-              tickCount={calculateTickCount()}
+              tickCount={tickCount}
             />
             <Tooltip content={<PortfolioTimelineTooltip />} />
             {/* Reference line to show break-even point */}
@@ -1322,7 +1390,7 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
       </div>
     </div>
   );
-};
+});
 
 // Daily Performance Chart Component - Shows daily P&L patterns with real-time animations
 // ✨ Features:
