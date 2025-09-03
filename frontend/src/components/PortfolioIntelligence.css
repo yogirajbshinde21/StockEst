@@ -7,43 +7,6 @@
   background: #fafbfc;
   min-height: 100vh;
   position: relative;
-  scroll-behavior: auto; /* Prevent smooth scrolling that can interfere with updates */
-  overflow-anchor: auto; /* Maintain scroll position during content updates */
-}
-
-/* Dashboard Real-time Indicator */
-.dashboard-realtime-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 1px solid #0ea5e9;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  color: #0369a1;
-  width: fit-content;
-}
-
-.dashboard-realtime-indicator .live-dot {
-  width: 8px;
-  height: 8px;
-  background: #10b981;
-  border-radius: 50%;
-  animation: pulse-green 2s infinite;
-}
-
-.dashboard-realtime-indicator .live-text {
-  font-weight: 600;
-}
-
-.dashboard-realtime-indicator .update-info {
-  font-size: 0.7rem;
-  color: #6b7280;
-  margin-left: 8px;
-  padding-left: 8px;
-  border-left: 1px solid #d1d5db;
 }
 
 /* Loading States */
@@ -1249,15 +1212,120 @@
 
 /* Enhanced Daily Performance Tooltip */
 .daily-performance-tooltip {
-  min-width: 150px !important;
-  max-width: 200px !important;
-  min-height: 90px !important;
-  padding: 10px 12px !important;
+  min-width: 200px !important;
+  max-width: 280px !important;
+  min-height: 120px !important;
+  padding: 12px 16px !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+  white-space: normal !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.daily-performance-tooltip .tooltip-label {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin-bottom: 8px !important;
+  font-size: 0.85rem !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding-bottom: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.daily-performance-tooltip .tooltip-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .daily-performance-tooltip .tooltip-item {
-  margin: 3px 0 !important;
-  justify-content: space-between !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+  margin: 4px 0 !important;
+  padding: 4px 0 !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+}
+
+.daily-performance-tooltip .tooltip-item:last-child {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+}
+
+.daily-performance-tooltip .tooltip-indicator {
+  font-size: 1rem !important;
+  margin-right: 6px !important;
+  font-weight: bold !important;
+}
+
+.daily-performance-tooltip .tooltip-indicator.positive {
+  color: #10b981 !important;
+}
+
+.daily-performance-tooltip .tooltip-indicator.negative {
+  color: #ef4444 !important;
+}
+
+.daily-performance-tooltip .tooltip-amount {
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  color: #374151 !important;
+  margin: 2px 0 !important;
+}
+
+.daily-performance-tooltip .tooltip-percent {
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  margin: 2px 0 !important;
+}
+
+.daily-performance-tooltip .tooltip-percent.positive {
+  color: #10b981 !important;
+}
+
+.daily-performance-tooltip .tooltip-percent.negative {
+  color: #ef4444 !important;
+}
+
+.daily-performance-tooltip .tooltip-subtitle {
+  font-size: 0.75rem !important;
+  color: #6b7280 !important;
+  font-weight: 400 !important;
+  margin-top: 1px !important;
+}
+
+.daily-performance-tooltip .tooltip-live-indicator {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 6px !important;
+  padding: 4px 8px !important;
+  background: #f0f9ff !important;
+  border-radius: 4px !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.daily-performance-tooltip .live-dot-small {
+  width: 6px !important;
+  height: 6px !important;
+  background: #10b981 !important;
+  border-radius: 50% !important;
+  animation: pulse 2s infinite !important;
+}
+
+.daily-performance-tooltip .real-data-indicator {
+  font-size: 0.75rem !important;
+  color: #6b7280 !important;
+  font-style: italic !important;
 }
 
 .tooltip-amount {

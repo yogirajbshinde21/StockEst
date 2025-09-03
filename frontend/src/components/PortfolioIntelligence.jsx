@@ -1737,12 +1737,14 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
             <div className="tooltip-label">{label}</div>
             <div className="tooltip-content">
               <div className="tooltip-item">
-                <span className={`tooltip-indicator ${data.isPositive ? 'positive' : 'negative'}`}>
-                  {data.isPositive ? '↗' : '↘'}
-                </span>
-                <span className="tooltip-amount price-value">
-                  {formatValue(data.dayChange)}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className={`tooltip-indicator ${data.isPositive ? 'positive' : 'negative'}`}>
+                    {data.isPositive ? '↗' : '↘'}
+                  </span>
+                  <span className="tooltip-amount price-value">
+                    {formatValue(data.dayChange)}
+                  </span>
+                </div>
                 <span className="tooltip-subtitle">Daily P&L Change</span>
               </div>
               <div className="tooltip-item">
