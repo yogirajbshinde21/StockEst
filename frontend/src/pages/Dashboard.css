@@ -45,21 +45,40 @@
 }
 
 .dashboard-sidebar.collapsed {
-  width: 280px;
+  width: 60px; /* Much narrower when collapsed */
   transform: translateX(0);
   z-index: 1100; /* Higher z-index to stay above main content */
   box-shadow: 4px 0 25px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.7);
   border-right: 2px solid rgba(59, 130, 246, 0.2);
+  overflow: visible; /* Allow button to extend outside */
 }
 
 .dashboard-sidebar.collapsed .sidebar-header {
   z-index: 1101; /* Even higher for the header controls */
   position: relative;
+  flex-direction: column; /* Stack brand icon and toggle button vertically */
+  align-items: center; /* Center align everything */
+  padding: 1rem 0.5rem; /* Reduce padding */
+  gap: 1rem; /* Add space between brand icon and toggle button */
 }
 
 .dashboard-sidebar.collapsed .sidebar-toggle {
   z-index: 1102; /* Highest for the toggle button */
-  position: relative;
+  position: relative; /* Change from absolute to relative */
+  right: auto; /* Reset right positioning */
+  top: auto; /* Reset top positioning */
+  transform: none; /* Reset transform */
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 2px solid #3b82f6 !important;
+  color: #3b82f6 !important;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4) !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s ease !important;
 }
 
 .dashboard-sidebar.collapsed .sidebar-header .brand span,
@@ -213,13 +232,122 @@
 }
 
 /* Special styling for collapsed state */
+.dashboard-sidebar.collapsed .sidebar-toggle:hover {
+  background: #3b82f6 !important;
+  color: white !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6) !important;
+}
+
+/* Add a subtle pulse animation to draw attention */
 .dashboard-sidebar.collapsed .sidebar-toggle {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #3b82f6;
+  animation: gentlePulse 3s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% { 
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+/* Hide other sidebar content when collapsed */
+.dashboard-sidebar.collapsed .brand span,
+.dashboard-sidebar.collapsed .nav-item span {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0);
+  transition: all 0.3s ease;
+}
+
+/* Style nav-items when collapsed - keep them clickable but compact */
+.dashboard-sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+  margin: 0.25rem 0.25rem; /* Reduce horizontal margin */
+  min-height: auto;
+  width: calc(100% - 0.5rem); /* Ensure proper width within narrow sidebar */
+}
+
+/* Style nav-icon-wrapper when collapsed */
+.dashboard-sidebar.collapsed .nav-item .nav-icon-wrapper {
+  margin: 0;
+  padding: 0.5rem;
+}
+
+/* Style the nav section when collapsed */
+.dashboard-sidebar.collapsed .sidebar-nav {
+  padding: 0.5rem 0;
+  align-items: center;
+  gap: 0.25rem; /* Add small gap between nav items */
+}
+
+/* Enhanced hover effects for collapsed nav items */
+.dashboard-sidebar.collapsed .nav-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: scale(1.05);
+  border-radius: 12px;
+}
+
+.dashboard-sidebar.collapsed .nav-item:hover .nav-icon-wrapper {
+  background: rgba(59, 130, 246, 0.15);
   color: #3b82f6;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-  animation: pulseGlow 2s ease-in-out infinite;
+  transform: scale(1.1);
+}
+
+/* Active state for collapsed nav items */
+.dashboard-sidebar.collapsed .nav-item.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 12px;
+}
+
+.dashboard-sidebar.collapsed .nav-item.active .nav-icon-wrapper {
+  background: #3b82f6;
+  color: white;
+}
+
+/* Add a subtle indicator that items are clickable when collapsed */
+.dashboard-sidebar.collapsed .nav-item {
   position: relative;
+  cursor: pointer;
+}
+
+.dashboard-sidebar.collapsed .nav-item::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: #3b82f6;
+  border-radius: 2px;
+  transition: height 0.2s ease;
+}
+
+.dashboard-sidebar.collapsed .nav-item:hover::after {
+  height: 20px;
+}
+
+.dashboard-sidebar.collapsed .nav-item.active::after {
+  height: 30px;
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+}
+
+/* Show only the brand icon when collapsed */
+.dashboard-sidebar.collapsed .brand {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.dashboard-sidebar.collapsed .brand-icon-wrapper {
+  opacity: 1 !important;
+  transform: scale(0.8) !important;
+  margin: 0 !important;
 }
 
 .dashboard-sidebar.collapsed .sidebar-toggle::after {
@@ -486,6 +614,45 @@
   width: 48px;
   padding: 0.75rem;
   border-radius: 50%;
+  margin: 0.5rem auto 0.25rem auto; /* Center it horizontally and add top margin */
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+/* Enhanced collapsed logout button styling */
+.dashboard-sidebar.collapsed .logout-btn {
+  margin: 0.5rem 0.25rem 0.25rem 0.25rem;
+  width: calc(100% - 0.5rem);
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: 12px; /* Match nav-item border-radius */
+  position: relative;
+}
+
+/* Hover effect for collapsed logout button */
+.dashboard-sidebar.collapsed .logout-btn:hover {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+/* Add visual indicator for collapsed logout button */
+.dashboard-sidebar.collapsed .logout-btn::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: #dc2626;
+  border-radius: 2px;
+  transition: height 0.2s ease;
+}
+
+.dashboard-sidebar.collapsed .logout-btn:hover::after {
+  height: 20px;
 }
 
 /* Main Content */
@@ -499,7 +666,7 @@
 }
 
 .dashboard-main.sidebar-collapsed {
-  margin-left: 80px;
+  margin-left: 60px; /* Match the collapsed sidebar width */
 }
 
 /* Sidebar Overlay */
@@ -596,8 +763,11 @@
 }
 
 .dashboard-sidebar.collapsed .sidebar-footer {
-  padding: 1rem;
+  padding: 0.5rem;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Top Bar */
@@ -958,7 +1128,7 @@
   }
   
   .dashboard-sidebar.collapsed {
-    width: 80px;
+    width: 60px; /* Match the main collapsed width */
   }
   
   .dashboard-main {
@@ -966,7 +1136,7 @@
   }
   
   .dashboard-main.sidebar-collapsed {
-    margin-left: 80px;
+    margin-left: 60px; /* Match the collapsed sidebar width */
   }
   
   .menu-btn {
