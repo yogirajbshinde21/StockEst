@@ -1694,14 +1694,26 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
     dateKey: d.dateKey // Pass through date key for debugging
   }));
   
-  // Calculate performance statistics from current chart data
-  const totalDays = chartData.length;
-  const profitDays = chartData.filter(d => d.isPositive).length;
-  const lossDays = totalDays - profitDays;
-  const bestDay = chartData.length > 0 ? Math.max(...chartData.map(d => d.dayChangePercent)) : 0;
-  const worstDay = chartData.length > 0 ? Math.min(...chartData.map(d => d.dayChangePercent)) : 0;
-  const avgDaily = chartData.length > 0 ? chartData.reduce((sum, d) => sum + d.dayChangePercent, 0) / totalDays : 0;
+  // Calculate performance statistics from current chart data - only count days with actual data
+  const daysWithData = chartData.filter(d => d.isReal || d.isToday || Math.abs(d.dayChangePercent) > 0);
+  const totalDays = daysWithData.length;
+  const profitDays = daysWithData.filter(d => d.dayChangePercent > 0).length;
+  const lossDays = daysWithData.filter(d => d.dayChangePercent < 0).length;
+  const bestDay = daysWithData.length > 0 ? Math.max(...daysWithData.map(d => d.dayChangePercent)) : 0;
+  const worstDay = daysWithData.length > 0 ? Math.min(...daysWithData.map(d => d.dayChangePercent)) : 0;
+  const avgDaily = daysWithData.length > 0 ? daysWithData.reduce((sum, d) => sum + d.dayChangePercent, 0) / totalDays : 0;
   const winRate = totalDays > 0 ? (profitDays / totalDays) * 100 : 0;
+
+  // Debug the calculation
+  console.log('📊 DAILY PERFORMANCE STATISTICS:');
+  console.log('================================');
+  console.log('📈 Total chart data points:', chartData.length);
+  console.log('📊 Days with actual data:', totalDays);
+  console.log('💰 Profit days:', profitDays);
+  console.log('📉 Loss days:', lossDays);
+  console.log('🎯 Win rate:', winRate.toFixed(1) + '%');
+  console.log('📊 Days with data breakdown:', daysWithData.map(d => `${d.date}: ${d.dayChangePercent.toFixed(2)}%`));
+  console.log('================================');
 
   // Custom tooltip for daily performance - Enhanced with AnimatedPrice-style formatting
   const DailyPerformanceTooltip = React.useMemo(() => {
@@ -1809,7 +1821,7 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
             <span>Loss Days ({lossDays})</span>
           </div>
           <div className="legend-item">
-            <span>Win Rate: {winRate.toFixed(1)}%</span>
+            <span>Trading Days: {totalDays} | Win Rate: {winRate.toFixed(1)}%</span>
           </div>
         </div>
       </div>
@@ -1862,7 +1874,7 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
           <div className="performance-title">
             📊 Today's Portfolio Performance + Historical Pattern
           </div>
-          <div className="performance-subtitle">Daily Total P&L Values</div>
+          <div className="performance-subtitle">Daily Total P&L Values ({totalDays} Trading Days)</div>
           
           <div className="performance-overview">
             <div className="overview-item">
@@ -1885,13 +1897,13 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
             <div className="stat-item">
               <span className="stat-label">Best Day:</span>
               <span className="stat-value positive">
-                {formatPercent(bestDay)} ({formatCurrency(chartData.find(d => d.dayChangePercent === bestDay)?.dayChange || 0)})
+                {formatPercent(bestDay)} ({formatCurrency(daysWithData.find(d => d.dayChangePercent === bestDay)?.dayChange || 0)})
               </span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Worst Day:</span>
               <span className="stat-value negative">
-                {formatPercent(worstDay)} ({formatCurrency(chartData.find(d => d.dayChangePercent === worstDay)?.dayChange || 0)})
+                {formatPercent(worstDay)} ({formatCurrency(daysWithData.find(d => d.dayChangePercent === worstDay)?.dayChange || 0)})
               </span>
             </div>
           </div>
