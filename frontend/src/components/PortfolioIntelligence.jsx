@@ -88,6 +88,17 @@ const PortfolioIntelligence = () => {
       const response = await axios.get('/api/trading/portfolio');
       const portfolioData = response.data?.data;
       if (portfolioData?.summary) {
+        console.log('📊 FETCHED PORTFOLIO DATA ANALYSIS:');
+        console.log('==================================');
+        console.log('📊 API Response Summary:', portfolioData.summary);
+        console.log('💰 Total P&L from API:', portfolioData.summary.totalProfitLoss);
+        console.log('💰 Current Value from API:', portfolioData.summary.currentValue);
+        console.log('💰 Total Invested from API:', portfolioData.summary.totalInvested);
+        console.log('🧮 Manual P&L calculation: currentValue - totalInvested =', 
+          (portfolioData.summary.currentValue || 0) - (portfolioData.summary.totalInvested || 0));
+        console.log('🎯 This should match what appears in Portfolio Summary Card');
+        console.log('==================================');
+        
         const newPortfolioData = {
           totalProfitLoss: portfolioData.summary.totalProfitLoss || 0,
           totalProfitLossPercent: portfolioData.summary.totalProfitLossPercent || 0,
@@ -124,6 +135,17 @@ const PortfolioIntelligence = () => {
       // Check if data has changed before updating
       if (JSON.stringify(newPortfolioData) !== JSON.stringify(currentPortfolioData)) {
         console.log('🔄 Real-time portfolio data from socket:', newPortfolioData);
+        
+        console.log('💰 PORTFOLIO SUMMARY CARD VALUE SOURCE:');
+        console.log('======================================');
+        console.log('📊 portfolioData.summary.totalProfitLoss:', portfolioData.summary.totalProfitLoss);
+        console.log('📊 portfolioData.summary.currentValue:', portfolioData.summary.currentValue);
+        console.log('📊 portfolioData.summary.totalInvested:', portfolioData.summary.totalInvested);
+        console.log('🧮 Expected calculation: currentValue - totalInvested =', 
+          (portfolioData.summary.currentValue || 0) - (portfolioData.summary.totalInvested || 0));
+        console.log('🏷️  This value should match Daily Performance Timeline for today');
+        console.log('======================================');
+        
         setCurrentPortfolioData(newPortfolioData);
         setLastUpdateTime(Date.now());
       }
@@ -164,35 +186,50 @@ const PortfolioIntelligence = () => {
           
           if (todayDataIndex >= 0) {
             // Update today's data with real-time values
-            const yesterdayValue = todayDataIndex > 0 ? 
-              responseData.timeline[todayDataIndex - 1].totalValue : 
-              currentPortfolioData.totalInvested;
+            const yesterdayEntry = todayDataIndex > 0 ? 
+              responseData.timeline[todayDataIndex - 1] : null;
+            
+            // Calculate today's daily P&L change 
+            // (today's total P&L - yesterday's total P&L)
+            let todayDayChange = currentPortfolioData.totalProfitLoss;
+            let todayDayChangePercent = currentPortfolioData.totalProfitLossPercent;
+            
+            if (yesterdayEntry && yesterdayEntry.totalProfitLoss !== undefined) {
+              todayDayChange = currentPortfolioData.totalProfitLoss - yesterdayEntry.totalProfitLoss;
+              const yesterdayPL = yesterdayEntry.totalProfitLoss;
+              todayDayChangePercent = yesterdayPL !== 0 ? (todayDayChange / Math.abs(yesterdayPL)) * 100 : 
+                currentPortfolioData.totalProfitLossPercent;
+            }
             
             const updatedTodayData = {
               ...responseData.timeline[todayDataIndex],
               totalValue: currentPortfolioData.totalValue,
               totalProfitLoss: currentPortfolioData.totalProfitLoss,
               totalProfitLossPercent: currentPortfolioData.totalProfitLossPercent,
-              dayChange: currentPortfolioData.totalValue - yesterdayValue,
-              dayChangePercent: yesterdayValue > 0 ? 
-                ((currentPortfolioData.totalValue - yesterdayValue) / yesterdayValue) * 100 : 0
+              dayChange: todayDayChange, // Use calculated daily P&L change
+              dayChangePercent: todayDayChangePercent
             };
             
-            console.log('📊 Updated today data:', updatedTodayData);
+            console.log('📊 Updated today data with proper daily P&L:', {
+              todayPL: currentPortfolioData.totalProfitLoss,
+              yesterdayPL: yesterdayEntry?.totalProfitLoss,
+              dayChange: todayDayChange,
+              dayChangePercent: todayDayChangePercent
+            });
             responseData.timeline[todayDataIndex] = updatedTodayData;
           } else if (currentPortfolioData.totalValue > 0) {
-            // Add today's data if not present
+            // Add today's data if not present (first day of trading)
             const newTodayData = {
               date: today.toISOString(),
               totalValue: currentPortfolioData.totalValue,
               totalInvested: currentPortfolioData.totalInvested,
               totalProfitLoss: currentPortfolioData.totalProfitLoss,
               totalProfitLossPercent: currentPortfolioData.totalProfitLossPercent,
-              dayChange: currentPortfolioData.totalProfitLoss, // Use total P&L as day change for new entries
+              dayChange: currentPortfolioData.totalProfitLoss, // For first day, use total P&L as daily change
               dayChangePercent: currentPortfolioData.totalProfitLossPercent
             };
             
-            console.log('📊 Adding new today data:', newTodayData);
+            console.log('📊 Adding new today data (first day):', newTodayData);
             responseData.timeline.push(newTodayData);
           }
         }
@@ -413,6 +450,7 @@ const PortfolioIntelligence = () => {
             formatCurrency={formatCurrency}
             formatPercent={formatPercent}
             lastUpdateTime={lastUpdateTime}
+            currentPortfolioData={currentPortfolioData}
           />
         )}
         
@@ -424,6 +462,7 @@ const PortfolioIntelligence = () => {
             formatCurrency={formatCurrency}
             formatPercent={formatPercent}
             lastUpdateTime={lastUpdateTime}
+            currentPortfolioData={currentPortfolioData}
           />
         )}
         
@@ -449,7 +488,7 @@ const PortfolioIntelligence = () => {
 };
 
 // Overview Section Component
-const OverviewSection = ({ analytics, timeline, timeframe, formatCurrency, formatPercent, lastUpdateTime }) => {
+const OverviewSection = ({ analytics, timeline, timeframe, formatCurrency, formatPercent, lastUpdateTime, currentPortfolioData }) => {
   // Safely extract values with proper fallbacks
   const safeTimeline = Array.isArray(timeline) ? timeline.filter(item => item && typeof item === 'object') : [];
   const lastEntry = safeTimeline.length > 0 ? safeTimeline[safeTimeline.length - 1] : {};
@@ -595,7 +634,7 @@ const OverviewSection = ({ analytics, timeline, timeframe, formatCurrency, forma
 };
 
 // Performance Section Component
-const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, formatPercent, lastUpdateTime }) => {
+const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, formatPercent, lastUpdateTime, currentPortfolioData }) => {
   return (
     <div className="performance-section">
       {/* Returns Comparison */}
@@ -730,6 +769,7 @@ const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, fo
           formatCurrency={formatCurrency}
           formatPercent={formatPercent}
           lastUpdateTime={lastUpdateTime}
+          currentPortfolioData={currentPortfolioData}
         />
       </div>
     </div>
@@ -1405,8 +1445,12 @@ const PortfolioTimelineChartRender = React.memo(({ timeline, formatCurrency, isS
 // - New today's bar appears as the last bar with fresh data
 // - Animation continues to work for the new "today" bar
 // - Chart automatically shifts to maintain 30-day window
-const DailyPerformanceChart = ({ timeline, formatCurrency, formatPercent, lastUpdateTime }) => {
-  console.log('📈 DailyPerformanceChart received timeline:', timeline, 'lastUpdateTime:', lastUpdateTime);
+const DailyPerformanceChart = ({ timeline, formatCurrency, formatPercent, lastUpdateTime, currentPortfolioData }) => {
+  console.log('� RAW INPUT DATA (from API):');
+  console.log('============================');
+  console.log('�📈 DailyPerformanceChart received timeline:', timeline, 'lastUpdateTime:', lastUpdateTime);
+  console.log('⚠️  Note: Raw dayChange values above may be incorrect - will be fixed in processing');
+  console.log('============================');
   
   // Use useMemo to prevent unnecessary re-computations and re-renders
   const chartData = React.useMemo(() => {
@@ -1417,33 +1461,76 @@ const DailyPerformanceChart = ({ timeline, formatCurrency, formatPercent, lastUp
     
     console.log('📅 Generating chart data for date:', today.toDateString());
     
-    // Create 30 days of data structure
+    // Create 30 days of data structure with proper daily P&L calculation
     for (let i = 29; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       
-      // Find matching timeline data for this date
+      // Find matching timeline data for this date (with timezone tolerance)
       const timelineMatch = timeline?.find(item => {
         if (!item?.date) return false;
         const itemDate = new Date(item.date);
-        itemDate.setHours(0, 0, 0, 0); // Normalize for comparison
-        return itemDate.getTime() === date.getTime();
+        const chartDate = new Date(date);
+        
+        // More flexible date matching to handle timezone differences
+        // Check if the dates are within the same calendar day
+        const itemDateStr = itemDate.toDateString();
+        const chartDateStr = chartDate.toDateString();
+        
+        // Also try checking if they're within 24 hours of each other
+        const timeDiff = Math.abs(itemDate.getTime() - chartDate.getTime());
+        const isWithin24Hours = timeDiff < (24 * 60 * 60 * 1000);
+        const isSameDay = itemDateStr === chartDateStr;
+        
+        return isSameDay || isWithin24Hours;
       });
+      
+      // Debug date matching
+      if (i <= 2) { // Only log last 3 days
+        console.log('🔍 DATE MATCHING DEBUG:');
+        console.log(`📅 Chart day ${i}: ${date.toDateString()} (${date.getTime()})`);
+        console.log(`🔍 Looking for timeline match...`);
+        if (timelineMatch) {
+          const itemDate = new Date(timelineMatch.date);
+          console.log(`✅ Found match: ${itemDate.toISOString()} -> ${itemDate.toDateString()}`);
+          console.log(`💰 totalProfitLoss: ${timelineMatch.totalProfitLoss}`);
+        } else {
+          console.log(`❌ No match found for ${date.toDateString()}`);
+          console.log(`📊 Available timeline dates:`, timeline?.map(t => new Date(t.date).toDateString()));
+        }
+        console.log('------------------------');
+      }
       
       let dayChange = 0;
       let dayChangePercent = 0;
       const isToday = i === 0; // Last item is always today
       
-      if (timelineMatch) {
-        // For today (last entry), use total P&L if dayChange is 0
-        if (isToday && timelineMatch.dayChange === 0 && timelineMatch.totalProfitLoss !== undefined) {
-          // Use total P&L as today's change since market started
-          dayChange = timelineMatch.totalProfitLoss;
-          dayChangePercent = timelineMatch.totalProfitLossPercent || 0;
-          console.log('📊 Using total P&L for today:', { dayChange, dayChangePercent });
-        } else {
-          dayChange = timelineMatch.dayChange || 0;
-          dayChangePercent = timelineMatch.dayChangePercent || 0;
+      if (isToday && currentPortfolioData) {
+        // For TODAY: Use live current portfolio data (not timeline data)
+        dayChange = currentPortfolioData.totalProfitLoss || 0;
+        dayChangePercent = currentPortfolioData.totalProfitLossPercent || 0;
+        
+        console.log('🎯 TODAY\'S DAILY P&L CALCULATION (LIVE DATA):');
+        console.log('==============================================');
+        console.log('📊 Using LIVE currentPortfolioData:', currentPortfolioData);
+        console.log('💰 Daily Change (dayChange):', dayChange);
+        console.log('📈 Daily Change Percent:', dayChangePercent);
+        console.log('🏷️  Source: LIVE currentPortfolioData.totalProfitLoss');
+        console.log('🔍 This should match Portfolio Summary Card value EXACTLY');
+        console.log('==============================================');
+      } else if (timelineMatch) {
+        // For HISTORICAL days: Use timeline data
+        dayChange = timelineMatch.totalProfitLoss || 0;
+        dayChangePercent = timelineMatch.totalProfitLossPercent || 0;
+        
+        if (!isToday) {
+          console.log('📊 HISTORICAL DAILY P&L CALCULATION:');
+          console.log('===================================');
+          console.log('📅 Date:', timelineMatch.date);
+          console.log('💰 Total P&L for this day:', timelineMatch.totalProfitLoss);
+          console.log('📈 P&L Percent for this day:', dayChangePercent);
+          console.log('🏷️  Using timeline data for historical day');
+          console.log('===================================');
         }
       }
       
@@ -1458,11 +1545,31 @@ const DailyPerformanceChart = ({ timeline, formatCurrency, formatPercent, lastUp
         isToday: isToday, // Mark today's bar for animation purposes
         dateKey: date.getTime() // Unique key for day transition detection
       });
+      
+      // Add final validation for today's data
+      if (isToday && timelineMatch) {
+        console.log('🔍 FINAL VALIDATION FOR TODAY\'S BAR:');
+        console.log('===================================');
+        console.log('📅 Date:', date.toDateString());
+        console.log('💰 dayChange (will show in chart):', dayChange);
+        console.log('📈 dayChangePercent:', dayChangePercent);
+        console.log('🎯 Expected: This should match Portfolio Summary Card P&L value');
+        console.log('📊 Source data - totalProfitLoss:', timelineMatch.totalProfitLoss);
+        console.log('===================================');
+      }
     }
     
     console.log('📈 Generated daily chart data:', realDailyData);
+    console.log('🎯 FINAL PROCESSED DATA FOR CHART:');
+    console.log('=================================');
+    realDailyData.forEach((day, index) => {
+      console.log(`📅 ${day.date}: dayChange=₹${day.dayChange.toFixed(2)} (${day.dayChangePercent.toFixed(2)}%)`);
+    });
+    console.log('🎯 These are the values that will appear in the chart bars');
+    console.log('=================================');
+    
     return { data: realDailyData, isSample: false, realDataCount: timeline?.length || 0 };
-  }, [timeline]);
+  }, [timeline, currentPortfolioData]);
 
   return (
     <DailyPerformanceChartRender 
@@ -1596,36 +1703,72 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
   const avgDaily = chartData.length > 0 ? chartData.reduce((sum, d) => sum + d.dayChangePercent, 0) / totalDays : 0;
   const winRate = totalDays > 0 ? (profitDays / totalDays) * 100 : 0;
 
-  // Custom tooltip for daily performance
-  const DailyPerformanceTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="chart-tooltip daily-performance-tooltip">
-          <div className="tooltip-label">{label}</div>
-          <div className="tooltip-content">
-            <div className="tooltip-item">
-              <span className={`tooltip-indicator ${data.isPositive ? 'positive' : 'negative'}`}>
-                {data.isPositive ? '↗' : '↘'}
-              </span>
-              <span className="tooltip-amount">{formatCurrency(data.dayChange)}</span>
-            </div>
-            <div className="tooltip-item">
-              <span className={`tooltip-percent ${data.isPositive ? 'positive' : 'negative'}`}>
-                {formatPercent(data.dayChangePercent)}
-              </span>
-            </div>
-            {data.isReal && (
+  // Custom tooltip for daily performance - Enhanced with AnimatedPrice-style formatting
+  const DailyPerformanceTooltip = React.useMemo(() => {
+    return ({ active, payload, label }) => {
+      if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        
+        // Format value using the same function as AnimatedPrice component
+        const formatValue = (val) => {
+          console.log('💰 DAILY CHART TOOLTIP FORMATTING:');
+          console.log('================================');
+          console.log('📊 Raw tooltip value (dayChange):', val);
+          console.log('🧮 Formatted result:', new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2
+          }).format(val));
+          console.log('🎯 This should match Portfolio Summary Card format');
+          console.log('💡 Note: For today, this should equal the P&L value from Portfolio Summary');
+          console.log('================================');
+          
+          return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2
+          }).format(val);
+        };
+        
+        return (
+          <div className="chart-tooltip daily-performance-tooltip">
+            <div className="tooltip-label">{label}</div>
+            <div className="tooltip-content">
               <div className="tooltip-item">
-                <span className="real-data-indicator">📊 Real Data</span>
+                <span className={`tooltip-indicator ${data.isPositive ? 'positive' : 'negative'}`}>
+                  {data.isPositive ? '↗' : '↘'}
+                </span>
+                <span className="tooltip-amount price-value">
+                  {formatValue(data.dayChange)}
+                </span>
+                <span className="tooltip-subtitle">Daily P&L Change</span>
               </div>
-            )}
+              <div className="tooltip-item">
+                <span className={`tooltip-percent ${data.isPositive ? 'positive' : 'negative'}`}>
+                  {data.dayChangePercent >= 0 ? '+' : ''}{data.dayChangePercent.toFixed(2)}%
+                </span>
+                <span className="tooltip-subtitle">Daily Return</span>
+              </div>
+              {data.isToday && (
+                <div className="tooltip-live-indicator">
+                  <span className="live-dot-small"></span>
+                  <span>Today's Live Data</span>
+                </div>
+              )}
+              {data.isReal && !data.isToday && (
+                <div className="tooltip-item">
+                  <span className="real-data-indicator">📊 Historical Data</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      );
-    }
-    return null;
-  };
+        );
+      }
+      return null;
+    };
+  }, []);
 
   // Format Y-axis for percentage values
   const formatYAxisPercent = (value) => {
@@ -1637,16 +1780,16 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
       {isSample && (
         <div className="sample-indicator">
           {realDataCount === 1 ? (
-            <span>📊 Today's Performance + Historical Pattern - Daily bars will accumulate from tomorrow</span>
+            <span>📊 Today's Portfolio Performance + Historical Pattern - Daily bars will accumulate from tomorrow</span>
           ) : (
-            <span>📊 Sample Daily Performance Data - Shows profit/loss patterns per day</span>
+            <span>📊 Sample Daily Portfolio Performance - Shows total P&L for each day</span>
           )}
         </div>
       )}
       
       <div className="chart-header">
         <div className="chart-title-section">
-          <h4>Daily Profit & Loss Pattern</h4>
+          <h4>Daily Portfolio Performance</h4>
           {!isSample && (
             <div className="real-time-indicator">
               <span className="live-dot"></span>
@@ -1715,9 +1858,9 @@ const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, 
       <div className="performance-stats">
         <div className="performance-summary">
           <div className="performance-title">
-            📊 Today's Performance + Historical Pattern
+            📊 Today's Portfolio Performance + Historical Pattern
           </div>
-          <div className="performance-subtitle">Daily Profit & Loss Pattern</div>
+          <div className="performance-subtitle">Daily Total P&L Values</div>
           
           <div className="performance-overview">
             <div className="overview-item">
