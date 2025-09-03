@@ -44,7 +44,7 @@ router.post('/query', auth, chatbotLimiter, async (req, res) => {
       });
     }
 
-    console.log(`🤖 Chatbot query from user ${userId}: "${query.substring(0, 50)}..."`);
+    console.log(`🤖 Chatbot query from user ${userId}: "${query.substring(0, 50)}..." (Language: ${language || 'default'})`);
 
     // Generate response using ChatbotService
     const response = await chatbotService.generateResponse(query, userId, language);

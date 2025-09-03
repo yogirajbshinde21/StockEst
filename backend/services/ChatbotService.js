@@ -411,7 +411,7 @@ You have complete access to the user's portfolio data above. Use this informatio
 3. Provide educational explanations with real-world examples
 4. Use current market data from Google Search when needed
 5. Be encouraging and supportive for investors
-6. Respond in ${isHindi ? 'Hindi-English mix (Hinglish)' : 'English'} as preferred by the user
+6. ${isHindi ? 'Respond COMPLETELY in Hindi (हिंदी). Use proper Hindi vocabulary for financial terms and avoid English words wherever possible.' : 'Respond in English only.'}
 7. Keep responses concise but informative
 8. For general market questions, focus on broad market analysis and education
 
@@ -477,7 +477,7 @@ ${portfolioData ? 'Remember: Use the specific portfolio data provided to give pe
    */
   async generateResponse(userQuery, userId, userLanguage = 'english') {
     try {
-      console.log(`🤖 Processing query: "${userQuery}" for user: ${userId}`);
+      console.log(`🤖 Processing query: "${userQuery}" for user: ${userId} in language: ${userLanguage}`);
       
       // Check if query is stock market related
       if (!this.isStockMarketQuery(userQuery)) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import Trans from './Trans';
 import './ChatBot.css';
@@ -11,6 +11,203 @@ const ChatBot = () => {
   const [dailyTip, setDailyTip] = useState('');
   const messagesEndRef = useRef(null);
   const { currentLanguage } = useLanguage();
+
+  // Voice interaction states
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [speechLanguage, setSpeechLanguage] = useState('en-IN'); // Separate state for speech recognition language
+  const speechSynthesisRef = useRef(null);
+
+  // Handle voice input - defined early to avoid dependency issues
+  const handleVoiceInput = useCallback((transcript, detectedLanguage = null) => {
+    // Detect language from the recognition language used
+    // If speech recognition was in Hindi (hi-IN), set response language to hindi
+    const voiceLanguage = detectedLanguage === 'hi-IN' ? 'hindi' : 'english';
+    
+    console.log(`🎤 Voice input detected:`, {
+      transcript,
+      detectedLanguage,
+      voiceLanguage
+    });
+    
+    // Create a temporary user message
+    const userMessage = {
+      id: Date.now(),
+      type: 'user',
+      text: transcript,
+      timestamp: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsLoading(true);
+
+    // Send to backend (similar to sendMessage but simplified)
+    const sendVoiceMessage = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('Please login to use the chatbot');
+        }
+
+        console.log(`🚀 Sending request with language: ${voiceLanguage}`);
+
+        const response = await fetch('http://localhost:5000/api/chatbot/query', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            query: transcript,
+            language: voiceLanguage // Use detected voice language instead of current UI language
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const botMessage = {
+            id: Date.now() + 1,
+            type: 'bot',
+            text: data.data.response,
+            timestamp: data.data.timestamp,
+            sources: data.data.sources || [],
+            isRelevant: data.data.isRelevant,
+            portfolioSummary: data.data.portfolioSummary,
+            cacheUsed: data.data.cacheUsed,
+            memoryContext: data.data.memoryContext,
+            portfolioFetched: data.data.portfolioFetched,
+            queryType: data.data.queryType
+          };
+
+          setMessages(prev => [...prev, botMessage]);
+          
+          // Auto-speak bot response when voice is enabled
+          if (isVoiceEnabled && voiceSupported && speechSynthesisRef.current) {
+            const cleanText = data.data.response
+              .replace(/🤖|📊|💰|📈|📉|🏢|💡|💾|🧠|🌐|👤/g, '')
+              .replace(/₹/g, ' rupees ')
+              .replace(/%/g, ' percent ')
+              .replace(/\*/g, '')
+              .replace(/\n+/g, '. ')
+              .trim();
+            
+            if (cleanText) {
+              speechSynthesisRef.current.cancel();
+              const utterance = new SpeechSynthesisUtterance(cleanText);
+              // Use the same language that was detected from voice input
+              utterance.lang = detectedLanguage || (voiceLanguage === 'hindi' ? 'hi-IN' : 'en-IN');
+              utterance.rate = 0.8;
+              utterance.onstart = () => {
+                setIsSpeaking(true);
+                console.log(`🔊 Speaking in ${utterance.lang === 'hi-IN' ? 'Hindi' : 'English'}`);
+              };
+              utterance.onend = () => setIsSpeaking(false);
+              utterance.onerror = () => setIsSpeaking(false);
+              speechSynthesisRef.current.speak(utterance);
+            }
+          }
+        } else {
+          throw new Error(data.message || 'Failed to get response');
+        }
+      } catch (error) {
+        console.error('Error sending voice message:', error);
+        const errorMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          text: voiceLanguage === 'hindi' 
+            ? 'क्षमा करें, कुछ तकनीकी समस्या है। कृपया फिर से कोशिश करें।'
+            : 'Sorry, there was a technical issue. Please try again.',
+          timestamp: new Date().toISOString(),
+          sources: [],
+          isError: true
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    sendVoiceMessage();
+  }, [isVoiceEnabled, voiceSupported]);
+
+  // Initialize voice features
+  useEffect(() => {
+    // Check for Web Speech API support
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speechSynthesis = window.speechSynthesis;
+    
+    if (SpeechRecognition && speechSynthesis) {
+      setVoiceSupported(true);
+      
+      // Initialize speech recognition
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.maxAlternatives = 1;
+      
+      // Set language based on speech language setting (not UI language)
+      recognitionInstance.lang = speechLanguage;
+      
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+      
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        const recognitionLanguage = recognitionInstance.lang; // Get the language that was used for recognition
+        setInputValue(transcript);
+        // Auto-send voice input using a ref to avoid dependency issues
+        setTimeout(() => {
+          // Use the transcript directly rather than depending on sendMessage
+          handleVoiceInput(transcript, recognitionLanguage);
+        }, 100);
+      };
+      
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        
+        // Determine language for error message based on recognition language
+        const isHindiRecognition = recognitionInstance.lang === 'hi-IN';
+        
+        // Show user-friendly error message
+        const errorMessages = {
+          'no-speech': isHindiRecognition ? 'कोई आवाज़ नहीं सुनाई दी' : 'No speech detected',
+          'network': isHindiRecognition ? 'नेटवर्क त्रुटि' : 'Network error',
+          'not-allowed': isHindiRecognition ? 'माइक्रोफोन की अनुमति नहीं है' : 'Microphone permission denied'
+        };
+        
+        const errorMessage = errorMessages[event.error] || 
+          (isHindiRecognition ? 'वॉइस इनपुट में त्रुटि' : 'Voice input error');
+        
+        // You could show this error in a toast or status message
+        console.log('Voice error:', errorMessage);
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(recognitionInstance);
+      speechSynthesisRef.current = speechSynthesis;
+    } else {
+      setVoiceSupported(false);
+      console.log('Web Speech API not supported in this browser');
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (speechSynthesisRef.current) {
+        speechSynthesisRef.current.cancel();
+      }
+    };
+  }, [currentLanguage, handleVoiceInput, speechLanguage]);
 
   // Initialize chatbot with welcome message
   useEffect(() => {
@@ -88,7 +285,7 @@ const ChatBot = () => {
   };
 
   // Send message to chatbot
-  const sendMessage = async (customQuery = null) => {
+  const sendMessage = useCallback(async (customQuery = null) => {
     const query = customQuery || inputValue.trim();
     if (!query || isLoading) return;
 
@@ -203,7 +400,63 @@ const ChatBot = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentLanguage, inputValue, isLoading]);
+
+  const startListening = useCallback(() => {
+    if (!voiceSupported || !recognition || isListening) return;
+    
+    // Stop any ongoing speech before listening
+    if (speechSynthesisRef.current) {
+      speechSynthesisRef.current.cancel();
+      setIsSpeaking(false);
+    }
+    
+    try {
+      // Update language for recognition based on speechLanguage setting
+      recognition.lang = speechLanguage;
+      recognition.start();
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+    }
+  }, [voiceSupported, recognition, isListening, speechLanguage]);
+
+  const stopListening = useCallback(() => {
+    if (recognition && isListening) {
+      recognition.stop();
+    }
+  }, [recognition, isListening]);
+
+  const toggleVoice = useCallback(() => {
+    setIsVoiceEnabled(!isVoiceEnabled);
+    
+    // If disabling voice, stop any ongoing speech or listening
+    if (isVoiceEnabled) {
+      if (speechSynthesisRef.current) {
+        speechSynthesisRef.current.cancel();
+        setIsSpeaking(false);
+      }
+      if (recognition && isListening) {
+        recognition.stop();
+      }
+    }
+  }, [isVoiceEnabled, recognition, isListening]);
+
+  const toggleSpeechLanguage = useCallback(() => {
+    const newLang = speechLanguage === 'en-IN' ? 'hi-IN' : 'en-IN';
+    setSpeechLanguage(newLang);
+    console.log(`🎤 Speech recognition language changed to: ${newLang}`);
+    
+    // If currently listening, stop and restart with new language
+    if (isListening && recognition) {
+      recognition.stop();
+      setTimeout(() => {
+        if (recognition) {
+          recognition.lang = newLang;
+          recognition.start();
+        }
+      }, 100);
+    }
+  }, [speechLanguage, isListening, recognition]);
 
   // Handle Enter key press
   const handleKeyPress = (e) => {
@@ -217,27 +470,33 @@ const ChatBot = () => {
   const quickActions = [
     {
       text: currentLanguage === 'hindi' ? 'मेरा पोर्टफोलियो' : 'My Portfolio',
-      query: currentLanguage === 'hindi' ? 'मेरे पोर्टफोलियो की स्थिति क्या है?' : 'What is the status of my portfolio?'
+      query: currentLanguage === 'hindi' ? 'मेरे पोर्टफोलियो की स्थिति क्या है?' : 'What is the status of my portfolio?',
+      icon: '📊'
     },
     {
       text: currentLanguage === 'hindi' ? 'लाभ-हानि' : 'Profit/Loss',
-      query: currentLanguage === 'hindi' ? 'मेरा कुल लाभ या हानि कितना है?' : 'What is my total profit or loss?'
+      query: currentLanguage === 'hindi' ? 'मेरा कुल लाभ या हानि कितना है?' : 'What is my total profit or loss?',
+      icon: '💰'
     },
     {
       text: currentLanguage === 'hindi' ? 'बेहतरीन स्टॉक' : 'Best Performers',
-      query: currentLanguage === 'hindi' ? 'मेरे पोर्टफोलियो में कौन से स्टॉक सबसे अच्छा प्रदर्शन कर रहे हैं?' : 'Which stocks are performing best in my portfolio?'
+      query: currentLanguage === 'hindi' ? 'मेरे पोर्टफोलियो में कौन से स्टॉक सबसे अच्छा प्रदर्शन कर रहे हैं?' : 'Which stocks are performing best in my portfolio?',
+      icon: '📈'
     },
     {
       text: currentLanguage === 'hindi' ? 'निवेश सुझाव' : 'Investment Advice',
-      query: currentLanguage === 'hindi' ? 'मेरे पोर्टफोलियो के अनुसार मुझे कहाँ निवेश करना चाहिए?' : 'Where should I invest based on my current portfolio?'
+      query: currentLanguage === 'hindi' ? 'मेरे पोर्टफोलियो के अनुसार मुझे कहाँ निवेश करना चाहिए?' : 'Where should I invest based on my current portfolio?',
+      icon: '💡'
     },
     {
-      text: currentLanguage === 'hindi' ? 'आज के टॉप स्टॉक्स' : 'Today\'s top stocks',
-      query: 'What are the top performing stocks today in Indian market?'
+      text: currentLanguage === 'hindi' ? 'आज के टॉप स्टॉक्स' : 'Today\'s Top Stocks',
+      query: 'What are the top performing stocks today in Indian market?',
+      icon: '🏆'
     },
     {
-      text: currentLanguage === 'hindi' ? 'मार्केट न्यूज़' : 'Market news',
-      query: 'What are the latest important stock market news today?'
+      text: currentLanguage === 'hindi' ? 'मार्केट न्यूज़' : 'Market News',
+      query: 'What are the latest important stock market news today?',
+      icon: '📰'
     }
   ];
 
@@ -277,15 +536,44 @@ const ChatBot = () => {
                 <span className="status-indicator">
                   <span className="status-dot"></span>
                   <Trans>ऑनलाइन - Online</Trans>
+                  {isSpeaking && (
+                    <span className="speaking-indicator">
+                      🔊 <Trans>बोल रहा है - Speaking...</Trans>
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
-            <button 
-              className="close-btn"
-              onClick={() => setIsVisible(false)}
-            >
-              ✕
-            </button>
+            <div className="header-controls">
+              {voiceSupported && (
+                <>
+                  <button 
+                    className={`speech-lang-btn ${speechLanguage === 'hi-IN' ? 'hindi' : 'english'}`}
+                    onClick={toggleSpeechLanguage}
+                    title={speechLanguage === 'hi-IN' 
+                      ? 'Switch to English Speech Input (Currently: Hindi)'
+                      : 'Switch to Hindi Speech Input (Currently: English)'}
+                  >
+                    {speechLanguage === 'hi-IN' ? 'हि' : 'EN'}
+                  </button>
+                  <button 
+                    className={`voice-toggle-btn ${isVoiceEnabled ? 'active' : ''}`}
+                    onClick={toggleVoice}
+                    title={currentLanguage === 'hindi' 
+                      ? (isVoiceEnabled ? 'आवाज़ बंद करें' : 'आवाज़ चालू करें')
+                      : (isVoiceEnabled ? 'Disable Voice' : 'Enable Voice')}
+                  >
+                    {isVoiceEnabled ? '🔊' : '🔇'}
+                  </button>
+                </>
+              )}
+              <button 
+                className="close-btn"
+                onClick={() => setIsVisible(false)}
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Daily Tip */}
@@ -408,7 +696,8 @@ const ChatBot = () => {
                     className="quick-action-btn"
                     onClick={() => handleQuickAction(action.query)}
                   >
-                    {action.text}
+                    <span className="action-icon">{action.icon}</span>
+                    <span className="action-text">{action.text}</span>
                   </button>
                 ))}
               </div>
@@ -422,23 +711,56 @@ const ChatBot = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={currentLanguage === 'hindi' 
-                  ? 'स्टॉक मार्केट के बारे में कुछ पूछें...'
-                  : 'Ask something about the stock market...'}
-                disabled={isLoading}
+                placeholder={isListening 
+                  ? (currentLanguage === 'hindi' ? '🎤 सुन रहा है...' : '🎤 Listening...')
+                  : (currentLanguage === 'hindi' 
+                    ? 'स्टॉक मार्केट के बारे में कुछ पूछें...'
+                    : 'Ask something about the stock market...')}
+                disabled={isLoading || isListening}
                 rows="1"
                 maxLength="500"
               />
-              <button 
-                onClick={() => sendMessage()}
-                disabled={!inputValue.trim() || isLoading}
-                className="send-btn"
-              >
-                {isLoading ? '⏳' : '📤'}
-              </button>
+              <div className="input-buttons">
+                {voiceSupported && (
+                  <button 
+                    className={`mic-btn ${isListening ? 'listening' : ''}`}
+                    onClick={isListening ? stopListening : startListening}
+                    disabled={isLoading || isSpeaking}
+                    title={speechLanguage === 'hi-IN'
+                      ? (isListening ? 'हिंदी रिकॉर्डिंग बंद करें' : 'हिंदी में वॉइस इनपुट')
+                      : (isListening ? 'Stop English Recording' : 'English Voice Input')}
+                  >
+                    {isListening ? '🔴' : '🎤'}
+                  </button>
+                )}
+                <button 
+                  onClick={() => sendMessage()}
+                  disabled={!inputValue.trim() || isLoading || isListening}
+                  className="send-btn"
+                >
+                  {isLoading ? '⏳' : '📤'}
+                </button>
+              </div>
             </div>
             <div className="input-footer">
               <span className="char-count">{inputValue.length}/500</span>
+              {voiceSupported && (
+                <span className="voice-status">
+                  {!isVoiceEnabled ? (
+                    <Trans>वॉइस उपलब्ध - Voice Available</Trans>
+                  ) : isListening ? (
+                    <span>
+                      🎤 {speechLanguage === 'hi-IN' ? 'हिंदी में सुन रहा है - Listening in Hindi' : 'अंग्रेजी में सुन रहा है - Listening in English'}
+                    </span>
+                  ) : isSpeaking ? (
+                    <Trans>🔊 बोल रहा है - Speaking...</Trans>
+                  ) : (
+                    <span>
+                      ✅ {speechLanguage === 'hi-IN' ? 'हिंदी वॉइस तैयार - Hindi Voice Ready' : 'अंग्रेजी वॉइस तैयार - English Voice Ready'}
+                    </span>
+                  )}
+                </span>
+              )}
               <span className="powered-by">
                 Powered by <strong>Gemini AI</strong>
               </span>
