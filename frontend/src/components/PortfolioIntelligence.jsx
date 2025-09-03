@@ -635,6 +635,106 @@ const OverviewSection = ({ analytics, timeline, timeframe, formatCurrency, forma
 
 // Performance Section Component
 const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, formatPercent, lastUpdateTime, currentPortfolioData }) => {
+  
+  // Calculate returns from timeline data as fallback
+  const calculateReturnsFromTimeline = (timeline) => {
+    if (!timeline || timeline.length === 0) return {};
+    
+    const today = new Date();
+    const returns = {};
+    
+    // Get current value (prioritize live data from currentPortfolioData)
+    let currentValue = 0;
+    let currentInvested = 0;
+    
+    if (currentPortfolioData && currentPortfolioData.totalValue) {
+      currentValue = currentPortfolioData.totalValue;
+      currentInvested = currentPortfolioData.totalInvested || 0;
+      console.log('📊 Using live portfolio data for returns calculation:', { currentValue, currentInvested });
+    } else {
+      // Fallback to timeline data
+      const currentEntry = timeline[timeline.length - 1];
+      currentValue = currentEntry?.totalValue || 0;
+      currentInvested = currentEntry?.totalInvested || 0;
+      console.log('📊 Using timeline data for returns calculation:', { currentValue, currentInvested });
+    }
+    
+    if (currentValue === 0 || currentInvested === 0) {
+      return {
+        oneDay: 0,
+        oneWeek: 0,
+        oneMonth: 0,
+        threeMonths: 0,
+        sixMonths: 0,
+        oneYear: 0,
+        allTime: currentInvested > 0 ? ((currentValue - currentInvested) / currentInvested) * 100 : 0
+      };
+    }
+    
+    // Helper function to find closest entry to a target date
+    const findClosestEntry = (targetDate) => {
+      return timeline.reduce((closest, entry) => {
+        const entryDate = new Date(entry.date);
+        const closestDate = new Date(closest.date);
+        const targetTime = targetDate.getTime();
+        
+        const entryDiff = Math.abs(entryDate.getTime() - targetTime);
+        const closestDiff = Math.abs(closestDate.getTime() - targetTime);
+        
+        return entryDiff < closestDiff ? entry : closest;
+      });
+    };
+    
+    // Calculate returns for different periods
+    const periods = [
+      { key: 'oneDay', days: 1 },
+      { key: 'oneWeek', days: 7 },
+      { key: 'oneMonth', days: 30 },
+      { key: 'threeMonths', days: 90 },
+      { key: 'sixMonths', days: 180 },
+      { key: 'oneYear', days: 365 }
+    ];
+    
+    periods.forEach(period => {
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() - period.days);
+      
+      const pastEntry = findClosestEntry(targetDate);
+      const pastValue = pastEntry?.totalValue || currentInvested;
+      
+      if (pastValue > 0) {
+        returns[period.key] = ((currentValue - pastValue) / pastValue) * 100;
+      } else {
+        returns[period.key] = 0;
+      }
+    });
+    
+    // All-time return
+    returns.allTime = currentInvested > 0 ? ((currentValue - currentInvested) / currentInvested) * 100 : 0;
+    
+    return returns;
+  };
+  
+  // Use calculated returns if analytics returns are not meaningful
+  const timelineReturns = calculateReturnsFromTimeline(timeline);
+  const analyticsReturns = analytics?.returns || {};
+  
+  // Check if analytics returns look valid (not all the same small value)
+  const analyticsValues = Object.values(analyticsReturns);
+  const isAnalyticsValid = analyticsValues.length > 0 && 
+    (analyticsValues.some(v => Math.abs(v) > 1) || // Has some meaningful values
+     new Set(analyticsValues.map(v => v.toFixed(2))).size > 1); // Not all the same
+  
+  const displayReturns = isAnalyticsValid ? analyticsReturns : timelineReturns;
+  
+  console.log('📊 RETURNS COMPARISON DEBUG:');
+  console.log('============================');
+  console.log('🔍 Analytics returns:', analyticsReturns);
+  console.log('📈 Timeline returns:', timelineReturns);
+  console.log('✅ Using returns:', displayReturns);
+  console.log('🎯 Analytics valid?', isAnalyticsValid);
+  console.log('============================');
+
   return (
     <div className="performance-section">
       {/* Returns Comparison */}
@@ -642,7 +742,7 @@ const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, fo
         <div className="returns-card">
           <h3>Returns Comparison</h3>
           <div className="returns-bars">
-            {Object.entries(analytics?.returns || {}).map(([period, value]) => (
+            {Object.entries(displayReturns).map(([period, value]) => (
               <div key={period} className="return-bar-item">
                 <div className="return-period">
                   {period === 'oneDay' ? '1D' :
@@ -650,14 +750,15 @@ const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, fo
                    period === 'oneMonth' ? '1M' :
                    period === 'threeMonths' ? '3M' :
                    period === 'sixMonths' ? '6M' :
-                   period === 'oneYear' ? '1Y' : 'All'}
+                   period === 'oneYear' ? '1Y' : 
+                   period === 'allTime' ? 'All' : 'All'}
                 </div>
                 <div className="return-bar-container">
                   <div 
                     className={`return-bar ${value >= 0 ? 'positive' : 'negative'}`}
                     style={{
-                      width: `${Math.min(Math.abs(value || 0), 100)}%`,
-                      minWidth: '2px'
+                      width: `${Math.max(Math.min(Math.abs(value || 0) * 2, 100), 3)}%`,
+                      minWidth: '3px'
                     }}
                   ></div>
                 </div>
