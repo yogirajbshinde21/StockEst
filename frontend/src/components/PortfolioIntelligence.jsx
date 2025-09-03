@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Trans from './Trans';
 import axios from 'axios';
+import { useSocket } from '../context/SocketContext';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -76,6 +77,10 @@ const PortfolioIntelligence = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30');
   const [activeView, setActiveView] = useState('overview');
   const [currentPortfolioData, setCurrentPortfolioData] = useState(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
+  
+  // Use socket for real-time updates
+  const { portfolioData, isConnected } = useSocket();
 
   // Fetch current portfolio data to get real-time P&L
   const fetchCurrentPortfolioData = useCallback(async () => {
@@ -83,17 +88,43 @@ const PortfolioIntelligence = () => {
       const response = await axios.get('/api/trading/portfolio');
       const portfolioData = response.data?.data;
       if (portfolioData?.summary) {
-        setCurrentPortfolioData({
+        const newPortfolioData = {
           totalProfitLoss: portfolioData.summary.totalProfitLoss || 0,
           totalProfitLossPercent: portfolioData.summary.totalProfitLossPercent || 0,
           totalValue: portfolioData.summary.currentValue || 0,
           totalInvested: portfolioData.summary.totalInvested || 0
-        });
+        };
+        
+        // Check if data has actually changed
+        if (JSON.stringify(newPortfolioData) !== JSON.stringify(currentPortfolioData)) {
+          console.log('📊 Portfolio data updated:', newPortfolioData);
+          setCurrentPortfolioData(newPortfolioData);
+          setLastUpdateTime(Date.now());
+        }
       }
     } catch (error) {
       console.error('Error fetching current portfolio data:', error);
     }
-  }, []);
+  }, [currentPortfolioData]);
+
+  // Handle real-time portfolio updates from socket
+  useEffect(() => {
+    if (portfolioData?.summary && isConnected) {
+      const newPortfolioData = {
+        totalProfitLoss: portfolioData.summary.totalProfitLoss || 0,
+        totalProfitLossPercent: portfolioData.summary.totalProfitLossPercent || 0,
+        totalValue: portfolioData.summary.currentValue || 0,
+        totalInvested: portfolioData.summary.totalInvested || 0
+      };
+      
+      // Check if data has changed before updating
+      if (JSON.stringify(newPortfolioData) !== JSON.stringify(currentPortfolioData)) {
+        console.log('🔄 Real-time portfolio data from socket:', newPortfolioData);
+        setCurrentPortfolioData(newPortfolioData);
+        setLastUpdateTime(Date.now());
+      }
+    }
+  }, [portfolioData, isConnected, currentPortfolioData]);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -330,6 +361,7 @@ const PortfolioIntelligence = () => {
             timeframe={selectedTimeframe}
             formatCurrency={formatCurrency}
             formatPercent={formatPercent}
+            lastUpdateTime={lastUpdateTime}
           />
         )}
         
@@ -500,7 +532,7 @@ const OverviewSection = ({ analytics, timeline, timeframe, formatCurrency, forma
 };
 
 // Performance Section Component
-const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, formatPercent }) => {
+const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, formatPercent, lastUpdateTime }) => {
   return (
     <div className="performance-section">
       {/* Returns Comparison */}
@@ -634,6 +666,7 @@ const PerformanceSection = ({ timeline, analytics, timeframe, formatCurrency, fo
           timeline={timeline} 
           formatCurrency={formatCurrency}
           formatPercent={formatPercent}
+          lastUpdateTime={lastUpdateTime}
         />
       </div>
     </div>
@@ -1069,15 +1102,30 @@ const PortfolioTimelineChartRender = ({ timeline, formatCurrency, isSample = fal
   );
 };
 
-// Daily Performance Chart Component - Shows daily P&L patterns
-const DailyPerformanceChart = React.memo(({ timeline, formatCurrency, formatPercent }) => {
-  console.log('📈 DailyPerformanceChart received timeline:', timeline);
+// Daily Performance Chart Component - Shows daily P&L patterns with real-time animations
+// ✨ Features:
+// - Real-time data integration via socket connection
+// - Smooth bar animations when P&L values change
+// - Visual indicators for live data and update status
+// - Enhanced animations for today's P&L changes (longer duration)
+// - Cubic ease-out animations for natural movement
+// 📅 Day Transition Support:
+// - Today's bar is always the LAST bar (rightmost)
+// - When a new day starts, yesterday moves to second-last position
+// - New today's bar appears as the last bar with fresh data
+// - Animation continues to work for the new "today" bar
+// - Chart automatically shifts to maintain 30-day window
+const DailyPerformanceChart = ({ timeline, formatCurrency, formatPercent, lastUpdateTime }) => {
+  console.log('📈 DailyPerformanceChart received timeline:', timeline, 'lastUpdateTime:', lastUpdateTime);
   
-  // Use useMemo to prevent unnecessary re-computations
+  // Use useMemo to prevent unnecessary re-computations and re-renders
   const chartData = React.useMemo(() => {
-    // Generate real data for exactly 30 days
+    // Generate real data for exactly 30 days - always ending with TODAY
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to start of day for consistent comparison
     const realDailyData = [];
+    
+    console.log('📅 Generating chart data for date:', today.toDateString());
     
     // Create 30 days of data structure
     for (let i = 29; i >= 0; i--) {
@@ -1088,15 +1136,17 @@ const DailyPerformanceChart = React.memo(({ timeline, formatCurrency, formatPerc
       const timelineMatch = timeline?.find(item => {
         if (!item?.date) return false;
         const itemDate = new Date(item.date);
-        return itemDate.toDateString() === date.toDateString();
+        itemDate.setHours(0, 0, 0, 0); // Normalize for comparison
+        return itemDate.getTime() === date.getTime();
       });
       
       let dayChange = 0;
       let dayChangePercent = 0;
+      const isToday = i === 0; // Last item is always today
       
       if (timelineMatch) {
         // For today (last entry), use total P&L if dayChange is 0
-        if (i === 0 && timelineMatch.dayChange === 0 && timelineMatch.totalProfitLoss !== undefined) {
+        if (isToday && timelineMatch.dayChange === 0 && timelineMatch.totalProfitLoss !== undefined) {
           // Use total P&L as today's change since market started
           dayChange = timelineMatch.totalProfitLoss;
           dayChangePercent = timelineMatch.totalProfitLossPercent || 0;
@@ -1115,6 +1165,8 @@ const DailyPerformanceChart = React.memo(({ timeline, formatCurrency, formatPerc
         isPositive: dayChange >= 0,
         portfolioValue: timelineMatch?.totalValue || 0,
         isReal: !!timelineMatch, // Mark if this is real data or zero fill
+        isToday: isToday, // Mark today's bar for animation purposes
+        dateKey: date.getTime() // Unique key for day transition detection
       });
     }
     
@@ -1129,30 +1181,130 @@ const DailyPerformanceChart = React.memo(({ timeline, formatCurrency, formatPerc
       formatPercent={formatPercent} 
       isSample={chartData.isSample}
       realDataCount={chartData.realDataCount || 0}
+      lastUpdateTime={lastUpdateTime}
     />
   );
-});
+};
 
-// Recharts-based daily performance chart rendering component
-const DailyPerformanceChartRender = React.memo(({ timeline, formatCurrency, formatPercent, isSample = false, realDataCount = 0 }) => {
-  // Transform data for Recharts Bar Chart
-  const chartData = timeline.map(d => ({
+// Recharts-based daily performance chart rendering component - Stable animation approach
+// 🎯 Solution: Prevents page refresh/re-render by:
+// 1. Using stable keys for Recharts components
+// 2. Minimal state updates with short delays for CSS transitions
+// 3. CSS-based animations instead of JavaScript-driven re-renders
+// 4. Smart change detection to only animate significant updates
+const DailyPerformanceChartRender = ({ timeline, formatCurrency, formatPercent, isSample = false, realDataCount = 0, lastUpdateTime }) => {
+  const [displayData, setDisplayData] = useState(timeline || []);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const previousDataRef = useRef(timeline || []);
+  
+  // Handle data updates with minimal re-renders and day transition support
+  useEffect(() => {
+    if (!timeline || timeline.length === 0) {
+      setDisplayData([]);
+      return;
+    }
+    
+    // Check if this is the initial load
+    if (previousDataRef.current.length === 0) {
+      setDisplayData(timeline);
+      previousDataRef.current = timeline;
+      console.log('📊 Initial chart data loaded');
+      return;
+    }
+    
+    // Find today's bar (marked with isToday: true) in both current and previous data
+    const currentTodayIndex = timeline.findIndex(item => item.isToday === true);
+    const previousTodayIndex = previousDataRef.current.findIndex(item => item.isToday === true);
+    
+    if (currentTodayIndex === -1 || previousTodayIndex === -1) {
+      // Fallback to last item if isToday flag is missing
+      const currentToday = timeline[timeline.length - 1];
+      const previousToday = previousDataRef.current[previousDataRef.current.length - 1];
+      
+      const hasSignificantChange = currentToday && previousToday && 
+        Math.abs(currentToday.dayChangePercent - previousToday.dayChangePercent) > 0.01;
+      
+      if (hasSignificantChange) {
+        console.log('📊 Smooth updating chart data (fallback method):', 
+          `${previousToday.dayChangePercent.toFixed(2)}% → ${currentToday.dayChangePercent.toFixed(2)}%`);
+        setIsAnimating(true);
+        setTimeout(() => {
+          setDisplayData(timeline);
+          setIsAnimating(false);
+          previousDataRef.current = timeline;
+        }, 100);
+      } else {
+        setDisplayData(timeline);
+        previousDataRef.current = timeline;
+      }
+      return;
+    }
+    
+    // Get today's data from both arrays
+    const currentToday = timeline[currentTodayIndex];
+    const previousToday = previousDataRef.current[previousTodayIndex];
+    
+    // Check for day transition (when today's date changes)
+    const dayTransition = currentToday.dateKey !== previousToday.dateKey;
+    
+    if (dayTransition) {
+      console.log('📅 Day transition detected! New day started:', {
+        previousDate: new Date(previousToday.dateKey).toDateString(),
+        currentDate: new Date(currentToday.dateKey).toDateString()
+      });
+      
+      // On day transition, update immediately with animation
+      setIsAnimating(true);
+      setTimeout(() => {
+        setDisplayData(timeline);
+        setIsAnimating(false);
+        previousDataRef.current = timeline;
+        console.log('📊 Chart updated for new day - yesterday is now second-last, today is last bar');
+      }, 150); // Slightly longer delay for day transition
+      return;
+    }
+    
+    // Regular intraday updates - check for significant P&L changes
+    const hasSignificantChange = Math.abs(currentToday.dayChangePercent - previousToday.dayChangePercent) > 0.01;
+    
+    if (hasSignificantChange) {
+      console.log('📊 Today\'s P&L changed, animating update:', 
+        `${previousToday.dayChangePercent.toFixed(2)}% → ${currentToday.dayChangePercent.toFixed(2)}%`);
+      
+      setIsAnimating(true);
+      setTimeout(() => {
+        setDisplayData(timeline);
+        setIsAnimating(false);
+        previousDataRef.current = timeline;
+        console.log('📊 Intraday P&L animation completed');
+      }, 100);
+    } else {
+      // Minor updates - no animation needed
+      setDisplayData(timeline);
+      previousDataRef.current = timeline;
+    }
+  }, [timeline, lastUpdateTime]);
+  
+  // Transform data for Recharts
+  const chartData = displayData.map(d => ({
     date: d.date,
     dayChange: d.dayChange || 0,
     dayChangePercent: d.dayChangePercent || 0,
     isPositive: (d.dayChange || 0) >= 0,
-    fill: (d.dayChange || 0) >= 0 ? '#10b981' : '#ef4444', // Green for gains, red for losses
-    isReal: d.isReal || false
+    fill: (d.dayChange || 0) >= 0 ? '#10b981' : '#ef4444',
+    isReal: d.isReal || false,
+    isToday: d.isToday || false, // Pass through today marker
+    dateKey: d.dateKey // Pass through date key for debugging
   }));
-
-  // Calculate performance statistics
+  
+  // Calculate performance statistics from current chart data
   const totalDays = chartData.length;
   const profitDays = chartData.filter(d => d.isPositive).length;
   const lossDays = totalDays - profitDays;
-  const bestDay = Math.max(...chartData.map(d => d.dayChangePercent));
-  const worstDay = Math.min(...chartData.map(d => d.dayChangePercent));
-  const avgDaily = chartData.reduce((sum, d) => sum + d.dayChangePercent, 0) / totalDays;
-  const winRate = (profitDays / totalDays) * 100;
+  const bestDay = chartData.length > 0 ? Math.max(...chartData.map(d => d.dayChangePercent)) : 0;
+  const worstDay = chartData.length > 0 ? Math.min(...chartData.map(d => d.dayChangePercent)) : 0;
+  const avgDaily = chartData.length > 0 ? chartData.reduce((sum, d) => sum + d.dayChangePercent, 0) / totalDays : 0;
+  const winRate = totalDays > 0 ? (profitDays / totalDays) * 100 : 0;
 
   // Custom tooltip for daily performance
   const DailyPerformanceTooltip = ({ active, payload, label }) => {
@@ -1191,7 +1343,7 @@ const DailyPerformanceChartRender = React.memo(({ timeline, formatCurrency, form
   };
 
   return (
-    <div className={`daily-performance-chart ${isSample ? 'sample-chart' : ''}`}>
+    <div className={`daily-performance-chart ${isSample ? 'sample-chart' : ''} ${isAnimating ? 'animating' : ''}`}>
       {isSample && (
         <div className="sample-indicator">
           {realDataCount === 1 ? (
@@ -1203,7 +1355,15 @@ const DailyPerformanceChartRender = React.memo(({ timeline, formatCurrency, form
       )}
       
       <div className="chart-header">
-        <h4>Daily Profit & Loss Pattern</h4>
+        <div className="chart-title-section">
+          <h4>Daily Profit & Loss Pattern</h4>
+          {!isSample && (
+            <div className="real-time-indicator">
+              <span className="live-dot"></span>
+              <span className="live-text">Live</span>
+            </div>
+          )}
+        </div>
         <div className="chart-legend">
           <div className="legend-item">
             <div className="legend-color positive"></div>
@@ -1222,6 +1382,7 @@ const DailyPerformanceChartRender = React.memo(({ timeline, formatCurrency, form
       <div className="chart-wrapper">
         <ResponsiveContainer width="100%" height={500}>
           <BarChart
+            key="daily-performance-chart" // Stable key to prevent unnecessary re-mounts
             data={chartData}
             margin={{
               top: 30,
@@ -1331,7 +1492,7 @@ const DailyPerformanceChartRender = React.memo(({ timeline, formatCurrency, form
       </div>
     </div>
   );
-});
+};
 
 // Portfolio Composition Chart Component
 const PortfolioCompositionChart = ({ sectorData, formatPercent }) => {

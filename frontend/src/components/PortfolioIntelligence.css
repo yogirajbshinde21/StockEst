@@ -798,6 +798,7 @@
 .daily-performance-tooltip {
   min-width: 150px !important;
   max-width: 200px !important;
+  min-height: 90px !important;
   padding: 10px 12px !important;
 }
 
@@ -1998,4 +1999,223 @@
 .no-data p {
   margin: 0.5rem 0;
   line-height: 1.5;
+}
+
+/* Real-time animation styles for daily performance chart */
+.daily-performance-chart.animating {
+  position: relative;
+}
+
+.daily-performance-chart.animating::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+  animation: shimmer 1s ease-in-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Chart header with real-time indicator */
+.daily-performance-chart .chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.chart-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chart-title-section h4 {
+  margin: 0;
+}
+
+.real-time-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+.live-text {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@keyframes livePulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6; 
+    transform: scale(1.2);
+  }
+}
+
+/* Enhance bar chart for smoother animations without page refresh */
+.daily-performance-chart {
+  transition: opacity 0.2s ease;
+}
+
+.daily-performance-chart .recharts-wrapper {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.daily-performance-chart .recharts-bar-rectangle {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transform-origin: bottom center;
+}
+
+.daily-performance-chart.animating .recharts-bar-rectangle {
+  transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* Prevent layout shift and ensure smooth value updates */
+.daily-performance-chart .recharts-cartesian-grid {
+  transition: opacity 0.3s ease;
+}
+
+.daily-performance-chart .recharts-cartesian-axis {
+  transition: all 0.3s ease;
+}
+
+/* Smooth bar height and color transitions */
+.daily-performance-chart .recharts-bar {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.daily-performance-chart.animating .recharts-bar {
+  transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Enhanced visual feedback without jarring updates */
+.daily-performance-chart.animating {
+  position: relative;
+}
+
+.daily-performance-chart.animating::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  animation: smoothUpdate 1.2s ease-out;
+  z-index: 10;
+}
+
+@keyframes smoothUpdate {
+  0% { 
+    transform: translateX(-100%); 
+    opacity: 0;
+  }
+  50% { 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateX(100%); 
+    opacity: 0;
+  }
+}
+
+/* Day transition animation - special effect when new day starts */
+.daily-performance-chart.day-transition {
+  animation: dayTransition 1.5s ease-out;
+}
+
+@keyframes dayTransition {
+  0% { 
+    transform: translateX(0); 
+    opacity: 1;
+  }
+  25% { 
+    transform: translateX(-5px); 
+    opacity: 0.8;
+  }
+  50% { 
+    transform: translateX(5px); 
+    opacity: 0.9;
+  }
+  75% { 
+    transform: translateX(-2px); 
+    opacity: 0.95;
+  }
+  100% { 
+    transform: translateX(0); 
+    opacity: 1;
+  }
+}
+
+/* Highlight today's bar with subtle glow */
+.daily-performance-chart .recharts-bar-rectangle:last-child {
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+  stroke: rgba(16, 185, 129, 0.6);
+  stroke-width: 1px;
+}
+
+/* Real-time update indicator */
+.daily-performance-chart.animating .chart-header::after {
+  content: '🔄 Updating...';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Smooth transitions for chart data */
+.daily-performance-chart .recharts-cartesian-grid line {
+  transition: opacity 0.3s ease;
+}
+
+.daily-performance-chart.animating .recharts-cartesian-grid line {
+  opacity: 0.3;
+}
+
+/* Enhanced tooltip for animated data */
+.daily-performance-tooltip {
+  transition: all 0.2s ease;
+}
+
+.daily-performance-chart.animating .daily-performance-tooltip {
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.3);
 }
