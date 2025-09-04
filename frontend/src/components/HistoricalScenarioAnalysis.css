@@ -306,7 +306,7 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   gap: 2rem;
-  padding: 2rem;
+  padding: 1rem;
   align-items: center;
 }
 
@@ -315,14 +315,17 @@
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid #e2e8f0;
+  
 }
 
 .summary-card.current {
   border-left: 4px solid #10b981;
+  min-height: 100px;
 }
 
 .summary-card.historical {
   border-left: 4px solid #ef4444;
+  min-height: 100px;
 }
 
 .summary-header {
