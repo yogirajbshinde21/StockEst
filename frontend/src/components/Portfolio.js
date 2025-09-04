@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import AnimatedPrice from './AnimatedPrice';
 import PortfolioIntelligence from './PortfolioIntelligence';
+import HistoricalScenarioAnalysis from './HistoricalScenarioAnalysis';
 import Trans from './Trans';
 import { usePriceTracker } from '../hooks/usePriceTracker';
 import axios from 'axios';
@@ -16,7 +17,8 @@ import {
   Minus,
   Activity,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  History
 } from 'lucide-react';
 import './Portfolio.css';
 
@@ -214,11 +216,20 @@ const Portfolio = ({ portfolioData, onTrade }) => {
           <BarChart3 size={18} />
           <Trans>Intelligence Dashboard</Trans>
         </button>
+        <button 
+          className={`nav-tab ${activeView === 'scenarios' ? 'active' : ''}`}
+          onClick={() => setActiveView('scenarios')}
+        >
+          <History size={18} />
+          <Trans>Historical Scenarios</Trans>
+        </button>
       </div>
 
       {/* Content based on active view */}
       {activeView === 'intelligence' ? (
         <PortfolioIntelligence />
+      ) : activeView === 'scenarios' ? (
+        <HistoricalScenarioAnalysis currentPortfolioData={currentData} />
       ) : (
         <>
           {/* Portfolio Summary */}

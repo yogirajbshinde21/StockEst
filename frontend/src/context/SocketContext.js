@@ -77,17 +77,32 @@ export const SocketProvider = ({ children }) => {
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
   const subscriptionCheckRef = useRef(null);
+  const isSubscribedToStocks = useRef(false);
+  const lastStockDataUpdate = useRef(Date.now());
 
-  // Periodic subscription check to ensure we stay subscribed
+  // Check if stock data is fresh (received within last 60 seconds)
+  useEffect(() => {
+    const dataFreshnessCheck = setInterval(() => {
+      const timeSinceLastUpdate = Date.now() - lastStockDataUpdate.current;
+      if (timeSinceLastUpdate > 60000) { // 60 seconds
+        console.log('⚠️ Stock data seems stale, marking as unsubscribed...');
+        isSubscribedToStocks.current = false;
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(dataFreshnessCheck);
+  }, []);
+
+  // Intelligent subscription management - ensures we stay subscribed without spam
   useEffect(() => {
     if (state.isConnected && socketRef.current) {
+      // Check subscription status more frequently but only re-subscribe if needed
       subscriptionCheckRef.current = setInterval(() => {
-        // Re-subscribe to stock updates to ensure we don't lose connection
-        if (socketRef.current && state.isConnected) {
-          console.log('🔄 Periodic subscription check - ensuring stock updates...');
+        if (socketRef.current && state.isConnected && !isSubscribedToStocks.current) {
+          console.log('🔄 Re-establishing stock subscription...');
           socketRef.current.emit('subscribe-stocks');
         }
-      }, 60000); // Check every minute
+      }, 30000); // Check every 30 seconds for faster recovery
       
       return () => {
         if (subscriptionCheckRef.current) {
@@ -213,6 +228,7 @@ export const SocketProvider = ({ children }) => {
 
       socket.on('disconnect', (reason) => {
         console.log('🔌 Socket disconnected:', reason);
+        isSubscribedToStocks.current = false; // Reset subscription status on disconnect
         dispatch({ type: 'SOCKET_DISCONNECT' });
         
         // Attempt to reconnect if it's not a manual disconnect
@@ -250,6 +266,8 @@ export const SocketProvider = ({ children }) => {
           marketStatus: data.marketStatus,
           isMarketOpen: data.isMarketOpen
         });
+        isSubscribedToStocks.current = true; // Confirm we're receiving data
+        lastStockDataUpdate.current = Date.now(); // Track when we last received data
         dispatch({ type: 'UPDATE_STOCK_DATA', payload: data });
       });
 
@@ -275,6 +293,7 @@ export const SocketProvider = ({ children }) => {
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
+      isSubscribedToStocks.current = false; // Reset subscription status
       dispatch({ type: 'SOCKET_DISCONNECT' });
     }
   };
@@ -303,6 +322,7 @@ export const SocketProvider = ({ children }) => {
     if (socketRef.current && state.isConnected) {
       console.log('📈 Attempting to subscribe to stock updates...');
       socketRef.current.emit('subscribe-stocks');
+      isSubscribedToStocks.current = true;
       console.log('📈 Subscribe request sent');
     } else {
       console.warn('⚠️ Cannot subscribe to stock updates - socket not connected:', {
@@ -316,6 +336,7 @@ export const SocketProvider = ({ children }) => {
   const unsubscribeFromStockUpdates = () => {
     if (socketRef.current && state.isConnected) {
       socketRef.current.emit('unsubscribe-stocks');
+      isSubscribedToStocks.current = false;
       console.log('📉 Unsubscribed from stock updates');
     }
   };
@@ -341,11 +362,21 @@ export const SocketProvider = ({ children }) => {
     if (socketRef.current && state.isConnected) {
       console.log('🔄 Manual refresh - subscribing to stock updates...');
       socketRef.current.emit('subscribe-stocks');
+      isSubscribedToStocks.current = true;
     } else {
       console.warn('⚠️ Cannot refresh stock data - socket not ready:', {
         hasSocket: !!socketRef.current,
         isConnected: state.isConnected
       });
+    }
+  };
+
+  // Test function to manually force subscription (for debugging)
+  const forceResubscribe = () => {
+    console.log('🔧 FORCE RE-SUBSCRIBE: Manually triggering subscription...');
+    isSubscribedToStocks.current = false;
+    if (socketRef.current && state.isConnected) {
+      socketRef.current.emit('subscribe-stocks');
     }
   };
 
@@ -385,6 +416,7 @@ export const SocketProvider = ({ children }) => {
     unsubscribeFromPortfolioUpdates,
     refreshStockData,
     clearConnectionError,
+    forceResubscribe,
     getStockByInstrumentKey,
     getTopGainers,
     getTopLosers

@@ -18,12 +18,14 @@ const watchlistRoutes = require('./routes/watchlist');
 const achievementRoutes = require('./routes/achievements');
 const analysisRoutes = require('./routes/analysis');
 const analyticsRoutes = require('./routes/analytics');
+const historicalScenariosRoutes = require('./routes/historicalScenarios');
 
 // Import services
 const stockDataService = require('./services/stockDataService');
 const newsScheduler = require('./utils/newsScheduler');
 const portfolioAnalyticsScheduler = require('./utils/portfolioAnalyticsScheduler');
 const HistoricalDataService = require('./services/HistoricalDataService');
+const HistoricalScenarioService = require('./services/HistoricalScenarioService');
 
 // Import middleware
 const { auth } = require('./middleware/auth');
@@ -122,6 +124,7 @@ class StockSimulatorServer {
     this.app.use('/api/achievements', achievementRoutes);
     this.app.use('/api/analysis', analysisRoutes);
     this.app.use('/api/analytics', analyticsRoutes);
+    this.app.use('/api/portfolio', historicalScenariosRoutes);
 
     // 404 handler for API routes
     this.app.use('/api/*', (req, res) => {
@@ -266,6 +269,14 @@ class StockSimulatorServer {
       mongoose.connection.on('reconnected', () => {
         console.log('✅ MongoDB reconnected');
       });
+
+      // Initialize historical scenarios
+      try {
+        await HistoricalScenarioService.initializeScenarios();
+        console.log('✅ Historical scenarios initialized');
+      } catch (error) {
+        console.error('⚠️ Failed to initialize historical scenarios:', error.message);
+      }
 
     } catch (error) {
       console.error('❌ MongoDB connection failed:', error);
