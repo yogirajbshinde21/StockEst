@@ -656,7 +656,7 @@ const HistoricalScenarioAnalysis = ({ currentPortfolioData }) => {
             <h4>Worst Affected Stock</h4>
             <div className="impact-stock worst">
               <span className="stock-symbol">{comparison.worstImpactStock?.symbol}</span>
-              <span className="stock-impact">{formatPercent(comparison.worstImpactStock?.impactPercentage)}</span>
+              <span className="stock-impact">{formatPercent(comparison.worstImpactStock?.historicalProfitLossPercent || comparison.worstImpactStock?.impactPercentage)}</span>
             </div>
           </div>
           
@@ -664,7 +664,7 @@ const HistoricalScenarioAnalysis = ({ currentPortfolioData }) => {
             <h4>Best Performing Stock</h4>
             <div className="impact-stock best">
               <span className="stock-symbol">{comparison.bestImpactStock?.symbol}</span>
-              <span className="stock-impact">{formatPercent(comparison.bestImpactStock?.impactPercentage)}</span>
+              <span className="stock-impact">{formatPercent(comparison.bestImpactStock?.historicalProfitLossPercent || comparison.bestImpactStock?.impactPercentage)}</span>
             </div>
           </div>
         </div>

@@ -385,18 +385,42 @@ Return ONLY the JSON object, no additional text or explanations.
    * Find stock with worst impact in scenario
    */
   findWorstImpactStock(historicalPortfolio) {
-    return historicalPortfolio.reduce((worst, stock) => 
-      stock.impactPercentage < worst.impactPercentage ? stock : worst
-    );
+    if (!historicalPortfolio || historicalPortfolio.length === 0) {
+      return null;
+    }
+    
+    // Find the stock with the worst historical profit/loss percentage (biggest loss)
+    return historicalPortfolio.reduce((worst, stock) => {
+      // If no worst stock yet, use current stock
+      if (!worst) return stock;
+      
+      // Compare historical profit/loss percentages - more negative means worse performance
+      const stockPnLPercent = stock.historicalProfitLossPercent || 0;
+      const worstPnLPercent = worst.historicalProfitLossPercent || 0;
+      
+      return stockPnLPercent < worstPnLPercent ? stock : worst;
+    });
   }
 
   /**
    * Find stock with best impact in scenario
    */
   findBestImpactStock(historicalPortfolio) {
-    return historicalPortfolio.reduce((best, stock) => 
-      stock.impactPercentage > best.impactPercentage ? stock : best
-    );
+    if (!historicalPortfolio || historicalPortfolio.length === 0) {
+      return null;
+    }
+    
+    // Find the stock with the best historical profit/loss percentage (least loss or most gain)
+    return historicalPortfolio.reduce((best, stock) => {
+      // If no best stock yet, use current stock
+      if (!best) return stock;
+      
+      // Compare historical profit/loss percentages - higher (less negative or more positive) means better performance
+      const stockPnLPercent = stock.historicalProfitLossPercent || 0;
+      const bestPnLPercent = best.historicalProfitLossPercent || 0;
+      
+      return stockPnLPercent > bestPnLPercent ? stock : best;
+    });
   }
 
   /**
