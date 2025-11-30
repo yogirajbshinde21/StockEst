@@ -13,7 +13,7 @@ const DEMO_USER = {
   email: 'demo@stocksimulator.com',
   password: 'Demo123',
   name: 'Demo User',
-  balance: 100000, // Starting with ₹1,00,000
+  virtualBalance: 100000, // Starting with ₹1,00,000
   portfolio: []
 };
 
@@ -35,7 +35,7 @@ async function createDemoUser() {
     if (existingUser) {
       console.log('✅ Demo user already exists - skipping creation');
       console.log('📧 Email:', DEMO_USER.email);
-      console.log('💰 Current Balance: ₹' + (existingUser.balance || 0).toLocaleString('en-IN'));
+      console.log('💰 Current Balance: ₹' + (existingUser.virtualBalance || 0).toLocaleString('en-IN'));
       console.log('📊 Portfolio Items:', existingUser.portfolio?.length || 0);
       console.log('ℹ️  To reset demo user, delete it from database first');
     } else {
@@ -46,7 +46,7 @@ async function createDemoUser() {
         email: DEMO_USER.email,
         password: hashedPassword,
         name: DEMO_USER.name,
-        balance: DEMO_USER.balance,
+        virtualBalance: DEMO_USER.virtualBalance,
         portfolio: [],
         watchlist: [],
         achievements: []
@@ -57,7 +57,7 @@ async function createDemoUser() {
       console.log('✅ Demo user created successfully!');
       console.log('📧 Email:', DEMO_USER.email);
       console.log('🔑 Password:', DEMO_USER.password);
-      console.log('💰 Balance: ₹' + DEMO_USER.balance.toLocaleString('en-IN'));
+      console.log('💰 Balance: ₹' + DEMO_USER.virtualBalance.toLocaleString('en-IN'));
       
       console.log('\n🎉 Demo user is ready to use!');
       console.log('You can now login with:');
