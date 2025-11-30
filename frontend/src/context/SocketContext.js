@@ -200,9 +200,9 @@ export const SocketProvider = ({ children }) => {
     }
 
     try {
-      const serverUrl = process.env.NODE_ENV === 'production' 
-        ? process.env.REACT_APP_SOCKET_URL_PROD 
-        : process.env.REACT_APP_SOCKET_URL;
+      const serverUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+      
+      console.log('🔌 Connecting to Socket.IO server:', serverUrl);
 
       socketRef.current = io(serverUrl, {
         transports: ['websocket', 'polling'],
@@ -254,7 +254,7 @@ export const SocketProvider = ({ children }) => {
           }, 100);
         } else {
           console.error('❌ Socket authentication failed:', data.message);
-          toast.error('Real-time connection authentication failed');
+          // Don't show toast - it's annoying during reconnection attempts
         }
       });
 
@@ -279,7 +279,7 @@ export const SocketProvider = ({ children }) => {
       // Error events
       socket.on('error', (error) => {
         console.error('❌ Socket error:', error);
-        toast.error(error.message || 'Connection error occurred');
+        // Don't show toast - it's annoying during reconnection attempts
       });
 
     } catch (error) {
@@ -313,7 +313,8 @@ export const SocketProvider = ({ children }) => {
       }, delay);
     } else {
       console.error('❌ Max reconnection attempts reached');
-      toast.error('Lost connection to server. Please refresh the page.');
+      // Don't spam user with toast notifications
+      // They can see stock data is loading via API even without WebSocket
     }
   };
 
