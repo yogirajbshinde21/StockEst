@@ -1,6 +1,7 @@
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
+const mongoose = require('mongoose');
 
 /**
  * Upstox OAuth Service
@@ -189,17 +190,22 @@ class UpstoxAuthService {
         updatedAt: new Date().toISOString()
       };
 
-      // Ensure config directory exists
-      const configDir = path.dirname(this.tokenFilePath);
-      await fs.mkdir(configDir, { recursive: true });
+      // Store in MongoDB instead of file system (Render has ephemeral filesystem)
+      const TokenModel = mongoose.models.SystemToken || mongoose.model('SystemToken', new mongoose.Schema({
+        service: { type: String, required: true, unique: true },
+        accessToken: String,
+        refreshToken: String,
+        tokenExpiry: String,
+        updatedAt: { type: Date, default: Date.now }
+      }));
 
-      await fs.writeFile(
-        this.tokenFilePath,
-        JSON.stringify(tokenData, null, 2),
-        'utf8'
+      await TokenModel.findOneAndUpdate(
+        { service: 'upstox' },
+        { ...tokenData, updatedAt: new Date() },
+        { upsert: true, new: true }
       );
       
-      console.log('💾 Tokens saved successfully');
+      console.log('💾 Tokens saved successfully to MongoDB');
     } catch (error) {
       console.error('❌ Failed to save tokens:', error.message);
     }
@@ -210,17 +216,25 @@ class UpstoxAuthService {
    */
   async loadTokens() {
     try {
-      const data = await fs.readFile(this.tokenFilePath, 'utf8');
-      const tokenData = JSON.parse(data);
+      // Load from MongoDB instead of file system
+      const TokenModel = mongoose.models.SystemToken || mongoose.model('SystemToken', new mongoose.Schema({
+        service: { type: String, required: true, unique: true },
+        accessToken: String,
+        refreshToken: String,
+        tokenExpiry: String,
+        updatedAt: { type: Date, default: Date.now }
+      }));
+
+      const tokenDoc = await TokenModel.findOne({ service: 'upstox' });
       
-      this.accessToken = tokenData.accessToken;
-      this.refreshToken = tokenData.refreshToken;
-      this.tokenExpiry = tokenData.tokenExpiry;
-      
-      console.log('📂 Tokens loaded from file');
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        console.log('📂 No saved tokens found');
+      if (tokenDoc) {
+        this.accessToken = tokenDoc.accessToken;
+        this.refreshToken = tokenDoc.refreshToken;
+        this.tokenExpiry = tokenDoc.tokenExpiry;
+        
+        console.log('📂 Tokens loaded from MongoDB');
+      } else {
+        console.log('📂 No saved tokens found in MongoDB');
       } else {
         console.error('❌ Failed to load tokens:', error.message);
       }

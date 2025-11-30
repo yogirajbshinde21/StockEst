@@ -59,6 +59,9 @@ class StockSimulatorServer {
    * Setup Express middleware
    */
   setupMiddleware() {
+    // Trust proxy - Required for Render deployment (fixes X-Forwarded-For header)
+    this.app.set('trust proxy', 1);
+
     // Security middleware
     this.app.use(helmet({
       contentSecurityPolicy: {
@@ -275,8 +278,12 @@ class StockSimulatorServer {
 
       // Initialize historical scenarios
       try {
-        await HistoricalScenarioService.initializeScenarios();
-        console.log('✅ Historical scenarios initialized');
+        if (typeof HistoricalScenarioService.initializeScenarios === 'function') {
+          await HistoricalScenarioService.initializeScenarios();
+          console.log('✅ Historical scenarios initialized');
+        } else {
+          console.log('ℹ️ Historical scenarios service loaded (no initialization required)');
+        }
       } catch (error) {
         console.error('⚠️ Failed to initialize historical scenarios:', error.message);
       }
