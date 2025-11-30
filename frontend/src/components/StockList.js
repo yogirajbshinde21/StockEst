@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api';
 import AnimatedPrice from './AnimatedPrice';
 import { usePriceTracker } from '../hooks/usePriceTracker';
 import { usePlaceholderTranslation } from '../hooks/usePlaceholderTranslation';
@@ -40,7 +41,7 @@ const StockList = ({ onTrade }) => {
 
   const fetchWatchlist = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/watchlist', {
+      const response = await fetch(`${API_BASE_URL}/api/watchlist`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -62,7 +63,7 @@ const StockList = ({ onTrade }) => {
 
   const addToWatchlist = async (stock) => {
     try {
-      const response = await fetch('http://localhost:5000/api/watchlist/add', {
+      const response = await fetch(`${API_BASE_URL}/api/watchlist/add`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -91,7 +92,7 @@ const StockList = ({ onTrade }) => {
 
   const removeFromWatchlist = async (instrumentKey, symbol) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/watchlist/remove/${instrumentKey}`, {
+      const response = await fetch(`${API_BASE_URL}/api/watchlist/remove/${instrumentKey}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

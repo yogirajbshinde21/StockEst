@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { API_BASE_URL } from '../config/api';
 import AnimatedPrice from './AnimatedPrice';
 import { usePriceTracker } from '../hooks/usePriceTracker';
 import Trans from './Trans';
@@ -44,7 +45,7 @@ const Watchlist = ({ onTrade }) => {
   const fetchWatchlist = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/watchlist', {
+      const response = await fetch(`${API_BASE_URL}/api/watchlist`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -87,7 +88,7 @@ const Watchlist = ({ onTrade }) => {
 
   const removeFromWatchlist = async (instrumentKey) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/watchlist/remove/${instrumentKey}`, {
+      const response = await fetch(`${API_BASE_URL}/api/watchlist/remove/${instrumentKey}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -124,7 +125,7 @@ const Watchlist = ({ onTrade }) => {
     if (!selectedStock || !alertPrice) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/watchlist/alert/${selectedStock.instrumentKey}`, {
+      const response = await fetch(`${API_BASE_URL}/api/watchlist/alert/${selectedStock.instrumentKey}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
