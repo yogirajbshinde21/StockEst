@@ -33,25 +33,11 @@ async function createDemoUser() {
     const existingUser = await User.findOne({ email: DEMO_USER.email });
     
     if (existingUser) {
-      console.log('⚠️  Demo user already exists!');
+      console.log('✅ Demo user already exists - skipping creation');
       console.log('📧 Email:', DEMO_USER.email);
-      console.log('💰 Current Balance: ₹' + existingUser.balance.toLocaleString('en-IN'));
-      console.log('📊 Portfolio Items:', existingUser.portfolio.length);
-      
-      const updateChoice = 'yes'; // Auto-update for deployment
-      
-      if (updateChoice.toLowerCase() === 'yes' || updateChoice.toLowerCase() === 'y') {
-        // Update password and reset balance
-        existingUser.password = await bcrypt.hash(DEMO_USER.password, 10);
-        existingUser.balance = DEMO_USER.balance;
-        existingUser.name = DEMO_USER.name;
-        await existingUser.save();
-        
-        console.log('✅ Demo user updated successfully!');
-        console.log('📧 Email:', DEMO_USER.email);
-        console.log('🔑 Password:', DEMO_USER.password);
-        console.log('💰 Balance Reset: ₹' + DEMO_USER.balance.toLocaleString('en-IN'));
-      }
+      console.log('💰 Current Balance: ₹' + (existingUser.balance || 0).toLocaleString('en-IN'));
+      console.log('📊 Portfolio Items:', existingUser.portfolio?.length || 0);
+      console.log('ℹ️  To reset demo user, delete it from database first');
     } else {
       // Create new demo user
       const hashedPassword = await bcrypt.hash(DEMO_USER.password, 10);
@@ -72,12 +58,12 @@ async function createDemoUser() {
       console.log('📧 Email:', DEMO_USER.email);
       console.log('🔑 Password:', DEMO_USER.password);
       console.log('💰 Balance: ₹' + DEMO_USER.balance.toLocaleString('en-IN'));
+      
+      console.log('\n🎉 Demo user is ready to use!');
+      console.log('You can now login with:');
+      console.log('   Email:', DEMO_USER.email);
+      console.log('   Password:', DEMO_USER.password);
     }
-
-    console.log('\n🎉 Demo user is ready to use!');
-    console.log('You can now login with:');
-    console.log('   Email:', DEMO_USER.email);
-    console.log('   Password:', DEMO_USER.password);
     
   } catch (error) {
     console.error('❌ Error creating demo user:', error.message);
