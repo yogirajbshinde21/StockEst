@@ -2,6 +2,22 @@
 
 A comprehensive MERN stack platform that provides a realistic stock market simulation experience designed specifically for rural education. Users start with ₹100,000 in virtual money and can practice trading with real-time stock data from the Upstox API.
 
+## 🚀 **NEW: Production Deployment Ready!**
+
+This project now includes **automatic Upstox token management** with OAuth 2.0, eliminating the need for daily manual token updates!
+
+### Quick Deploy to Render (30 minutes)
+- ✅ **One-time OAuth setup** - No more daily token updates!
+- ✅ **24/7 uptime** - Runs continuously in production
+- ✅ **Automatic token refresh** - No manual intervention needed
+- ✅ **Free tier available** - Deploy for $0/month
+
+**→ [Quick Start Guide](./QUICK_START_RENDER.md)** - Deploy in 30 minutes  
+**→ [Complete Deployment Guide](./RENDER_DEPLOYMENT_GUIDE.md)** - Detailed step-by-step  
+**→ [Deployment Summary](./DEPLOYMENT_SUMMARY.md)** - What changed & why
+
+---
+
 ## 🎯 Features
 
 ### Core Trading Features

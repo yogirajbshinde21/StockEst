@@ -122,6 +122,8 @@ docker-compose.yml
 # Configuration files with sensitive data
 config/production.json
 config/staging.json
+config/upstox-token.json
+config/*.json
 
 # Backup files
 *.backup

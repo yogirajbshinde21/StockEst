@@ -1,10 +1,11 @@
 const UpstoxApi = require('upstox-js-sdk');
 const StockPrice = require('../models/StockPrice');
+const upstoxAuthService = require('./UpstoxAuthService');
 
 class StockDataService {
   constructor() {
-    // Initialize Upstox API client
-    this.setupUpstoxClient();
+    // Initialize Upstox API client (will be set up after auth)
+    this.marketQuoteApi = null;
     
     // Define instruments to track (using your exact working list from start.js)
     this.instruments = [
@@ -49,6 +50,12 @@ class StockDataService {
     try {
       console.log('🚀 Initializing Stock Data Service...');
       
+      // Initialize Upstox authentication
+      await upstoxAuthService.initialize();
+      
+      // Setup Upstox client with valid token
+      await this.setupUpstoxClient();
+      
       if (!this.isInitialized) {
         await this.initializeStocks();
       }
@@ -67,15 +74,23 @@ class StockDataService {
   /**
    * Setup Upstox API client (based on your existing code)
    */
-  setupUpstoxClient() {
+  async setupUpstoxClient() {
     try {
+      // Get valid access token from auth service
+      const accessToken = await upstoxAuthService.getValidAccessToken();
+      
       const defaultClient = UpstoxApi.ApiClient.instance;
-      defaultClient.authentications['OAUTH2'].accessToken = process.env.UPSTOX_ACCESS_TOKEN;
+      defaultClient.authentications['OAUTH2'].accessToken = accessToken;
       
       this.marketQuoteApi = new UpstoxApi.MarketQuoteApi();
       console.log('✅ Upstox API client initialized successfully');
     } catch (error) {
       console.error('❌ Error setting up Upstox client:', error);
+      
+      if (error.message.includes('Authorization required')) {
+        console.error('⚠️ Please visit /api/upstox/authorize to authorize the application');
+      }
+      
       throw new Error('Failed to initialize Upstox API client');
     }
   }

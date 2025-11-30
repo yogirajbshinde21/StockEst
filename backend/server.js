@@ -19,6 +19,7 @@ const achievementRoutes = require('./routes/achievements');
 const analysisRoutes = require('./routes/analysis');
 const analyticsRoutes = require('./routes/analytics');
 const historicalScenariosRoutes = require('./routes/historicalScenarios');
+const upstoxRoutes = require('./routes/upstox');
 
 // Import services
 const stockDataService = require('./services/stockDataService');
@@ -37,9 +38,10 @@ class StockSimulatorServer {
     this.io = socketIo(this.server, {
       cors: {
         origin: process.env.NODE_ENV === 'production' 
-          ? ['https://yourdomain.com'] 
+          ? process.env.CORS_ORIGIN || '*'
           : ['http://localhost:3000', 'http://localhost:3001'],
-        methods: ['GET', 'POST']
+        methods: ['GET', 'POST'],
+        credentials: true
       }
     });
     
@@ -72,7 +74,7 @@ class StockSimulatorServer {
     // CORS middleware
     this.app.use(cors({
       origin: process.env.NODE_ENV === 'production' 
-        ? ['https://yourdomain.com'] 
+        ? process.env.CORS_ORIGIN || '*'
         : ['http://localhost:3000', 'http://localhost:3001'],
       credentials: true
     }));
@@ -125,6 +127,7 @@ class StockSimulatorServer {
     this.app.use('/api/analysis', analysisRoutes);
     this.app.use('/api/analytics', analyticsRoutes);
     this.app.use('/api/portfolio', historicalScenariosRoutes);
+    this.app.use('/api/upstox', upstoxRoutes);
 
     // 404 handler for API routes
     this.app.use('/api/*', (req, res) => {
@@ -346,6 +349,30 @@ class StockSimulatorServer {
       });
 
       console.log('✅ Historical data refresh scheduler started (weekdays 4:00 PM IST)');
+
+      // Setup cron job for automatic token refresh (every 12 hours)
+      cron.schedule('0 */12 * * *', async () => {
+        try {
+          console.log('🔄 Checking Upstox token status...');
+          const upstoxAuthService = require('./services/UpstoxAuthService');
+          const tokenInfo = upstoxAuthService.getTokenInfo();
+          
+          if (tokenInfo.authorized && tokenInfo.hoursRemaining < 6) {
+            console.log('⚠️ Token expiring soon, refreshing...');
+            await upstoxAuthService.refreshAccessToken();
+            
+            // Reinitialize stock data service with new token
+            await stockDataService.setupUpstoxClient();
+            console.log('✅ Token refreshed and stock service reinitialized');
+          } else {
+            console.log(`✅ Token still valid (${tokenInfo.hoursRemaining} hours remaining)`);
+          }
+        } catch (error) {
+          console.error('❌ Token refresh check error:', error.message);
+        }
+      });
+
+      console.log('✅ Upstox token refresh scheduler started (every 12 hours)');
 
       // Initial price update
       if (stockDataService.isMarketOpen()) {
