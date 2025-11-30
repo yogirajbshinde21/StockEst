@@ -198,16 +198,16 @@ const Login = () => {
             <h4><Trans>Quick Demo Access</Trans></h4>
             <p><Trans>Use these credentials to try the platform:</Trans></p>
             <div className="demo-info">
-              <strong><Trans>Email:</Trans></strong> demo@stocksimulator.com<br />
-              <strong><Trans>Password:</Trans></strong> Demo123
+              <strong><Trans>Email:</Trans></strong> test1@gmail.com<br />
+              <strong><Trans>Password:</Trans></strong> Guru@2109
             </div>
             <button
               type="button"
               className="demo-fill-btn"
               onClick={() => {
                 setFormData({
-                  email: 'demo@stocksimulator.com',
-                  password: 'Demo123'
+                  email: 'test1@gmail.com',
+                  password: 'Guru@2109'
                 });
               }}
               disabled={isSubmitting}
