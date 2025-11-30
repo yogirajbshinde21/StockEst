@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { API_BASE_URL } from '../config/api';
 import Trans from './Trans';
 import './NewsSection.css';
 
@@ -46,7 +47,7 @@ const NewsSection = () => {
         
       console.log(`📰 Fetching news: ${url}`);
       
-      const response = await fetch(`http://localhost:5000${url}`, {
+      const response = await fetch(`${API_BASE_URL}${url}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -76,7 +77,7 @@ const NewsSection = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:5000/api/news/stats', {
+      const response = await fetch(`${API_BASE_URL}/api/news/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

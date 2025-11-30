@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { API_BASE_URL } from '../config/api';
 import Trans from './Trans';
 import './ChatBot.css';
 
@@ -74,7 +75,7 @@ const ChatBot = () => {
 
         console.log(`🚀 Sending request with language: ${voiceLanguage}`);
 
-        const response = await fetch('http://localhost:5000/api/chatbot/query', {
+        const response = await fetch(`${API_BASE_URL}/api/chatbot/query`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -461,7 +462,7 @@ const ChatBot = () => {
         throw new Error('Please login to use the chatbot');
       }
 
-      const response = await fetch('http://localhost:5000/api/chatbot/query', {
+      const response = await fetch(`${API_BASE_URL}/api/chatbot/query`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
