@@ -212,7 +212,7 @@ class UpstoxAuthService {
   }
 
   /**
-   * Load tokens from file
+   * Load tokens from MongoDB
    */
   async loadTokens() {
     try {
@@ -235,9 +235,9 @@ class UpstoxAuthService {
         console.log('📂 Tokens loaded from MongoDB');
       } else {
         console.log('📂 No saved tokens found in MongoDB');
-      } else {
-        console.error('❌ Failed to load tokens:', error.message);
       }
+    } catch (error) {
+      console.error('❌ Failed to load tokens:', error.message);
     }
   }
 
