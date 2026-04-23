@@ -12,7 +12,13 @@ class StockDataService {
       'NSE_EQ|INE002A01018', // Reliance Industries
       'NSE_EQ|INE009A01021', // Infosys
       'NSE_EQ|INE467B01029', // TCS
-      'NSE_EQ|INE040A01034'  // HDFC Bank
+      'NSE_EQ|INE040A01034', // HDFC Bank
+      'NSE_EQ|INE090A01021', // ICICI Bank
+      'NSE_EQ|INE062A01020', // State Bank of India
+      'NSE_EQ|INE075A01022', // Wipro
+      'NSE_EQ|INE154A01025', // ITC
+      'NSE_EQ|INE397D01024', // Bharti Airtel
+      'NSE_EQ|INE237A01028'  // Kotak Mahindra Bank
     ];
     
     // Company names mapping (from your exact working code)
@@ -20,7 +26,13 @@ class StockDataService {
       'NSE_EQ|INE002A01018': 'Reliance Industries',
       'NSE_EQ|INE009A01021': 'Infosys',
       'NSE_EQ|INE467B01029': 'TCS',
-      'NSE_EQ|INE040A01034': 'HDFC Bank'
+      'NSE_EQ|INE040A01034': 'HDFC Bank',
+      'NSE_EQ|INE090A01021': 'ICICI Bank',
+      'NSE_EQ|INE062A01020': 'State Bank of India',
+      'NSE_EQ|INE075A01022': 'Wipro',
+      'NSE_EQ|INE154A01025': 'ITC',
+      'NSE_EQ|INE397D01024': 'Bharti Airtel',
+      'NSE_EQ|INE237A01028': 'Kotak Mahindra Bank'
     };
     
     // Symbol mapping for display
@@ -28,7 +40,13 @@ class StockDataService {
       'NSE_EQ|INE002A01018': 'RELIANCE',
       'NSE_EQ|INE009A01021': 'INFY',
       'NSE_EQ|INE467B01029': 'TCS',
-      'NSE_EQ|INE040A01034': 'HDFCBANK'
+      'NSE_EQ|INE040A01034': 'HDFCBANK',
+      'NSE_EQ|INE090A01021': 'ICICIBANK',
+      'NSE_EQ|INE062A01020': 'SBIN',
+      'NSE_EQ|INE075A01022': 'WIPRO',
+      'NSE_EQ|INE154A01025': 'ITC',
+      'NSE_EQ|INE397D01024': 'BHARTIARTL',
+      'NSE_EQ|INE237A01028': 'KOTAKBANK'
     };
     
     // Reverse mapping: API response keys to database keys
@@ -36,7 +54,13 @@ class StockDataService {
       'NSE_EQ:RELIANCE': 'NSE_EQ|INE002A01018',
       'NSE_EQ:INFY': 'NSE_EQ|INE009A01021', 
       'NSE_EQ:TCS': 'NSE_EQ|INE467B01029',
-      'NSE_EQ:HDFCBANK': 'NSE_EQ|INE040A01034'
+      'NSE_EQ:HDFCBANK': 'NSE_EQ|INE040A01034',
+      'NSE_EQ:ICICIBANK': 'NSE_EQ|INE090A01021',
+      'NSE_EQ:SBIN': 'NSE_EQ|INE062A01020',
+      'NSE_EQ:WIPRO': 'NSE_EQ|INE075A01022',
+      'NSE_EQ:ITC': 'NSE_EQ|INE154A01025',
+      'NSE_EQ:BHARTIARTL': 'NSE_EQ|INE397D01024',
+      'NSE_EQ:KOTAKBANK': 'NSE_EQ|INE237A01028'
     };
     
     this.isInitialized = false;
@@ -54,7 +78,14 @@ class StockDataService {
       await upstoxAuthService.initialize();
       
       // Setup Upstox client with valid token
-      await this.setupUpstoxClient();
+      try {
+        await this.setupUpstoxClient();
+      } catch (authError) {
+        console.warn('⚠️ Upstox API client not available - running in degraded mode');
+        console.warn('⚠️ Live stock updates will not work until re-authorized');
+        console.warn('⚠️ Visit http://localhost:5000/api/upstox/authorize to re-authorize');
+        this.marketQuoteApi = null;
+      }
       
       if (!this.isInitialized) {
         await this.initializeStocks();
@@ -188,6 +219,11 @@ class StockDataService {
    * Fetch live prices from Upstox API (fixed version)
    */
   async fetchLivePrices() {
+    if (!this.marketQuoteApi) {
+      console.warn('⚠️ Upstox API not initialized - skipping live price fetch');
+      console.warn('⚠️ Visit http://localhost:5000/api/upstox/authorize to re-authorize');
+      return [];
+    }
     return new Promise((resolve, reject) => {
       try {
         const instrumentsString = this.instruments.join(',');
@@ -530,7 +566,13 @@ class StockDataService {
         'NSE_EQ|INE040A01034': 961.60,   // HDFCBANK
         'NSE_EQ|INE467B01029': 3088.60,  // TCS  
         'NSE_EQ|INE002A01018': 1384.60,  // RELIANCE
-        'NSE_EQ|INE009A01021': 1480.90   // INFY
+        'NSE_EQ|INE009A01021': 1480.90,  // INFY
+        'NSE_EQ|INE090A01021': 1265.40,  // ICICIBANK
+        'NSE_EQ|INE062A01020': 788.50,   // SBIN
+        'NSE_EQ|INE075A01022': 453.20,   // WIPRO
+        'NSE_EQ|INE154A01025': 428.75,   // ITC
+        'NSE_EQ|INE397D01024': 1680.30,  // BHARTIARTL
+        'NSE_EQ|INE237A01028': 1935.80   // KOTAKBANK
       };
       
       const stocks = await StockPrice.find({ isActive: true });

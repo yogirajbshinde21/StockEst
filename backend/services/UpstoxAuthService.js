@@ -32,18 +32,44 @@ class UpstoxAuthService {
         const now = new Date();
         const expiryDate = new Date(this.tokenExpiry);
         
-        // If token expires in less than 1 hour, refresh it
+        // If token expires in less than 1 hour, try to refresh it
         if (expiryDate - now < 60 * 60 * 1000) {
-          console.log('⚠️ Token expiring soon, refreshing...');
-          await this.refreshAccessToken();
+          console.log('⚠️ Token expiring soon, trying to refresh...');
+          try {
+            await this.refreshAccessToken();
+          } catch (refreshError) {
+            console.warn('⚠️ Token refresh failed, checking .env fallback...');
+            this._tryEnvTokenFallback();
+          }
         } else {
           console.log('✅ Loaded valid Upstox access token');
         }
       } else {
-        console.log('⚠️ No valid token found. Authorization required.');
+        // No token in MongoDB, try .env fallback
+        console.log('⚠️ No valid token in MongoDB, checking .env fallback...');
+        this._tryEnvTokenFallback();
       }
     } catch (error) {
       console.error('❌ Failed to initialize Upstox Auth:', error.message);
+      this._tryEnvTokenFallback();
+    }
+  }
+
+  /**
+   * Fallback: use UPSTOX_ACCESS_TOKEN from .env if available
+   */
+  _tryEnvTokenFallback() {
+    const envToken = process.env.UPSTOX_ACCESS_TOKEN;
+    if (envToken && envToken.length > 10) {
+      this.accessToken = envToken;
+      // Set expiry to end of today (Upstox tokens typically expire at end of day)
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      this.tokenExpiry = endOfDay.toISOString();
+      console.log('✅ Using UPSTOX_ACCESS_TOKEN from .env as fallback');
+      console.log('ℹ️  Token will be valid until end of day. Update .env with a fresh token tomorrow.');
+    } else {
+      console.warn('⚠️ No UPSTOX_ACCESS_TOKEN in .env. Visit /api/upstox/authorize or paste a token in .env');
     }
   }
 
@@ -247,7 +273,11 @@ class UpstoxAuthService {
   async getValidAccessToken() {
     // Check if we have a token
     if (!this.accessToken) {
-      throw new Error('No access token available. Authorization required.');
+      // Try .env fallback before giving up
+      this._tryEnvTokenFallback();
+      if (!this.accessToken) {
+        throw new Error('No access token available. Authorization required.');
+      }
     }
 
     // Check if token is about to expire (less than 5 minutes remaining)
@@ -255,8 +285,16 @@ class UpstoxAuthService {
     const expiryDate = new Date(this.tokenExpiry);
     
     if (expiryDate - now < 5 * 60 * 1000) {
-      console.log('⏰ Token expiring soon, refreshing...');
-      await this.refreshAccessToken();
+      console.log('⏰ Token expiring soon, trying to refresh...');
+      try {
+        await this.refreshAccessToken();
+      } catch (refreshError) {
+        console.warn('⚠️ Refresh failed, trying .env fallback...');
+        this._tryEnvTokenFallback();
+        if (!this.accessToken) {
+          throw new Error('No access token available. Authorization required.');
+        }
+      }
     }
 
     return this.accessToken;

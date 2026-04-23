@@ -22,6 +22,30 @@ class HistoricalDataService {
       'HDFCBANK': {
         instrumentKey: 'NSE_EQ|INE040A01034',
         companyName: 'HDFC Bank Limited'
+      },
+      'ICICIBANK': {
+        instrumentKey: 'NSE_EQ|INE090A01021',
+        companyName: 'ICICI Bank Limited'
+      },
+      'SBIN': {
+        instrumentKey: 'NSE_EQ|INE062A01020',
+        companyName: 'State Bank of India'
+      },
+      'WIPRO': {
+        instrumentKey: 'NSE_EQ|INE075A01022',
+        companyName: 'Wipro Limited'
+      },
+      'ITC': {
+        instrumentKey: 'NSE_EQ|INE154A01025',
+        companyName: 'ITC Limited'
+      },
+      'BHARTIARTL': {
+        instrumentKey: 'NSE_EQ|INE397D01024',
+        companyName: 'Bharti Airtel Limited'
+      },
+      'KOTAKBANK': {
+        instrumentKey: 'NSE_EQ|INE237A01028',
+        companyName: 'Kotak Mahindra Bank Limited'
       }
     };
 

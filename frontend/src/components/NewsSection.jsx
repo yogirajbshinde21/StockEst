@@ -19,7 +19,13 @@ const NewsSection = () => {
     { value: 'RELIANCE', label: 'Reliance - रिलायंस', labelHi: 'रिलायंस' },
     { value: 'INFY', label: 'Infosys - इंफोसिस', labelHi: 'इंफोसिस' },
     { value: 'TCS', label: 'TCS - टीसीएस', labelHi: 'टीसीएस' },
-    { value: 'HDFCBANK', label: 'HDFC Bank - एचडीएफसी बैंक', labelHi: 'एचडीएफसी बैंक' }
+    { value: 'HDFCBANK', label: 'HDFC Bank - एचडीएफसी बैंक', labelHi: 'एचडीएफसी बैंक' },
+    { value: 'ICICIBANK', label: 'ICICI Bank - आईसीआईसीआई बैंक', labelHi: 'आईसीआईसीआई बैंक' },
+    { value: 'SBIN', label: 'SBI - एसबीआई', labelHi: 'एसबीआई' },
+    { value: 'WIPRO', label: 'Wipro - विप्रो', labelHi: 'विप्रो' },
+    { value: 'ITC', label: 'ITC - आईटीसी', labelHi: 'आईटीसी' },
+    { value: 'BHARTIARTL', label: 'Bharti Airtel - एयरटेल', labelHi: 'एयरटेल' },
+    { value: 'KOTAKBANK', label: 'Kotak Bank - कोटक बैंक', labelHi: 'कोटक बैंक' }
   ];
 
   // Fetch news based on selected filter

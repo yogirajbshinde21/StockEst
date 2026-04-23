@@ -87,12 +87,16 @@ class PortfolioIntelligenceDemoData {
    */
   generateSampleHoldings(totalValue) {
     const sampleStocks = [
-      { symbol: 'RELIANCE', instrumentKey: 'NSE_EQ|INE002A01018', weightage: 25 },
-      { symbol: 'TCS', instrumentKey: 'NSE_EQ|INE467B01029', weightage: 20 },
-      { symbol: 'HDFCBANK', instrumentKey: 'NSE_EQ|INE040A01034', weightage: 18 },
-      { symbol: 'INFY', instrumentKey: 'NSE_EQ|INE009A01021', weightage: 15 },
-      { symbol: 'ICICIBANK', instrumentKey: 'NSE_EQ|INE090A01021', weightage: 12 },
-      { symbol: 'WIPRO', instrumentKey: 'NSE_EQ|INE075A01022', weightage: 10 }
+      { symbol: 'RELIANCE', instrumentKey: 'NSE_EQ|INE002A01018', weightage: 18 },
+      { symbol: 'TCS', instrumentKey: 'NSE_EQ|INE467B01029', weightage: 14 },
+      { symbol: 'HDFCBANK', instrumentKey: 'NSE_EQ|INE040A01034', weightage: 12 },
+      { symbol: 'INFY', instrumentKey: 'NSE_EQ|INE009A01021', weightage: 11 },
+      { symbol: 'ICICIBANK', instrumentKey: 'NSE_EQ|INE090A01021', weightage: 10 },
+      { symbol: 'SBIN', instrumentKey: 'NSE_EQ|INE062A01020', weightage: 9 },
+      { symbol: 'WIPRO', instrumentKey: 'NSE_EQ|INE075A01022', weightage: 8 },
+      { symbol: 'ITC', instrumentKey: 'NSE_EQ|INE154A01025', weightage: 7 },
+      { symbol: 'BHARTIARTL', instrumentKey: 'NSE_EQ|INE397D01024', weightage: 6 },
+      { symbol: 'KOTAKBANK', instrumentKey: 'NSE_EQ|INE237A01028', weightage: 5 }
     ];
 
     return sampleStocks.map(stock => {

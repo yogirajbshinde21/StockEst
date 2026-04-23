@@ -14,6 +14,7 @@ import Trans from '../components/Trans';
 import AchievementsList from '../components/AchievementsList';
 import AchievementNotification from '../components/AchievementNotification';
 import StockAnalysis from '../components/StockAnalysis';
+import PredictionChallenge from '../components/PredictionChallenge';
 import AnimatedPrice from '../components/AnimatedPrice';
 import { usePriceTracker, usePortfolioTracker } from '../hooks/usePriceTracker';
 import { 
@@ -33,7 +34,8 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Brain
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -220,7 +222,21 @@ const Dashboard = () => {
             <div className="nav-icon-wrapper">
               <Trophy size={20} />
             </div>
-            {!sidebarCollapsed && <Trans>Leaderboard</Trans>}
+             {!sidebarCollapsed && <Trans>Leaderboard</Trans>}
+          </button>
+
+          <button
+            className={`nav-item ${activeTab === 'predictions' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('predictions');
+              setSidebarOpen(false);
+            }}
+            title="AI Predict"
+          >
+            <div className="nav-icon-wrapper">
+              <Brain size={20} />
+            </div>
+            {!sidebarCollapsed && <Trans>AI Predict</Trans>}
           </button>
         </div>
 
@@ -265,7 +281,8 @@ const Dashboard = () => {
                 activeTab === 'portfolio' ? 'My Portfolio' :
                 activeTab === 'watchlist' ? 'My Watchlist' :
                 activeTab === 'news' ? 'News' : 
-                activeTab === 'achievements' ? 'Achievements' : 'Dashboard'
+                activeTab === 'achievements' ? 'Achievements' :
+                activeTab === 'predictions' ? 'AI Predictions' : 'Dashboard'
               }</Trans>
             </h1>
           </div>
@@ -473,6 +490,8 @@ const Dashboard = () => {
               userId={user?.id}
               showLeaderboard={true}
             />
+          ) : activeTab === 'predictions' ? (
+            <PredictionChallenge />
           ) : null}
         </div>
       </div>

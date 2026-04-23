@@ -20,6 +20,7 @@ const analysisRoutes = require('./routes/analysis');
 const analyticsRoutes = require('./routes/analytics');
 const historicalScenariosRoutes = require('./routes/historicalScenarios');
 const upstoxRoutes = require('./routes/upstox');
+const predictionsRoutes = require('./routes/predictions');
 
 // Import services
 const stockDataService = require('./services/stockDataService');
@@ -27,6 +28,7 @@ const newsScheduler = require('./utils/newsScheduler');
 const portfolioAnalyticsScheduler = require('./utils/portfolioAnalyticsScheduler');
 const HistoricalDataService = require('./services/HistoricalDataService');
 const HistoricalScenarioService = require('./services/HistoricalScenarioService');
+const PredictionService = require('./services/PredictionService');
 
 // Import middleware
 const { auth } = require('./middleware/auth');
@@ -131,6 +133,7 @@ class StockSimulatorServer {
     this.app.use('/api/analytics', analyticsRoutes);
     this.app.use('/api/portfolio', historicalScenariosRoutes);
     this.app.use('/api/upstox', upstoxRoutes);
+    this.app.use('/api/predictions', predictionsRoutes);
 
     // 404 handler for API routes
     this.app.use('/api/*', (req, res) => {
@@ -354,6 +357,37 @@ class StockSimulatorServer {
       }, {
         timezone: "Asia/Kolkata"
       });
+
+      // ── AI Prediction cron jobs ──
+
+      // Generate daily predictions at 4:30 PM IST (after historical data refresh at 4:00 PM)
+      cron.schedule('30 16 * * 1-5', async () => {
+        try {
+          console.log('🔮 Cron: Starting daily prediction generation...');
+          const predictions = await PredictionService.generateDailyPredictions();
+          console.log(`🔮 Cron: Generated ${predictions.length} predictions successfully`);
+        } catch (error) {
+          console.error('❌ Cron: Prediction generation FAILED:', error.message);
+          // Predictions marked as UNAVAILABLE by the service on failure
+        }
+      }, {
+        timezone: "Asia/Kolkata"
+      });
+
+      // Evaluate yesterday's predictions at 9:45 AM IST (after market opens)
+      cron.schedule('45 9 * * 1-5', async () => {
+        try {
+          console.log('📊 Cron: Starting prediction evaluation...');
+          await PredictionService.evaluatePredictions();
+          console.log('📊 Cron: Prediction evaluation complete');
+        } catch (error) {
+          console.error('❌ Cron: Prediction evaluation FAILED:', error.message);
+        }
+      }, {
+        timezone: "Asia/Kolkata"
+      });
+
+      console.log('✅ AI Prediction schedulers started (generate: 4:30 PM, evaluate: 9:45 AM IST)');
 
       console.log('✅ Historical data refresh scheduler started (weekdays 4:00 PM IST)');
 

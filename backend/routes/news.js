@@ -43,7 +43,7 @@ router.get('/stock/:symbol', auth, async (req, res) => {
     const { symbol } = req.params;
     const limit = parseInt(req.query.limit) || 5;
     
-    const validSymbols = ['RELIANCE', 'INFY', 'TCS', 'HDFCBANK'];
+    const validSymbols = ['RELIANCE', 'INFY', 'TCS', 'HDFCBANK', 'ICICIBANK', 'SBIN', 'WIPRO', 'ITC', 'BHARTIARTL', 'KOTAKBANK'];
     if (!validSymbols.includes(symbol.toUpperCase())) {
       return res.status(400).json({
         success: false,

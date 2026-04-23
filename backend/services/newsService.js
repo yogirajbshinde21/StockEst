@@ -14,7 +14,7 @@ class NewsService {
     this.lastMonthlyReset = new Date().getMonth();
     
     // Target stocks for news analysis
-    this.targetStocks = ['RELIANCE', 'INFY', 'TCS', 'HDFCBANK'];
+    this.targetStocks = ['RELIANCE', 'INFY', 'TCS', 'HDFCBANK', 'ICICIBANK', 'SBIN', 'WIPRO', 'ITC', 'BHARTIARTL', 'KOTAKBANK'];
     
     // IST timezone offset
     this.istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
@@ -179,26 +179,7 @@ class NewsService {
 For each news:
 1. Write clear headline in Hindi-English mix (max 15 words)
 2. Explain impact on Indian stock markets in simple Hindi-English
-3. Mention if it affects Reliance/Infosys/TCS/HDFC Bank
-
-Format as:
-NEWS 1: [Headline]
-[Market Impact Explanation]
-Stock Impact: [If any]`;
-      } else if (isMarketDay && isExtendedHours) {
-        // Market hours - detailed, real-time focus
-        newsCount = 5;
-        newsPrompt = `Give me exactly 5 real-time Indian stock market news items for today during market hours. Focus on:
-1. Live market movements and trends
-2. Company announcements affecting share prices
-3. Sector-wise performance updates
-4. Breaking financial news
-5. Regulatory or policy updates
-
-For each news:
-1. Write clear headline in Hindi-English mix (max 15 words)  
-2. Write 2-3 sentences explanation in simple Hindi-English for rural students
-3. Mention immediate impact on Reliance/Infosys/TCS/HDFC Bank if relevant
+3. Mention if it affects Reliance/Infosys/TCS/HDFC Bank/ICICI Bank/SBI/Wipro/ITC/Bharti Airtel/Kotak Bank
 
 Format as:
 NEWS 1: [Headline]
@@ -216,7 +197,7 @@ Stock Impact: [If any]`;
 For each news:
 1. Write clear headline in Hindi-English mix (max 15 words)
 2. Explain relevance for tomorrow's market in simple Hindi-English
-3. Mention impact on Reliance/Infosys/TCS/HDFC Bank if relevant
+3. Mention impact on Reliance/Infosys/TCS/HDFC Bank/ICICI Bank/SBI/Wipro/ITC/Bharti Airtel/Kotak Bank if relevant
 
 Format as:
 NEWS 1: [Headline]
@@ -401,7 +382,13 @@ Continue for all ${newsCount} news. No markdown symbols (*), no reference number
       'RELIANCE': 'reliance',
       'INFY': 'infosys',
       'TCS': 'tcs',
-      'HDFCBANK': 'hdfc bank'
+      'HDFCBANK': 'hdfc bank',
+      'ICICIBANK': 'icici bank',
+      'SBIN': 'sbi',
+      'WIPRO': 'wipro',
+      'ITC': 'itc',
+      'BHARTIARTL': 'bharti airtel',
+      'KOTAKBANK': 'kotak mahindra bank'
     };
     return stockNames[symbol] || symbol;
   }

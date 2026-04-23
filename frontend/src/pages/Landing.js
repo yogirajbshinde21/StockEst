@@ -107,10 +107,12 @@ const Landing = () => {
     { symbol: 'TCS', basePrice: 3789.20 },
     { symbol: 'INFOSYS', basePrice: 1623.45 },
     { symbol: 'HDFC', basePrice: 2845.90 },
+    { symbol: 'ICICI', basePrice: 1265.40 },
+    { symbol: 'SBI', basePrice: 788.50 },
     { symbol: 'WIPRO', basePrice: 456.78 },
-    { symbol: 'BHARTI', basePrice: 876.23 },
-    { symbol: 'ICICI', basePrice: 934.56 },
-    { symbol: 'ADANI', basePrice: 2234.89 }
+    { symbol: 'ITC', basePrice: 428.75 },
+    { symbol: 'AIRTEL', basePrice: 1680.30 },
+    { symbol: 'KOTAK', basePrice: 1935.80 }
   ], []);
 
   // Features with lite-youtube embedded videos for high performance

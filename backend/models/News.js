@@ -24,7 +24,7 @@ const newsSchema = new mongoose.Schema({
     symbol: {
       type: String,
       required: true,
-      enum: ['RELIANCE', 'INFY', 'TCS', 'HDFCBANK']
+      enum: ['RELIANCE', 'INFY', 'TCS', 'HDFCBANK', 'ICICIBANK', 'SBIN', 'WIPRO', 'ITC', 'BHARTIARTL', 'KOTAKBANK']
     },
     impact: {
       type: String,

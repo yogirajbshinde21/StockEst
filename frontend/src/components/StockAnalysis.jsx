@@ -50,7 +50,13 @@ const StockAnalysis = () => {
     { symbol: 'RELIANCE', name: 'Reliance Industries', color: '#e74c3c' },
     { symbol: 'TCS', name: 'Tata Consultancy Services', color: '#3498db' },
     { symbol: 'INFY', name: 'Infosys Limited', color: '#2ecc71' },
-    { symbol: 'HDFCBANK', name: 'HDFC Bank', color: '#f39c12' }
+    { symbol: 'HDFCBANK', name: 'HDFC Bank', color: '#f39c12' },
+    { symbol: 'ICICIBANK', name: 'ICICI Bank', color: '#9b59b6' },
+    { symbol: 'SBIN', name: 'State Bank of India', color: '#1abc9c' },
+    { symbol: 'WIPRO', name: 'Wipro Limited', color: '#e67e22' },
+    { symbol: 'ITC', name: 'ITC Limited', color: '#2c3e50' },
+    { symbol: 'BHARTIARTL', name: 'Bharti Airtel', color: '#e91e63' },
+    { symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank', color: '#00bcd4' }
   ];
 
   const prepareChartData = useCallback((candles) => {

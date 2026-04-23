@@ -20,6 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@tavily/core": "^0.7.2",
     "assemblyai": "^4.15.0",
     "axios": "^1.11.0",
     "bcryptjs": "^2.4.3",
@@ -32,6 +33,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.0",
     "node-cron": "^3.0.3",
+    "simple-statistics": "^7.8.8",
     "socket.io": "^4.7.2",
     "upstox-js-sdk": "^2.19.0"
   },

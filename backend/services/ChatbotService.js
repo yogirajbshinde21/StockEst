@@ -1,19 +1,32 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const User = require('../models/User');
 const StockPrice = require('../models/StockPrice');
 const News = require('../models/News');
+const { tavily } = require('@tavily/core');
 
 class ChatbotService {
   constructor() {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not defined in environment variables');
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY is not defined in environment variables. Get a free key at https://console.groq.com/keys');
     }
     
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    this.model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      tools: [{ googleSearch: {} }]
-    });
+    // Groq API configuration (free tier, works globally including India)
+    this.groqApiKey = process.env.GROQ_API_KEY;
+    this.groqBaseUrl = 'https://api.groq.com/openai/v1/chat/completions';
+    this.primaryModel = 'llama-3.3-70b-versatile';
+    this.fallbackModel = 'llama-3.1-8b-instant';
+    
+    // Tavily search configuration (for real-time data)
+    this.tavilyEnabled = !!process.env.TAVILY_API_KEY;
+    if (this.tavilyEnabled) {
+      this.tavilyClient = tavily({ apiKey: process.env.TAVILY_API_KEY });
+      console.log('🔍 Tavily real-time search enabled');
+    } else {
+      console.log('⚠️ Tavily API key not set - real-time search disabled');
+    }
+    
+    // Retry configuration
+    this.maxRetries = 3;
+    this.baseRetryDelay = 1000; // 1 second
     
     // Smart caching system for portfolio data
     this.portfolioCache = new Map();
@@ -26,9 +39,11 @@ class ChatbotService {
     // Stock market related keywords for query filtering
     this.stockMarketKeywords = [
       'stock', 'share', 'portfolio', 'investment', 'trading', 'market', 'nse', 'bse',
-      'reliance', 'infosys', 'tcs', 'hdfc', 'dividend', 'profit', 'loss', 'buy', 'sell',
+      'reliance', 'infosys', 'tcs', 'hdfc', 'icici', 'sbi', 'wipro', 'itc', 'airtel', 'kotak',
+      'dividend', 'profit', 'loss', 'buy', 'sell',
       'शेयर', 'निवेश', 'बाजार', 'पोर्टफोलियो', 'मुनाफा', 'नुकसान', 'खरीदना', 'बेचना',
       'स्टॉक', 'ट्रेडिंग', 'कंपनी', 'रिलायंस', 'इंफोसिस', 'टीसीएस', 'एचडीएफसी',
+      'आईसीआईसीआई', 'एसबीआई', 'विप्रो', 'आईटीसी', 'एयरटेल', 'कोटक',
       'holdings', 'position', 'transaction', 'trade', 'watchlist'
     ];
 
@@ -41,7 +56,19 @@ class ChatbotService {
       'portfolio', 'holdings', 'pnl', 'p&l'
     ];
 
-    console.log('✅ ChatbotService initialized with smart portfolio memory and caching');
+    // Keywords that indicate the query needs real-time web search
+    this.realtimeSearchKeywords = [
+      'price today', 'current price', 'stock price', 'share price', 'live price',
+      'today price', 'right now', 'latest price', 'market today', 'nifty today',
+      'sensex today', 'gold price', 'silver price', 'crude oil', 'bitcoin',
+      'ipo', 'upcoming ipo', 'latest news', 'breaking news', 'market news',
+      'quarterly results', 'earnings', 'dividend date', 'bonus', 'stock split',
+      'आज की कीमत', 'मौजूदा कीमत', 'आज का भाव', 'लाइव प्राइस',
+      '52 week high', '52 week low', 'all time high', 'target price',
+      'analyst rating', 'buy or sell', 'forecast', 'prediction'
+    ];
+
+    console.log('✅ ChatbotService initialized with Groq AI (Llama 3.3 70B) + Tavily Search + smart portfolio memory');
     
     // Start cleanup interval for memory management
     this.startCleanupInterval();
@@ -118,6 +145,82 @@ class ChatbotService {
     return this.stockMarketKeywords.some(keyword => 
       queryLower.includes(keyword.toLowerCase())
     );
+  }
+
+  /**
+   * Check if query needs real-time web search data
+   */
+  needsRealtimeSearch(query) {
+    const queryLower = query.toLowerCase();
+    return this.realtimeSearchKeywords.some(keyword => 
+      queryLower.includes(keyword.toLowerCase())
+    );
+  }
+
+  /**
+   * Search for real-time information using Tavily
+   */
+  async searchRealtime(query) {
+    if (!this.tavilyEnabled) {
+      console.log('⚠️ Tavily not configured - skipping real-time search');
+      return null;
+    }
+
+    try {
+      console.log(`🔍 Searching real-time data for: "${query}"`);
+      
+      // Enhance the search query for better financial results
+      const searchQuery = `${query} India stock market NSE BSE`;
+      
+      const result = await this.tavilyClient.search(searchQuery, {
+        searchDepth: 'basic',
+        maxResults: 3,
+        topic: 'finance',
+        includeAnswer: true
+      });
+
+      console.log(`✅ Tavily returned ${result.results?.length || 0} results`);
+      
+      return {
+        answer: result.answer || null,
+        results: (result.results || []).map(r => ({
+          title: r.title,
+          content: r.content?.substring(0, 300),
+          url: r.url
+        }))
+      };
+    } catch (error) {
+      console.error('❌ Tavily search failed:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Get current stock prices from database for context
+   */
+  async getDBStockPrices() {
+    try {
+      const prices = await StockPrice.find({}).sort({ timestamp: -1 }).limit(20);
+      if (!prices || prices.length === 0) return null;
+      
+      // Deduplicate by symbol (keep latest)
+      const priceMap = {};
+      prices.forEach(p => {
+        if (!priceMap[p.symbol]) {
+          priceMap[p.symbol] = {
+            symbol: p.symbol,
+            price: p.currentPrice,
+            change: p.change || 0,
+            changePercent: p.changePercent || 0
+          };
+        }
+      });
+      
+      return Object.values(priceMap);
+    } catch (error) {
+      console.error('❌ Error fetching DB stock prices:', error.message);
+      return null;
+    }
   }
 
   /**
@@ -287,7 +390,7 @@ class ChatbotService {
   /**
    * Create context prompt - portfolio data only included when needed
    */
-  createContextPrompt(userQuery, portfolioData, userLanguage) {
+  createContextPrompt(userQuery, portfolioData, userLanguage, searchResults = null, dbPrices = null) {
     // Map of supported languages with their language instructions
     const languageInstructions = {
       'english': 'Respond in English only.',
@@ -425,6 +528,31 @@ You have complete access to the user's portfolio data above. Use this informatio
       context += ` You provide general stock market information and analysis for Indian markets.`;
     }
 
+    // Add real-time search results if available
+    if (searchResults) {
+      context += `\n\n=== REAL-TIME WEB DATA (from live search) ===`;
+      if (searchResults.answer) {
+        context += `\nDirect Answer: ${searchResults.answer}`;
+      }
+      if (searchResults.results && searchResults.results.length > 0) {
+        context += `\nSources:`;
+        searchResults.results.forEach((r, i) => {
+          context += `\n${i + 1}. ${r.title}: ${r.content}`;
+        });
+      }
+      context += `\n\nCRITICAL: The real-time data above is CURRENT and ACCURATE. Present these numbers directly and confidently as today's data. Do NOT say "might not reflect" or "please check elsewhere" - this IS the latest data.`;
+    }
+
+    // Add current stock prices from database
+    if (dbPrices && dbPrices.length > 0) {
+      context += `\n\n=== LIVE STOCK PRICES (from StockEst database) ===`;
+      dbPrices.forEach(p => {
+        const arrow = p.change >= 0 ? '▲' : '▼';
+        context += `\n${p.symbol}: ₹${p.price} ${arrow} ${p.change >= 0 ? '+' : ''}${p.changePercent.toFixed(2)}%`;
+      });
+      context += `\nCRITICAL: These are CURRENT LIVE prices updated in real-time. When users ask about stock prices, state these prices directly and confidently as the current price. Do NOT redirect users to other websites. Do NOT say these might be outdated.`;
+    }
+
     context += `\n\n=== CRITICAL LANGUAGE REQUIREMENTS ===
 ${languageInstruction}
 
@@ -432,11 +560,12 @@ ${languageInstruction}
 1. Answer only stock market, investment, trading, and financial literacy questions
 2. Use simple language suitable for Indian investors
 3. Provide educational explanations with real-world examples
-4. Use current market data from Google Search when needed
-5. Be encouraging and supportive for investors
-6. MANDATORY: ${languageInstruction}
-7. Keep responses concise but informative
-8. For general market questions, focus on broad market analysis and education
+4. When stock prices are provided above, state them DIRECTLY and CONFIDENTLY as the current price. Example: "TCS is currently trading at ₹2521.80"
+5. NEVER say "please check on Yahoo Finance" or "I cannot access real-time data" - you HAVE real-time data above
+6. Be encouraging and supportive for investors
+7. MANDATORY: ${languageInstruction}
+8. Keep responses concise and to the point - answer the question first, then add context
+9. For general market questions, focus on broad market analysis and education
 
 REMINDER: Your response MUST be in the language specified above. Do not mix languages.
 
@@ -454,7 +583,7 @@ FINAL REMINDER: ${languageInstruction}`;
    */
   processResponse(response) {
     try {
-      let text = response.response.text();
+      let text = response.text;
       
       // Remove markdown asterisks and formatting
       text = text.replace(/\*\*/g, '').replace(/\*/g, '');
@@ -464,38 +593,100 @@ FINAL REMINDER: ${languageInstruction}`;
       
       // Remove other markdown symbols
       text = text.replace(/`/g, '').replace(/#{1,6}\s*/g, '');
-      
-      // Extract sources from grounding metadata
-      const sources = [];
-      if (response.response.candidates && response.response.candidates[0].groundingMetadata) {
-        const groundingChunks = response.response.candidates[0].groundingMetadata.groundingChunks || [];
-        
-        groundingChunks.forEach(chunk => {
-          if (chunk.web && chunk.web.uri) {
-            const title = chunk.web.title || 'Learn More';
-            sources.push({
-              title: title,
-              url: chunk.web.uri
-            });
-          }
-        });
-      }
-
-      // Remove duplicate sources
-      const uniqueSources = sources.filter((source, index, self) => 
-        index === self.findIndex(s => s.url === source.url)
-      );
 
       return {
         text: text.trim(),
-        sources: uniqueSources
+        sources: []
       };
     } catch (error) {
       console.error('❌ Error processing response:', error.message);
       return {
-        text: response.response?.text() || 'Unable to process response',
+        text: response?.text || 'Unable to process response',
         sources: []
       };
+    }
+  }
+
+  /**
+   * Call the Groq API with a given model
+   */
+  async callGroqAPI(prompt, model) {
+    const response = await fetch(this.groqBaseUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.groqApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are StockEst AI, an intelligent and helpful stock market assistant for Indian investors. You provide accurate, educational, and supportive financial guidance.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+        top_p: 0.9
+      })
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Groq API error (${response.status}): ${errorBody}`);
+    }
+
+    const data = await response.json();
+    return {
+      text: data.choices[0].message.content,
+      model: data.model,
+      usage: data.usage
+    };
+  }
+
+  /**
+   * Generate content with retry logic and fallback model
+   */
+  async generateWithRetry(prompt) {
+    let lastError = null;
+
+    // Try primary model (Llama 3.3 70B) with retries
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt}/${this.maxRetries} with primary model (${this.primaryModel})...`);
+        const result = await this.callGroqAPI(prompt, this.primaryModel);
+        console.log(`✅ Primary model responded successfully (${result.usage?.total_tokens || '?'} tokens)`);
+        return result;
+      } catch (error) {
+        lastError = error;
+        console.warn(`⚠️ Primary model attempt ${attempt} failed: ${error.message}`);
+        
+        // Don't retry on auth errors
+        if (error.message.includes('401') || error.message.includes('403')) {
+          throw error;
+        }
+        
+        if (attempt < this.maxRetries) {
+          const delay = this.baseRetryDelay * Math.pow(2, attempt - 1);
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    // Try fallback model (Llama 3.1 8B - faster, lighter)
+    try {
+      console.log(`🔄 Switching to fallback model (${this.fallbackModel})...`);
+      const result = await this.callGroqAPI(prompt, this.fallbackModel);
+      console.log(`✅ Fallback model responded successfully (${result.usage?.total_tokens || '?'} tokens)`);
+      return result;
+    } catch (fallbackError) {
+      console.error('❌ Fallback model also failed:', fallbackError.message);
+      throw lastError;
     }
   }
 
@@ -571,14 +762,25 @@ FINAL REMINDER: ${languageInstruction}`;
       } else {
         console.log('🌐 General market query - skipping portfolio data fetch');
       }
+
+      // Check if query needs real-time web search
+      let searchResults = null;
+      if (this.needsRealtimeSearch(userQuery)) {
+        console.log('🔍 Query needs real-time data - searching via Tavily...');
+        searchResults = await this.searchRealtime(userQuery);
+      }
+
+      // Fetch current stock prices from DB for context
+      const dbPrices = await this.getDBStockPrices();
       
-      // Create context prompt with or without portfolio data
-      const contextPrompt = this.createContextPrompt(userQuery, portfolioData, userLanguage);
+      // Create context prompt with all available data
+      const contextPrompt = this.createContextPrompt(userQuery, portfolioData, userLanguage, searchResults, dbPrices);
       
-      console.log('📝 Sending query to Gemini with' + (needsPortfolioData ? ' portfolio-specific' : ' general market') + ' context...');
+      const searchInfo = searchResults ? ' + real-time search' : '';
+      console.log('📝 Sending query to Groq AI with' + (needsPortfolioData ? ' portfolio-specific' : ' general market') + ' context' + searchInfo + '...');
       
-      // Generate response with Google Search grounding
-      const result = await this.model.generateContent(contextPrompt);
+      // Generate response with retry logic and fallback model
+      const result = await this.generateWithRetry(contextPrompt);
       
       // Process and clean the response
       const processedResponse = this.processResponse(result);
@@ -718,15 +920,20 @@ FINAL REMINDER: ${languageInstruction}`;
   getServiceStatus() {
     return {
       status: 'active',
-      model: 'gemini-2.5-flash',
+      model: this.primaryModel,
+      fallbackModel: this.fallbackModel,
+      provider: 'Groq',
       features: [
         'Smart Portfolio Caching', 
         'Conversation Memory', 
         'Real-time Portfolio Analysis',
-        'Google Search Grounding', 
-        'Multi-language Support'
+        'Tavily Real-time Web Search',
+        'Live Stock Price Context',
+        'Multi-language Support',
+        'Retry with Fallback Model'
       ],
-      apiConfigured: !!this.genAI,
+      apiConfigured: !!this.groqApiKey,
+      tavilyEnabled: this.tavilyEnabled,
       cacheStats: {
         cachedUsers: this.portfolioCache.size,
         memoryUsers: this.userConversationMemory.size,

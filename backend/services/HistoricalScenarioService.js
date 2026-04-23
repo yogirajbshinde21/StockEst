@@ -82,13 +82,13 @@ class HistoricalScenarioService {
    */
   async calculateScenarioImpacts(scenario) {
     try {
-      console.log(`🤖 Calculating impacts for ${scenario.eventName} using Gemini...`);
+      console.log(`🤖 Calculating impacts for ${scenario.eventName} using AI...`);
       
       const prompt = this.createScenarioCalculationPrompt(scenario);
       
-      // Use Gemini to calculate impacts
-      const response = await this.chatbotService.model.generateContent(prompt);
-      const result = response.response.text();
+      // Use AI (Groq) to calculate impacts
+      const response = await this.chatbotService.generateWithRetry(prompt);
+      const result = response.text;
       
       // Parse the Gemini response
       const impacts = this.parseGeminiResponse(result, scenario.eventName);
@@ -145,10 +145,12 @@ REQUIRED OUTPUT FORMAT (JSON):
     {"symbol": "TCS", "instrumentKey": "NSE_EQ|INE467B01029", "impactPercentage": -22.0, "sectorOverride": false},
     {"symbol": "HDFCBANK", "instrumentKey": "NSE_EQ|INE040A01034", "impactPercentage": -35.8, "sectorOverride": false},
     {"symbol": "INFY", "instrumentKey": "NSE_EQ|INE009A01021", "impactPercentage": -24.2, "sectorOverride": false},
-    {"symbol": "ICICIBANK", "instrumentKey": "NSE_EQ|INE090A01013", "impactPercentage": -33.5, "sectorOverride": false},
-    {"symbol": "HINDUNILVR", "instrumentKey": "NSE_EQ|INE030A01027", "impactPercentage": -5.2, "sectorOverride": false},
+    {"symbol": "ICICIBANK", "instrumentKey": "NSE_EQ|INE090A01021", "impactPercentage": -33.5, "sectorOverride": false},
+    {"symbol": "SBIN", "instrumentKey": "NSE_EQ|INE062A01020", "impactPercentage": -38.9, "sectorOverride": false},
+    {"symbol": "WIPRO", "instrumentKey": "NSE_EQ|INE075A01022", "impactPercentage": -20.5, "sectorOverride": false},
     {"symbol": "ITC", "instrumentKey": "NSE_EQ|INE154A01025", "impactPercentage": -12.8, "sectorOverride": false},
-    {"symbol": "SBIN", "instrumentKey": "NSE_EQ|INE062A01020", "impactPercentage": -38.9, "sectorOverride": false}
+    {"symbol": "BHARTIARTL", "instrumentKey": "NSE_EQ|INE397D01024", "impactPercentage": -18.3, "sectorOverride": false},
+    {"symbol": "KOTAKBANK", "instrumentKey": "NSE_EQ|INE237A01028", "impactPercentage": -34.1, "sectorOverride": false}
   ],
   "marketImpact": {
     "overallMarketChange": -30.2,
@@ -244,7 +246,13 @@ Return ONLY the JSON object, no additional text or explanations.
         stockImpacts: [
           { symbol: 'RELIANCE', instrumentKey: 'NSE_EQ|INE002A01018', impactPercentage: -30.0, sectorOverride: false },
           { symbol: 'TCS', instrumentKey: 'NSE_EQ|INE467B01029', impactPercentage: -20.0, sectorOverride: false },
-          { symbol: 'HDFCBANK', instrumentKey: 'NSE_EQ|INE040A01034', impactPercentage: -35.0, sectorOverride: false }
+          { symbol: 'HDFCBANK', instrumentKey: 'NSE_EQ|INE040A01034', impactPercentage: -35.0, sectorOverride: false },
+          { symbol: 'ICICIBANK', instrumentKey: 'NSE_EQ|INE090A01021', impactPercentage: -33.0, sectorOverride: false },
+          { symbol: 'SBIN', instrumentKey: 'NSE_EQ|INE062A01020', impactPercentage: -38.0, sectorOverride: false },
+          { symbol: 'WIPRO', instrumentKey: 'NSE_EQ|INE075A01022', impactPercentage: -22.0, sectorOverride: false },
+          { symbol: 'ITC', instrumentKey: 'NSE_EQ|INE154A01025', impactPercentage: -10.0, sectorOverride: false },
+          { symbol: 'BHARTIARTL', instrumentKey: 'NSE_EQ|INE397D01024', impactPercentage: -18.0, sectorOverride: false },
+          { symbol: 'KOTAKBANK', instrumentKey: 'NSE_EQ|INE237A01028', impactPercentage: -32.0, sectorOverride: false }
         ],
         marketImpact: { overallMarketChange: -30.0, volatilityIncrease: 200.0, duration: '3_MONTHS' }
       },
@@ -256,7 +264,15 @@ Return ONLY the JSON object, no additional text or explanations.
         ],
         stockImpacts: [
           { symbol: 'HDFCBANK', instrumentKey: 'NSE_EQ|INE040A01034', impactPercentage: -55.0, sectorOverride: false },
-          { symbol: 'ICICIBANK', instrumentKey: 'NSE_EQ|INE090A01013', impactPercentage: -60.0, sectorOverride: false }
+          { symbol: 'ICICIBANK', instrumentKey: 'NSE_EQ|INE090A01021', impactPercentage: -60.0, sectorOverride: false },
+          { symbol: 'SBIN', instrumentKey: 'NSE_EQ|INE062A01020', impactPercentage: -58.0, sectorOverride: false },
+          { symbol: 'KOTAKBANK', instrumentKey: 'NSE_EQ|INE237A01028', impactPercentage: -52.0, sectorOverride: false },
+          { symbol: 'RELIANCE', instrumentKey: 'NSE_EQ|INE002A01018', impactPercentage: -40.0, sectorOverride: false },
+          { symbol: 'TCS', instrumentKey: 'NSE_EQ|INE467B01029', impactPercentage: -25.0, sectorOverride: false },
+          { symbol: 'INFY', instrumentKey: 'NSE_EQ|INE009A01021', impactPercentage: -22.0, sectorOverride: false },
+          { symbol: 'WIPRO', instrumentKey: 'NSE_EQ|INE075A01022', impactPercentage: -28.0, sectorOverride: false },
+          { symbol: 'ITC', instrumentKey: 'NSE_EQ|INE154A01025', impactPercentage: 3.0, sectorOverride: false },
+          { symbol: 'BHARTIARTL', instrumentKey: 'NSE_EQ|INE397D01024', impactPercentage: -30.0, sectorOverride: false }
         ],
         marketImpact: { overallMarketChange: -40.0, volatilityIncrease: 300.0, duration: '6_MONTHS' }
       },
@@ -267,7 +283,15 @@ Return ONLY the JSON object, no additional text or explanations.
         ],
         stockImpacts: [
           { symbol: 'TCS', instrumentKey: 'NSE_EQ|INE467B01029', impactPercentage: -75.0, sectorOverride: false },
-          { symbol: 'INFY', instrumentKey: 'NSE_EQ|INE009A01021', impactPercentage: -80.0, sectorOverride: false }
+          { symbol: 'INFY', instrumentKey: 'NSE_EQ|INE009A01021', impactPercentage: -80.0, sectorOverride: false },
+          { symbol: 'WIPRO', instrumentKey: 'NSE_EQ|INE075A01022', impactPercentage: -72.0, sectorOverride: false },
+          { symbol: 'HDFCBANK', instrumentKey: 'NSE_EQ|INE040A01034', impactPercentage: -12.0, sectorOverride: false },
+          { symbol: 'ICICIBANK', instrumentKey: 'NSE_EQ|INE090A01021', impactPercentage: -15.0, sectorOverride: false },
+          { symbol: 'SBIN', instrumentKey: 'NSE_EQ|INE062A01020', impactPercentage: -14.0, sectorOverride: false },
+          { symbol: 'RELIANCE', instrumentKey: 'NSE_EQ|INE002A01018', impactPercentage: -20.0, sectorOverride: false },
+          { symbol: 'ITC', instrumentKey: 'NSE_EQ|INE154A01025', impactPercentage: -8.0, sectorOverride: false },
+          { symbol: 'BHARTIARTL', instrumentKey: 'NSE_EQ|INE397D01024', impactPercentage: -10.0, sectorOverride: false },
+          { symbol: 'KOTAKBANK', instrumentKey: 'NSE_EQ|INE237A01028', impactPercentage: -13.0, sectorOverride: false }
         ],
         marketImpact: { overallMarketChange: -35.0, volatilityIncrease: 400.0, duration: '1_YEAR' }
       }
